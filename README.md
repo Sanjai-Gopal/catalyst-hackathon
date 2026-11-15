@@ -2,7 +2,7 @@
 > **PromptWars × Catalyst Solo Hackathon | Powered by Google for Developers × Hack2Skill**  
 > **Challenge:** Elderly Care & Medication Management Platform  
 > **Author:** Sanjai Gopal ([@Sanjai-Gopal](https://github.com/Sanjai-Gopal))  
-> **Live Production Deployment:** [https://catalyst-hackathon.vercel.app](https://catalyst-hackathon.vercel.app)
+> **Live Production Deployment:** [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app)
 
 ---
 
