@@ -181,15 +181,10 @@ export function VoiceAssistantWidget({
       case 'CALL_CHILD': {
         setLastActionFeedback(prompts.callingChildFeedback);
         toast.error(`📞 "${cmd.transcript}" -> Emergency Call`, { duration: 4000 });
-        speakText(
-          prompts.callingChildFeedback,
-          () => {
-            onTriggerCallChild();
-          },
-          language,
-          speechRate
-        );
-        // Also trigger directly for immediate response
+        // Trigger the call once, immediately. It was previously also triggered from
+        // the speech-finished callback, so one command placed the call (and sent the
+        // SOS emails) twice.
+        speakText(prompts.callingChildFeedback, undefined, language, speechRate);
         onTriggerCallChild();
         break;
       }
@@ -197,14 +192,7 @@ export function VoiceAssistantWidget({
       case 'CALL_DOCTOR': {
         setLastActionFeedback(prompts.callingDocFeedback);
         toast.info(`🩺 "${cmd.transcript}" -> Calling Doctor`, { duration: 3000 });
-        speakText(
-          prompts.callingDocFeedback,
-          () => {
-            onTriggerCallDoctor();
-          },
-          language,
-          speechRate
-        );
+        speakText(prompts.callingDocFeedback, undefined, language, speechRate);
         onTriggerCallDoctor();
         break;
       }

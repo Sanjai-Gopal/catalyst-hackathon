@@ -16,46 +16,31 @@ import { CaretakerDashboard } from './CaretakerDashboard';
 import { PasscodeModal } from './PasscodeModal';
 import { CareCircleOnboardingModal } from './CareCircleOnboardingModal';
 import { LanguageProvider } from '@/context/language-context';
+import { getLocalDateString } from '@/lib/date';
+import {
+  isAdherenceArray,
+  isMedicationArray,
+  isPatientProfile,
+  loadValidated,
+} from '@/lib/storage';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
 export function CareNestApp() {
-  const [patient, setPatient] = useState<PatientProfile>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('carenest_patient_profile');
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // fallback
-      }
-    }
-    return INITIAL_PATIENT;
-  });
+  // Stored values are shape-validated, so corrupted/tampered localStorage falls
+  // back to defaults instead of crashing the app on every load.
+  const [patient, setPatient] = useState<PatientProfile>(() =>
+    loadValidated('carenest_patient_profile', isPatientProfile, INITIAL_PATIENT)
+  );
 
-  const [medications, setMedications] = useState<Medication[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('carenest_medications');
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // fallback
-      }
-    }
-    return INITIAL_MEDICATIONS;
-  });
+  const [medications, setMedications] = useState<Medication[]>(() =>
+    loadValidated('carenest_medications', isMedicationArray, INITIAL_MEDICATIONS)
+  );
 
   const [appointments] = useState<DoctorAppointment[]>(INITIAL_APPOINTMENTS);
-  const [adherence, setAdherence] = useState<AdherenceRecord[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('carenest_adherence');
-        if (stored) return JSON.parse(stored);
-      } catch {
-        // fallback
-      }
-    }
-    return [];
-  });
+  const [adherence, setAdherence] = useState<AdherenceRecord[]>(() =>
+    loadValidated<AdherenceRecord[]>('carenest_adherence', isAdherenceArray, [])
+  );
 
   const [mode, setMode] = useState<'senior' | 'caretaker'>('senior');
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
@@ -71,6 +56,14 @@ export function CareNestApp() {
       localStorage.setItem('carenest_adherence', JSON.stringify(adherence));
     }
   }, [adherence]);
+
+  // Persist medications (including remainingPills). Previously the pill count was
+  // decremented in memory only and silently reverted on reload.
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('carenest_medications', JSON.stringify(medications));
+    }
+  }, [medications]);
 
   const handleResetRoutine = () => {
     setAdherence([]);
@@ -88,7 +81,6 @@ export function CareNestApp() {
     setMedications(updatedMeds);
     if (typeof window !== 'undefined') {
       localStorage.setItem('carenest_patient_profile', JSON.stringify(updatedProfile));
-      localStorage.setItem('carenest_medications', JSON.stringify(updatedMeds));
       localStorage.setItem('carenest_onboarded', 'true');
       localStorage.removeItem('carenest_start_onboarding');
     }
@@ -102,7 +94,17 @@ export function CareNestApp() {
   const handleMarkTaken = (medicationId: string, slot: TimeSlot) => {
     const med = medications.find((m) => m.id === medicationId);
     const medName = med ? med.name : 'Medication';
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
+    const honorific = patient.honorific || 'Amma';
+
+    // Already logged today: don't log twice or use up another pill.
+    const alreadyTaken = adherence.some(
+      (a) => a.medicationId === medicationId && a.date === today && a.status === 'taken'
+    );
+    if (alreadyTaken) {
+      toast.info(`${medName} is already logged as taken today.`);
+      return;
+    }
 
     // Trigger celebratory confetti
     try {
@@ -130,7 +132,7 @@ export function CareNestApp() {
       },
     ]);
 
-    // Decrement pill count
+    // Decrement pill count (exactly once per medicine per day)
     setMedications((prev) =>
       prev.map((m) =>
         m.id === medicationId
@@ -139,30 +141,17 @@ export function CareNestApp() {
       )
     );
 
-    const honorific = patient.honorific || 'Amma';
     toast.success(`Logged dose for ${medName}! ${honorific} is doing wonderful. 🌸`);
   };
 
-  // Add Medication
+  // Add Medication (persisted by the medications effect above)
   const handleAddMedication = (newMed: Medication) => {
-    setMedications((prev) => {
-      const updated = [newMed, ...prev];
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('carenest_medications', JSON.stringify(updated));
-      }
-      return updated;
-    });
+    setMedications((prev) => [newMed, ...prev]);
   };
 
-  // Delete Medication
+  // Delete Medication (persisted by the medications effect above)
   const handleDeleteMedication = (id: string) => {
-    setMedications((prev) => {
-      const updated = prev.filter((m) => m.id !== id);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('carenest_medications', JSON.stringify(updated));
-      }
-      return updated;
-    });
+    setMedications((prev) => prev.filter((m) => m.id !== id));
   };
 
   return (

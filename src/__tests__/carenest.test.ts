@@ -3,12 +3,9 @@ import { type Medication, type TimeSlot } from '../types/carenest';
 import { buildEmailTemplate } from '../services/emailService';
 import { INITIAL_MEDICATIONS, INITIAL_PATIENT } from '../data/carenestInitialData';
 
+import { verifyPasscode } from '../lib/passcode'; // real production implementation
+
 // Core Business Logic Helpers
-export function verifyPasscode(enteredCode: string): boolean {
-  const clean = enteredCode.trim().toUpperCase();
-  const allowed = ['CARE-8492', '8492', 'CARE-2026', '2026'];
-  return allowed.includes(clean);
-}
 
 export function calculateAdherencePercentage(
   totalMeds: number,
@@ -190,12 +187,13 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       expect(INITIAL_LAB_REPORTS[0].diagnosticCenter).toContain('Apollo');
     });
 
-    it('should execute Google Gemini clinical safety check fallback contract', async () => {
+    it('should NOT report "safe" when the Gemini safety check cannot run (no API key in tests)', async () => {
       const { analyzeDrugInteractionsWithGemini } = await import('../services/geminiHealthcare');
       const alerts = await analyzeDrugInteractionsWithGemini(INITIAL_MEDICATIONS);
       expect(Array.isArray(alerts)).toBe(true);
       expect(alerts.length).toBeGreaterThan(0);
-      expect(alerts[0].severity).toBeDefined();
+      // Without a configured key the result must be "unknown", never an all-clear.
+      expect(alerts.every((a) => a.severity === 'unknown')).toBe(true);
       expect(alerts[0].recommendation).toBeDefined();
     });
   });
@@ -215,13 +213,11 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       }
     });
 
-    it('should parse prescription text with Google Gemini OCR parser fallback', async () => {
+    it('should reject (not invent medicines) when the prescription parser is unavailable', async () => {
       const { parsePrescriptionWithGemini } = await import('../services/geminiHealthcare');
-      const extracted = await parsePrescriptionWithGemini('Rx: Amlodipine 5mg OD morning, Metformin 500mg BD');
-      expect(Array.isArray(extracted)).toBe(true);
-      expect(extracted.length).toBeGreaterThan(0);
-      expect(extracted[0].name).toBeDefined();
-      expect(extracted[0].dosage).toBeDefined();
+      await expect(
+        parsePrescriptionWithGemini('Rx: Telmisartan 40mg once daily')
+      ).rejects.toThrow(/not available/i);
     });
   });
 

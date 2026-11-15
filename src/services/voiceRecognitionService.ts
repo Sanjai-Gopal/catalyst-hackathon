@@ -18,10 +18,12 @@ export interface ParsedVoiceCommand {
   confidence: number;
   medicationMentioned?: string;
   slotMentioned?: 'morning' | 'afternoon' | 'evening' | 'night';
+  /** True when the speaker said they have NOT taken their medicine (e.g. "not yet"). */
+  negated?: boolean;
 }
 
 const LANGUAGE_BCP_MAP: Record<string, string> = {
-  en: 'en-US',
+  en: 'en-IN',
   ta: 'ta-IN',
   hi: 'hi-IN',
   te: 'te-IN',
@@ -30,173 +32,214 @@ const LANGUAGE_BCP_MAP: Record<string, string> = {
   es: 'es-ES',
 };
 
-// Fast local multi-lingual keyword dictionary for instant (<10ms) intent matching
-const INTENT_PATTERNS: Record<VoiceIntentType, RegExp[]> = {
-  MARK_TAKEN: [
-    /took/i,
-    /taken/i,
-    /done/i,
-    /had my/i,
-    /finished/i,
-    /consumed/i,
-    /mark.*taken/i,
-    // Tamil
-    /சாப்பிட்டேன்/i,
-    /சாப்டேன்/i,
-    /மாத்திரை.*போட்டேன்/i,
-    /மருந்து.*எடுத்தேன்/i,
-    /எடுத்தாச்சு/i,
-    /முடிந்தது/i,
-    // Hindi
-    /दवा.*ली/i,
-    /खा.*ली/i,
-    /गोली.*ली/i,
-    /हो.*गया/i,
-    /ले.*लिया/i,
-    // Telugu
-    /వేసుకున్నాను/i,
-    /తీసుకున్నాను/i,
-    /మందు.*వేశా/i,
-    // Kannada
-    /ತೆಗೆದುಕೊಂಡೆ/i,
-    /ತಗೊಂಡೆ/i,
-    // Malayalam
-    /കഴിച്ചു/i,
-    /എടുത്തു/i,
-    // Spanish
-    /tomé/i,
-    /tomada/i,
-    /listo/i,
-    /medicina.*tomada/i,
-  ],
-  CALL_CHILD: [
-    /call.*(child|son|daughter|family|sanjai|kid)/i,
-    /emergency/i,
-    /sos/i,
-    /help.*me/i,
-    /call.*phone/i,
-    // Tamil
-    /அவசரம்/i,
-    /மகன்/i,
-    /மகள்/i,
-    /பிள்ளை/i,
-    /போன்.*பண்ணு/i,
-    /கூப்பிடு/i,
-    /உதவி/i,
-    // Hindi
-    /बेटे.*कॉल/i,
-    /फोन.*लगाओ/i,
-    /मदद.*करो/i,
-    /इमरजेंसी/i,
-    /कॉल.*करो/i,
-    // Telugu
-    /కొడుకు/i,
-    /కూతురు/i,
-    /ఫోన్.*చేయి/i,
-    /సహాయం/i,
-    // Kannada
-    /ಮಗನಿಗೆ.*ಕರೆ/i,
-    /ಸಹಾಯ/i,
-    // Malayalam
-    /മകനെ.*വിളിക്കൂ/i,
-    /സഹായം/i,
-    // Spanish
-    /llamar.*hijo/i,
-    /emergencia/i,
-    /socorro/i,
-    /ayuda/i,
-  ],
-  CALL_DOCTOR: [
-    /doctor/i,
-    /clinic/i,
-    /hospital/i,
-    /dr\./i,
-    // Tamil
-    /டாக்டர்/i,
-    /மருத்துவர்/i,
-    /ஆஸ்பத்திரி/i,
-    // Hindi
-    /डॉक्टर/i,
-    /हस्पताल/i,
-    // Telugu
-    /డాక్టర్/i,
-    // Kannada
-    /ವೈದ್ಯ/i,
-    // Malayalam
-    /ഡോക്ടർ/i,
-    // Spanish
-    /doctor/i,
-    /médico/i,
-  ],
-  READ_SCHEDULE: [
-    /what\s+(medicine|pill|tablet|routine|schedule)/i,
-    /read\s+(medicine|schedule)/i,
-    /tell\s+(medicine|schedule)/i,
-    /my pills/i,
-    /what to take/i,
-    // Tamil
-    /என்ன\s+(மருந்து|மாத்திரை)/i,
-    /பட்டியல்/i,
-    /இப்போ\s+என்ன/i,
-    // Hindi
-    /कौन\s+दवा/i,
-    /दवा\s+बताओ/i,
-    /क्या\s+खाना/i,
-    // Telugu
-    /ఏ\s+మందులు/i,
-    /ఏమి\s+వేసుకోవాలి/i,
-    // Kannada
-    /ಯಾವ.*ಔಷಧಿ/i,
-    // Malayalam
-    /ഏതൊക്കെ.*മരുന്ന്/i,
-    // Spanish
-    /qué.*medicina/i,
-    /leer.*medicamentos/i,
-  ],
-  HELP_QUERY: [/help/i, /உதவி/i, /सहायता/i, /సహాయం/i, /ayuda/i],
-  UNKNOWN: [],
-};
+/**
+ * Whole-word matcher for Latin-script words. Plain /took/ also matches "mistook",
+ * /done/ matches "abandoned" and /sos/ matches "Sosa". Unicode-aware so accented
+ * Spanish words ("tomé") are handled. Non-Latin scripts use plain patterns because
+ * \b does not work for them.
+ */
+const w = (word: string): RegExp =>
+  new RegExp(`(?<![\\p{L}\\p{N}])${word}(?![\\p{L}\\p{N}])`, 'iu');
 
+// Words that turn "I took my medicine" into "I did NOT take it". Checked only
+// together with a MARK_TAKEN match so a negation never logs a dose.
+const NEGATION_PATTERNS: RegExp[] = [
+  // English
+  w('not'),
+  /n't/i,
+  w('never'),
+  w('yet'),
+  w('no'),
+  w('without'),
+  // Spanish
+  w('nunca'),
+  w('todavía'),
+  w('aún'),
+  // Hindi
+  /नहीं/,
+  /अभी\s*नहीं/,
+  // Tamil
+  /இல்லை/,
+  /இல்ல/,
+  /இன்னும்/,
+  // Telugu
+  /లేదు/,
+  /ఇంకా/,
+  // Kannada
+  /ಇಲ್ಲ/,
+  /ಇನ್ನೂ/,
+  // Malayalam
+  /ഇല്ല/,
+  /ഇതുവരെ/,
+];
+
+// Distress words. A SHORT utterance containing one of these is treated as an
+// emergency; in a longer sentence ("can you help me find my glasses") it is not.
+const HELP_WORDS: RegExp[] = [
+  w('help'),
+  w('ayuda'),
+  w('socorro'),
+  /உதவி/,
+  /सहायता/,
+  /मदद/,
+  /సహాయం/,
+  /ಸಹಾಯ/,
+  /സഹായം/,
+];
+
+const EMERGENCY_PATTERNS: RegExp[] = [
+  w('emergency'),
+  w('sos'),
+  w('emergencia'),
+  /call.{0,15}\b(child|son|daughter|family|kid)\b/i,
+  // Tamil
+  /அவசரம்/,
+  // Stems (மகன / மகள / பிள்ள) so inflected forms like "மகனுக்கு" ("to the son") match.
+  /(மகன|மகள|பிள்ள).*(போன்|கூப்பிடு|அழை)/,
+  /(போன்|கூப்பிடு).*(மகன|மகள|பிள்ள)/,
+  /போன்.*பண்ணு/,
+  // Hindi
+  /इमरजेंसी/,
+  /बेटे.*कॉल/,
+  /फोन.*लगाओ/,
+  /कॉल.*करो/,
+  // Telugu
+  /(కొడుకు|కూతురు).*(ఫోన్|కాల్)/,
+  /ఫోన్.*చేయి/,
+  // Kannada
+  /ಮಗನಿಗೆ.*ಕರೆ/,
+  // Malayalam
+  /മകനെ.*വിളിക്കൂ/,
+  // Spanish
+  /llamar.{0,15}hijo/i,
+];
+
+const DOCTOR_PATTERNS: RegExp[] = [
+  w('doctor'),
+  w('clinic'),
+  w('hospital'),
+  /\bdr\./i,
+  w('médico'),
+  /டாக்டர்/,
+  /மருத்துவர்/,
+  /ஆஸ்பத்திரி/,
+  /डॉक्टर/,
+  /हस्पताल/,
+  /డాక్టర్/,
+  /ವೈದ್ಯ/,
+  /ഡോക്ടർ/,
+];
+
+const MARK_TAKEN_PATTERNS: RegExp[] = [
+  w('took'),
+  w('taken'),
+  w('done'),
+  /\bhad my\b/i,
+  w('finished'),
+  w('consumed'),
+  /\bmark\b.*\btaken\b/i,
+  // Tamil
+  /சாப்பிட்டேன்/,
+  /சாப்டேன்/,
+  /மாத்திரை.*போட்டேன்/,
+  /மருந்து.*எடுத்தேன்/,
+  /எடுத்தாச்சு/,
+  /முடிந்தது/,
+  // Hindi (the old /हो.*गया/ matched "मुझे बुखार हो गया" — "I got a fever")
+  /दवा.*ली/,
+  /खा.*ली/,
+  /गोली.*ली/,
+  /दवा.*हो\s*गया/,
+  /ले\s*लिया/,
+  // Telugu
+  /వేసుకున్నాను/,
+  /తీసుకున్నాను/,
+  /మందు.*వేశా/,
+  // Kannada
+  /ತೆಗೆದುಕೊಂಡೆ/,
+  /ತಗೊಂಡೆ/,
+  // Malayalam
+  /കഴിച്ചു/,
+  /എടുത്തു/,
+  // Spanish
+  w('tomé'),
+  w('tomada'),
+  w('listo'),
+];
+
+const READ_SCHEDULE_PATTERNS: RegExp[] = [
+  /\bwhat\s+(medicine|pill|tablet|routine|schedule)/i,
+  /\bread\s+(my\s+)?(medicine|schedule)/i,
+  /\btell\s+(me\s+)?(medicine|schedule)/i,
+  /\bmy pills\b/i,
+  /\bwhat to take\b/i,
+  /என்ன\s+(மருந்து|மாத்திரை)/,
+  /பட்டியல்/,
+  /இப்போ\s+என்ன/,
+  /कौन\s+दवा/,
+  /दवा\s+बताओ/,
+  /क्या\s+खाना/,
+  /ఏ\s+మందులు/,
+  /ఏమి\s+వేసుకోవాలి/,
+  /ಯಾವ.*ಔಷಧಿ/,
+  /ഏതൊക്കെ.*മരുന്ന്/,
+  /qué.*medicina/i,
+  /leer.*medicamentos/i,
+];
+
+const matchesAny = (patterns: RegExp[], text: string): boolean =>
+  patterns.some((p) => p.test(text));
+
+function detectSlot(lower: string): ParsedVoiceCommand['slotMentioned'] {
+  if (/morning|காலை|सुबह|ఉదయం|ಬೆಳಗ್ಗೆ|രാവിലെ|mañana/i.test(lower)) return 'morning';
+  if (/afternoon|noon|மதியம்|दोपहर|మధ్యాహ్నం|ಮಧ್ಯಾಹ್ನ|ഉച്ചയ്ക്ക്|tarde/i.test(lower)) return 'afternoon';
+  if (/evening|மாலை|शाम|సాయంత్రం|ಸಂಜೆ|വൈകുന്നേരം/i.test(lower)) return 'evening';
+  if (/night|இரவு|रात|రాత్రి|ರಾತ್ರಿ|രാത്രി|noche/i.test(lower)) return 'night';
+  return undefined;
+}
+
+/**
+ * Priority order is deliberate and safety-driven:
+ *   1. Emergency / short distress call  -> CALL_CHILD
+ *   2. Call the doctor                   -> CALL_DOCTOR
+ *   3. "I took my medicine"              -> MARK_TAKEN (unless negated)
+ *   4. Read schedule, then general help
+ * Previously MARK_TAKEN was checked first, so "emergency, I took too many pills"
+ * logged a dose and never placed a call, and "I have not taken my medicine"
+ * logged a dose as taken.
+ */
 export function parseVoiceTranscript(transcript: string): ParsedVoiceCommand {
-  const clean = transcript.trim();
+  const clean = (transcript ?? '').trim();
   const lower = clean.toLowerCase();
+  const slotMentioned = detectSlot(lower);
+  const wordCount = clean.split(/\s+/).filter(Boolean).length;
+  const make = (
+    intent: VoiceIntentType,
+    confidence: number,
+    extra: Partial<ParsedVoiceCommand> = {}
+  ): ParsedVoiceCommand => ({ intent, transcript: clean, confidence, slotMentioned, ...extra });
 
-  // Detect time slot mentioned
-  let slotMentioned: 'morning' | 'afternoon' | 'evening' | 'night' | undefined;
-  if (/morning|காலை|सुबह|ఉదయం|ಬೆಳಗ್ಗೆ|രാവിലെ|mañana/i.test(lower)) {
-    slotMentioned = 'morning';
-  } else if (/afternoon|noon|மதியம்|दोपहर|మధ్యాహ్నం|ಮಧ್ಯಾಹ್ನ|ഉച്ചയ്ക്ക്|tarde/i.test(lower)) {
-    slotMentioned = 'afternoon';
-  } else if (/evening|மாலை|शाम|సాయంత్రం|ಸಂಜೆ|വൈകുന്നേരം/i.test(lower)) {
-    slotMentioned = 'evening';
-  } else if (/night|இரவு|रात|రాత్రి|ರಾತ್ರಿ|രാത്രി|noche/i.test(lower)) {
-    slotMentioned = 'night';
+  if (!clean) return make('UNKNOWN', 0.6);
+
+  const isShortHelp = wordCount <= 3 && matchesAny(HELP_WORDS, lower);
+  if (matchesAny(EMERGENCY_PATTERNS, lower) || isShortHelp) {
+    return make('CALL_CHILD', 0.95);
   }
 
-  // Fast pattern match
-  for (const [intentKey, patterns] of Object.entries(INTENT_PATTERNS) as [
-    VoiceIntentType,
-    RegExp[]
-  ][]) {
-    if (intentKey === 'UNKNOWN') continue;
-    for (const pattern of patterns) {
-      if (pattern.test(lower)) {
-        return {
-          intent: intentKey,
-          transcript: clean,
-          confidence: 0.95,
-          slotMentioned,
-        };
-      }
+  if (matchesAny(DOCTOR_PATTERNS, lower)) return make('CALL_DOCTOR', 0.95);
+
+  if (matchesAny(MARK_TAKEN_PATTERNS, lower)) {
+    if (matchesAny(NEGATION_PATTERNS, lower)) {
+      // "I have not taken it" / "not yet": never log a dose.
+      return make('UNKNOWN', 0.6, { negated: true });
     }
+    return make('MARK_TAKEN', 0.95);
   }
 
-  return {
-    intent: 'UNKNOWN',
-    transcript: clean,
-    confidence: 0.6,
-    slotMentioned,
-  };
+  if (matchesAny(READ_SCHEDULE_PATTERNS, lower)) return make('READ_SCHEDULE', 0.95);
+  if (matchesAny(HELP_WORDS, lower)) return make('HELP_QUERY', 0.9);
+
+  return make('UNKNOWN', 0.6);
 }
 
 // Browser SpeechRecognition Type Declarations

@@ -43,6 +43,7 @@ import {
   RotateCcw,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
+import { getLocalDateString } from '@/lib/date';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
 import { speakText } from '@/services/voiceService';
 import { AddMedicationModal } from './AddMedicationModal';
@@ -74,7 +75,7 @@ interface EmailLogItem {
   recipient: string;
   subject: string;
   time: string;
-  status: 'delivered' | 'simulated';
+  status: 'delivered' | 'simulated' | 'failed';
 }
 
 export function CaretakerDashboard({
@@ -113,7 +114,7 @@ export function CaretakerDashboard({
       recipient: patient.emergencyContact.email,
       subject: '⏰ Upcoming Medication Reminder: Amlodipine for Amma',
       time: '07:45 AM',
-      status: 'delivered',
+      status: 'simulated', // sample row for the demo; no email was actually sent
     },
   ]);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -162,23 +163,16 @@ export function CaretakerDashboard({
     }
 
     try {
-      await sendEmailNotification({
+      const payload = {
         recipientEmail: patient.emergencyContact.email,
         recipientName: patient.emergencyContact.name,
         elderName: patient.name,
         type,
         medicationOrDetails: medOrDetails,
         scheduledTime: new Date().toLocaleTimeString(),
-      });
-
-      const { subject } = buildEmailTemplate({
-        recipientEmail: patient.emergencyContact.email,
-        recipientName: patient.emergencyContact.name,
-        elderName: patient.name,
-        type,
-        medicationOrDetails: medOrDetails,
-        scheduledTime: new Date().toLocaleTimeString(),
-      });
+      };
+      const result = await sendEmailNotification(payload);
+      const { subject } = buildEmailTemplate(payload);
 
       setEmailLogs((prev) => [
         {
@@ -187,12 +181,16 @@ export function CaretakerDashboard({
           recipient: patient.emergencyContact.email,
           subject,
           time: new Date().toLocaleTimeString(),
-          status: 'delivered',
+          status: result.success ? 'delivered' : 'failed',
         },
         ...prev,
       ]);
 
-      toast.success(`Dispatched ${type.replace('_', ' ')} email via Resend API to ${patient.emergencyContact.email}!`);
+      if (result.success) {
+        toast.success(`Sent ${type.replace('_', ' ')} email to ${patient.emergencyContact.email}.`);
+      } else {
+        toast.error(`Email NOT sent: ${result.error ?? 'unknown error'}`);
+      }
     } catch {
       toast.error('Error dispatching email');
     } finally {
@@ -201,7 +199,10 @@ export function CaretakerDashboard({
   };
 
   // Calculate adherence stats
-  const takenCount = adherence.filter((a) => a.status === 'taken').length;
+  // Only today's records: adherence is stored across days, so counting all of it
+  // produced "5 of 4 doses taken today" after the first day.
+  const todayStr = getLocalDateString();
+  const takenCount = adherence.filter((a) => a.status === 'taken' && a.date === todayStr).length;
   const adherenceRate = Math.min(100, Math.round((takenCount / Math.max(1, medications.length)) * 100));
 
   const handleReadDailyBrief = () => {
@@ -806,9 +807,9 @@ export function CaretakerDashboard({
                 </CardHeader>
                 <CardContent className='space-y-3 text-xs'>
                   {interactionAlerts.length === 0 ? (
-                    <div className='p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center gap-2'>
-                      <CheckCircle2 className='w-4 h-4 text-emerald-700 flex-shrink-0' />
-                      <span>All current {medications.length} medications are clinically safe with zero major contraindications.</span>
+                    <div className='p-4 rounded-xl bg-muted/50 border border-border text-muted-foreground flex items-center gap-2'>
+                      <AlertCircle className='w-4 h-4 flex-shrink-0' />
+                      <span>Safety check has not completed yet for the current {medications.length} medications.</span>
                     </div>
                   ) : (
                     interactionAlerts.map((alert, i) => (
@@ -817,6 +818,8 @@ export function CaretakerDashboard({
                         className={`p-3.5 rounded-xl border space-y-1.5 ${
                           alert.severity === 'danger'
                             ? 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
+                            : alert.severity === 'unknown'
+                            ? 'bg-muted/60 border-border text-foreground'
                             : 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-200'
                         }`}
                       >
@@ -1032,6 +1035,8 @@ export function CaretakerDashboard({
                           ? 'bg-rose-500/10 border-rose-500/30'
                           : alert.severity === 'warning'
                           ? 'bg-amber-500/10 border-amber-500/30'
+                          : alert.severity === 'unknown'
+                          ? 'bg-muted/60 border-border'
                           : 'bg-emerald-500/10 border-emerald-500/30'
                       }`}
                     >
@@ -1040,6 +1045,8 @@ export function CaretakerDashboard({
                           <AlertTriangle className='w-4 h-4 text-rose-600' />
                         ) : alert.severity === 'warning' ? (
                           <AlertTriangle className='w-4 h-4 text-amber-600' />
+                        ) : alert.severity === 'unknown' ? (
+                          <AlertCircle className='w-4 h-4 text-muted-foreground' />
                         ) : (
                           <CheckCircle2 className='w-4 h-4 text-emerald-700' />
                         )}
@@ -1048,6 +1055,8 @@ export function CaretakerDashboard({
                             ? 'High Contraindication Risk'
                             : alert.severity === 'warning'
                             ? 'Precaution Advisory'
+                            : alert.severity === 'unknown'
+                            ? 'Check Not Completed'
                             : 'Verified Compatible'}
                         </span>
                         {alert.medicationsInvolved && alert.medicationsInvolved.length > 0 && (
@@ -1163,8 +1172,20 @@ export function CaretakerDashboard({
                               To: {log.recipient} • {log.time}
                             </div>
                           </div>
-                          <Badge className='bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]'>
-                            Delivered
+                          <Badge
+                            className={
+                              log.status === 'failed'
+                                ? 'bg-rose-500/10 text-rose-700 border-rose-500/20 text-[10px]'
+                                : log.status === 'simulated'
+                                ? 'bg-muted text-muted-foreground border-border text-[10px]'
+                                : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]'
+                            }
+                          >
+                            {log.status === 'failed'
+                              ? 'Not sent'
+                              : log.status === 'simulated'
+                              ? 'Sample'
+                              : 'Delivered'}
                           </Badge>
                         </div>
                       ))}

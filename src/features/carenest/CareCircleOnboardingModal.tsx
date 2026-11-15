@@ -123,10 +123,10 @@ export function CareCircleOnboardingModal({
     initialProfile?.childrenContact?.name || 'Sanjai Gopal'
   );
   const [childEmail, setChildEmail] = useState(
-    initialProfile?.childrenContact?.email || 'sanjai23062008g@gmail.com'
+    initialProfile?.childrenContact?.email || ''
   );
   const [childPhone, setChildPhone] = useState(
-    initialProfile?.childrenContact?.phone || '+91 98401 23456'
+    initialProfile?.childrenContact?.phone || ''
   );
   const [doctorName, setDoctorName] = useState(
     initialProfile?.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'
@@ -135,7 +135,7 @@ export function CareCircleOnboardingModal({
     initialProfile?.doctorContact?.specialty || 'Senior Cardiologist'
   );
   const [doctorEmail, setDoctorEmail] = useState(
-    initialProfile?.doctorContact?.email || 'dr.ramanathan@apollohospitals.com'
+    initialProfile?.doctorContact?.email || ''
   );
   const [doctorPhone, setDoctorPhone] = useState(
     initialProfile?.doctorContact?.phone || '+91 44 2829 0200'
