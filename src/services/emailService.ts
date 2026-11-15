@@ -45,12 +45,13 @@ export function buildEmailTemplate(payload: EmailNotificationPayload): {
   const rawElder = payload.elderName ?? '';
   const rawDetails = payload.medicationOrDetails ?? '';
 
-  let subject = '';
+  // Every switch branch (including `default`) assigns these, so no initial value.
+  let subject: string;
   let badgeColor = '#0284c7';
-  let badgeText = 'HEALTHCARE REMINDER';
-  let mainHeadline = '';
-  let detailLabel = 'Details';
-  let actionAdvice = '';
+  let badgeText: string;
+  let mainHeadline: string;
+  let detailLabel: string;
+  let actionAdvice: string;
 
   switch (type) {
     case 'missed_medication':

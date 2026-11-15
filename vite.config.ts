@@ -29,7 +29,11 @@ export default defineConfig({
     unstubEnvs: true,
     browser: {
       enabled: true,
-      provider: playwright(),
+      provider: playwright(
+        process.env.CHROMIUM_PATH
+          ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } }
+          : undefined
+      ),
       instances: [{ browser: 'chromium' }],
     },
     coverage: {
