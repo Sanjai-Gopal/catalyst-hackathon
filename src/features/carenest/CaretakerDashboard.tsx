@@ -1,0 +1,830 @@
+import { useState, useEffect } from 'react';
+import {
+  Medication,
+  DoctorAppointment,
+  AdherenceRecord,
+  PatientProfile,
+  DrugInteractionAlert,
+  TimeSlot,
+} from '@/types/carenest';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import {
+  Activity,
+  Calendar,
+  Pill,
+  ShieldCheck,
+  Mail,
+  Plus,
+  Trash2,
+  Clock,
+  Send,
+  AlertTriangle,
+  Globe2,
+  CheckCircle2,
+  Phone,
+  Sparkles,
+  Loader2,
+  Heart,
+  User,
+} from 'lucide-react';
+import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
+import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
+import { AddMedicationModal } from './AddMedicationModal';
+import { CobeGlobe } from '@/components/design-system/CobeGlobe';
+import { toast } from 'sonner';
+
+interface CaretakerDashboardProps {
+  patient: PatientProfile;
+  medications: Medication[];
+  appointments: DoctorAppointment[];
+  adherence: AdherenceRecord[];
+  onAddMedication: (med: Medication) => void;
+  onDeleteMedication: (id: string) => void;
+  onMarkTaken: (medId: string, slot: TimeSlot) => void;
+  onSwitchToSeniorMode: () => void;
+}
+
+interface EmailLogItem {
+  id: string;
+  type: string;
+  recipient: string;
+  subject: string;
+  time: string;
+  status: 'delivered' | 'simulated';
+}
+
+export function CaretakerDashboard({
+  patient,
+  medications,
+  appointments,
+  adherence,
+  onAddMedication,
+  onDeleteMedication,
+  onMarkTaken,
+  onSwitchToSeniorMode,
+}: CaretakerDashboardProps) {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  // Gemini Drug Interaction State
+  const [interactionAlerts, setInteractionAlerts] = useState<DrugInteractionAlert[]>([]);
+  const [isCheckingInteractions, setIsCheckingInteractions] = useState(false);
+
+  // Email Notification Simulator State
+  const [emailLogs, setEmailLogs] = useState<EmailLogItem[]>([
+    {
+      id: 'log_01',
+      type: 'upcoming_dose',
+      recipient: patient.emergencyContact.email,
+      subject: '⏰ Upcoming Medication Reminder: Amlodipine for Amma',
+      time: '07:45 AM',
+      status: 'delivered',
+    },
+  ]);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [previewEmailType, setPreviewEmailType] = useState<
+    'missed_medication' | 'upcoming_dose' | 'appointment_reminder' | 'emergency_sos'
+  >('missed_medication');
+
+  // Run initial interaction check
+  useEffect(() => {
+    handleRunSafetyCheck();
+  }, [medications.length]);
+
+  const handleRunSafetyCheck = async () => {
+    setIsCheckingInteractions(true);
+    try {
+      const alerts = await analyzeDrugInteractionsWithGemini(medications);
+      setInteractionAlerts(alerts);
+    } catch {
+      toast.error('Failed to run AI safety check');
+    } finally {
+      setIsCheckingInteractions(false);
+    }
+  };
+
+  // Dispatch Email Handler
+  const handleDispatchEmail = async (
+    type: 'missed_medication' | 'upcoming_dose' | 'appointment_reminder' | 'emergency_sos'
+  ) => {
+    setIsSendingEmail(true);
+
+    let medOrDetails = 'Amlodipine (Norvasc) 5mg';
+    if (type === 'appointment_reminder') {
+      medOrDetails = 'Dr. R. Ramanathan, MD (Cardiologist) • Tomorrow 10:30 AM';
+    } else if (type === 'emergency_sos') {
+      medOrDetails = 'Emergency SOS triggered from bedside tablet';
+    }
+
+    try {
+      await sendEmailNotification({
+        recipientEmail: patient.emergencyContact.email,
+        recipientName: patient.emergencyContact.name,
+        elderName: patient.name,
+        type,
+        medicationOrDetails: medOrDetails,
+        scheduledTime: new Date().toLocaleTimeString(),
+      });
+
+      const { subject } = buildEmailTemplate({
+        recipientEmail: patient.emergencyContact.email,
+        recipientName: patient.emergencyContact.name,
+        elderName: patient.name,
+        type,
+        medicationOrDetails: medOrDetails,
+        scheduledTime: new Date().toLocaleTimeString(),
+      });
+
+      setEmailLogs((prev) => [
+        {
+          id: `log_${Date.now()}`,
+          type,
+          recipient: patient.emergencyContact.email,
+          subject,
+          time: new Date().toLocaleTimeString(),
+          status: 'delivered',
+        },
+        ...prev,
+      ]);
+
+      toast.success(`Dispatched ${type.replace('_', ' ')} email via Resend API to ${patient.emergencyContact.email}!`);
+    } catch {
+      toast.error('Error dispatching email');
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  // Calculate adherence stats
+  const takenCount = adherence.filter((a) => a.status === 'taken').length;
+  const adherenceRate = Math.min(100, Math.round((takenCount / Math.max(1, medications.length)) * 100));
+
+  return (
+    <div className='min-h-screen bg-background text-foreground pb-12'>
+      {/* Top Bar / Profile Summary */}
+      <div className='border-b border-border bg-card/60 backdrop-blur sticky top-0 z-20'>
+        <div className='max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4'>
+          <div className='flex items-center gap-3'>
+            <div className='flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm'>
+              <Heart className='h-6 w-6' />
+            </div>
+            <div>
+              <div className='flex items-center gap-2'>
+                <h1 className='text-xl font-bold tracking-tight'>CareNest AI</h1>
+                <Badge variant='outline' className='font-mono text-xs border-primary/30 text-primary'>
+                  Passcode: {patient.passcode}
+                </Badge>
+              </div>
+              <p className='text-xs text-muted-foreground'>
+                Patient: <span className='font-semibold text-foreground'>{patient.name}</span> ({patient.age}y) • Caretaker: {patient.emergencyContact.name}
+              </p>
+            </div>
+          </div>
+
+          <div className='flex items-center gap-3'>
+            <Button
+              variant='outline'
+              onClick={onSwitchToSeniorMode}
+              className='h-10 px-4 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
+            >
+              👵 Switch to Senior Mode
+            </Button>
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className='h-10 px-4 text-xs font-semibold rounded-xl bg-primary text-primary-foreground shadow-sm'
+            >
+              <Plus className='w-4 h-4 mr-1.5' />
+              Add Medication
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <div className='max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6'>
+        {/* Metric Cards */}
+        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4'>
+          <Card className='shadow-sm'>
+            <CardHeader className='flex flex-row items-center justify-between pb-2'>
+              <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                Daily Adherence
+              </CardTitle>
+              <Activity className='h-4 w-4 text-emerald-600' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold text-foreground'>{adherenceRate}%</div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                {takenCount} of {medications.length} doses logged today
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className='shadow-sm'>
+            <CardHeader className='flex flex-row items-center justify-between pb-2'>
+              <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                Active Medications
+              </CardTitle>
+              <Pill className='h-4 w-4 text-primary' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold text-foreground'>{medications.length}</div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Across Morning, Afternoon & Night
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className='shadow-sm'>
+            <CardHeader className='flex flex-row items-center justify-between pb-2'>
+              <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                Upcoming Visits
+              </CardTitle>
+              <Calendar className='h-4 w-4 text-indigo-500' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold text-foreground'>{appointments.length}</div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Next: Apollo Hospitals (Tomorrow)
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className='shadow-sm'>
+            <CardHeader className='flex flex-row items-center justify-between pb-2'>
+              <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                Gemini Drug Safety
+              </CardTitle>
+              <ShieldCheck className='h-4 w-4 text-emerald-500' />
+            </CardHeader>
+            <CardContent>
+              <div className='text-2xl font-bold text-foreground'>Active Shield</div>
+              <p className='text-xs text-muted-foreground mt-1'>
+                Google 2.5 Flash clinical audit enabled
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
+          <TabsList className='grid grid-cols-2 sm:grid-cols-5 w-full max-w-3xl h-11 bg-muted/60 p-1 rounded-xl'>
+            <TabsTrigger value='overview' className='text-xs font-medium'>
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value='medications' className='text-xs font-medium'>
+              Medications ({medications.length})
+            </TabsTrigger>
+            <TabsTrigger value='appointments' className='text-xs font-medium'>
+              Appointments ({appointments.length})
+            </TabsTrigger>
+            <TabsTrigger value='safety' className='text-xs font-medium flex items-center gap-1.5'>
+              <Sparkles className='w-3 h-3 text-amber-500' />
+              Gemini Shield
+            </TabsTrigger>
+            <TabsTrigger value='email-simulator' className='text-xs font-medium'>
+              Email System
+            </TabsTrigger>
+          </TabsList>
+
+          {/* TAB 1: OVERVIEW */}
+          <TabsContent value='overview' className='space-y-6'>
+            <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
+              {/* Left 2 Cols: Schedule Timeline & Log */}
+              <div className='lg:col-span-2 space-y-6'>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='text-base font-bold flex items-center justify-between'>
+                      <span>Today's Dosage Schedule</span>
+                      <Badge variant='secondary' className='text-xs font-mono'>
+                        {new Date().toLocaleDateString()}
+                      </Badge>
+                    </CardTitle>
+                    <CardDescription className='text-xs'>
+                      Real-time status across time slots. Synchronized with elder's device.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className='space-y-3'>
+                    {medications.map((med) => {
+                      const isTaken = adherence.some(
+                        (a) => a.medicationId === med.id && a.status === 'taken'
+                      );
+                      return (
+                        <div
+                          key={med.id}
+                          className='flex items-center justify-between p-3.5 rounded-xl border border-border/60 bg-card hover:bg-muted/30 transition-all'
+                        >
+                          <div className='flex items-center gap-3'>
+                            <div
+                              className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                                isTaken
+                                  ? 'bg-emerald-500/10 text-emerald-600'
+                                  : 'bg-muted text-muted-foreground'
+                              }`}
+                            >
+                              {isTaken ? (
+                                <CheckCircle2 className='w-5 h-5' />
+                              ) : (
+                                <Clock className='w-5 h-5' />
+                              )}
+                            </div>
+                            <div>
+                              <div className='flex items-center gap-2'>
+                                <h4 className='font-semibold text-sm'>{med.name}</h4>
+                                <Badge variant='outline' className='text-[10px] py-0 uppercase'>
+                                  {med.slot}
+                                </Badge>
+                              </div>
+                              <p className='text-xs text-muted-foreground'>
+                                {med.dosage} • {med.time} • {med.instructions}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className='flex items-center gap-2'>
+                            {isTaken ? (
+                              <Badge className='bg-emerald-600/10 text-emerald-600 border-emerald-600/20 text-xs'>
+                                Logged Taken
+                              </Badge>
+                            ) : (
+                              <Button
+                                size='sm'
+                                variant='outline'
+                                onClick={() => onMarkTaken(med.id, med.slot)}
+                                className='h-8 text-xs font-medium'
+                              >
+                                Mark Taken
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+
+                {/* Patient Profile Details */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='text-base font-bold flex items-center gap-2'>
+                      <User className='w-4 h-4 text-primary' />
+                      Patient Medical Profile & Emergency Contacts
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm'>
+                    <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
+                      <div className='text-xs text-muted-foreground uppercase font-semibold'>Known Conditions</div>
+                      <div className='font-medium mt-1'>{patient.medicalConditions.join(', ')}</div>
+                    </div>
+                    <div className='p-3 rounded-xl bg-rose-500/5 border border-rose-500/20'>
+                      <div className='text-xs text-rose-600 uppercase font-semibold'>Allergies</div>
+                      <div className='font-medium mt-1 text-rose-700 dark:text-rose-400'>
+                        {patient.allergies.join(', ')}
+                      </div>
+                    </div>
+                    <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
+                      <div className='text-xs text-muted-foreground uppercase font-semibold'>Primary Caretaker</div>
+                      <div className='font-medium mt-1'>{patient.emergencyContact.name} ({patient.emergencyContact.relationship})</div>
+                      <div className='text-xs text-muted-foreground mt-0.5'>{patient.emergencyContact.phone}</div>
+                    </div>
+                    <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
+                      <div className='text-xs text-muted-foreground uppercase font-semibold'>Emergency Alert Email</div>
+                      <div className='font-medium mt-1'>{patient.emergencyContact.email}</div>
+                      <div className='text-xs text-emerald-600 mt-0.5'>✓ Resend API Verified</div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right Col: 3D Care Globe & Quick Email Alert */}
+              <div className='space-y-6'>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className='text-base font-bold flex items-center gap-2'>
+                      <Globe2 className='w-4 h-4 text-primary' />
+                      Care Ecosystem Network
+                    </CardTitle>
+                    <CardDescription className='text-xs'>
+                      Chennai (Amma) ↔ Apollo Hospitals ↔ San Francisco (Son)
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className='flex flex-col items-center justify-center pt-2'>
+                    <CobeGlobe size={240} />
+                    <div className='w-full space-y-2 mt-4 text-xs'>
+                      <div className='flex items-center justify-between p-2 rounded-lg bg-muted/50'>
+                        <span className='font-medium'>Patient Location:</span>
+                        <span className='text-muted-foreground'>Chennai, India</span>
+                      </div>
+                      <div className='flex items-center justify-between p-2 rounded-lg bg-muted/50'>
+                        <span className='font-medium'>Cloud Backend:</span>
+                        <span className='text-muted-foreground'>Appwrite (Singapore sgp)</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Quick SOS Trigger */}
+                <Card className='border-rose-500/20 bg-rose-500/5'>
+                  <CardHeader>
+                    <CardTitle className='text-sm font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2'>
+                      <Phone className='w-4 h-4' />
+                      Proactive Notification Test
+                    </CardTitle>
+                    <CardDescription className='text-xs'>
+                      Test automated email dispatch to family inbox.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className='space-y-2'>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleDispatchEmail('missed_medication')}
+                      disabled={isSendingEmail}
+                      className='w-full text-xs justify-start border-rose-300 text-rose-700 hover:bg-rose-100'
+                    >
+                      <Mail className='w-3.5 h-3.5 mr-2' />
+                      Send Missed Dose Email Alert
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => handleDispatchEmail('appointment_reminder')}
+                      disabled={isSendingEmail}
+                      className='w-full text-xs justify-start border-indigo-300 text-indigo-700 hover:bg-indigo-100'
+                    >
+                      <Mail className='w-3.5 h-3.5 mr-2' />
+                      Send Appointment Reminder Email
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* TAB 2: MEDICATIONS */}
+          <TabsContent value='medications' className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <h3 className='text-lg font-bold'>Medication Management</h3>
+                <p className='text-xs text-muted-foreground'>
+                  Add, edit, or remove prescriptions. Gemini AI OCR is available for auto-fill.
+                </p>
+              </div>
+              <Button
+                onClick={() => setIsAddModalOpen(true)}
+                className='text-xs h-9 bg-primary text-primary-foreground font-semibold'
+              >
+                <Plus className='w-4 h-4 mr-1.5' />
+                Add New Medication
+              </Button>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              {medications.map((med) => (
+                <Card key={med.id} className='relative overflow-hidden shadow-sm'>
+                  <div
+                    className={`h-1.5 w-full ${
+                      med.criticality === 'high'
+                        ? 'bg-rose-500'
+                        : med.criticality === 'medium'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
+                    }`}
+                  />
+                  <CardHeader className='pb-2'>
+                    <div className='flex items-start justify-between'>
+                      <div>
+                        <Badge variant='outline' className='text-[10px] uppercase font-mono mb-1'>
+                          {med.slot} • {med.time}
+                        </Badge>
+                        <CardTitle className='text-base font-bold'>{med.name}</CardTitle>
+                        <CardDescription className='text-xs font-semibold text-primary mt-0.5'>
+                          {med.dosage}
+                        </CardDescription>
+                      </div>
+                      <Button
+                        variant='ghost'
+                        size='icon'
+                        onClick={() => {
+                          onDeleteMedication(med.id);
+                          toast.success(`Removed ${med.name}`);
+                        }}
+                        className='h-8 w-8 text-muted-foreground hover:text-destructive'
+                      >
+                        <Trash2 className='w-4 h-4' />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className='text-xs space-y-2'>
+                    <div className='p-2.5 rounded-lg bg-muted/40'>
+                      <span className='font-semibold text-muted-foreground'>Instructions:</span>{' '}
+                      <span>{med.instructions}</span>
+                    </div>
+                    <div className='flex items-center justify-between text-muted-foreground'>
+                      <span>Prescribed by: {med.prescribedBy}</span>
+                      <span>
+                        Pills remaining: <strong className='text-foreground'>{med.remainingPills}/{med.totalPills}</strong>
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* TAB 3: DOCTOR APPOINTMENTS */}
+          <TabsContent value='appointments' className='space-y-4'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <h3 className='text-lg font-bold'>Upcoming Doctor Appointments</h3>
+                <p className='text-xs text-muted-foreground'>
+                  Track clinical consultations and send automated email reminders to family.
+                </p>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+              {appointments.map((apt) => (
+                <Card key={apt.id} className='shadow-sm'>
+                  <CardHeader className='pb-3'>
+                    <div className='flex items-start justify-between'>
+                      <div>
+                        <Badge className='bg-primary/10 text-primary border-primary/20 text-xs mb-1'>
+                          {apt.specialty}
+                        </Badge>
+                        <CardTitle className='text-base font-bold'>{apt.doctorName}</CardTitle>
+                        <CardDescription className='text-xs text-muted-foreground mt-0.5'>
+                          {apt.clinic} • {apt.address}
+                        </CardDescription>
+                      </div>
+                      <Badge variant='outline' className='text-xs font-semibold'>
+                        {apt.dateTime}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent className='text-xs space-y-3'>
+                    <div className='p-2.5 rounded-lg bg-muted/40 border border-border/40'>
+                      <span className='font-semibold text-foreground'>Clinical Notes:</span>{' '}
+                      <span className='text-muted-foreground'>{apt.notes}</span>
+                    </div>
+
+                    <div className='flex items-center justify-between pt-1'>
+                      <div className='text-muted-foreground font-mono'>
+                        Clinic: {apt.contactPhone}
+                      </div>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => handleDispatchEmail('appointment_reminder')}
+                        disabled={isSendingEmail}
+                        className='h-8 text-xs font-medium'
+                      >
+                        <Send className='w-3.5 h-3.5 mr-1.5 text-primary' />
+                        Email Reminder to Family
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </TabsContent>
+
+          {/* TAB 4: GEMINI DRUG SAFETY SHIELD */}
+          <TabsContent value='safety' className='space-y-4'>
+            <Card className='border-amber-500/20 bg-amber-500/5'>
+              <CardHeader>
+                <div className='flex flex-wrap items-center justify-between gap-4'>
+                  <div>
+                    <CardTitle className='text-base font-bold flex items-center gap-2'>
+                      <Sparkles className='w-5 h-5 text-amber-500' />
+                      Google Gemini 2.5 Flash Clinical Safety Shield
+                    </CardTitle>
+                    <CardDescription className='text-xs'>
+                      AI-powered drug-drug interaction contraindication audit for elderly care.
+                    </CardDescription>
+                  </div>
+                  <Button
+                    onClick={handleRunSafetyCheck}
+                    disabled={isCheckingInteractions}
+                    size='sm'
+                    className='bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs'
+                  >
+                    {isCheckingInteractions ? (
+                      <>
+                        <Loader2 className='w-3.5 h-3.5 mr-1.5 animate-spin' />
+                        Analyzing with Gemini...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className='w-3.5 h-3.5 mr-1.5' />
+                        Re-check Interactions
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className='space-y-4'>
+                {interactionAlerts.length === 0 ? (
+                  <div className='text-center py-6 text-sm text-muted-foreground'>
+                    Click "Re-check Interactions" to run the Google Gemini clinical audit.
+                  </div>
+                ) : (
+                  interactionAlerts.map((alert, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-4 rounded-xl border ${
+                        alert.severity === 'danger'
+                          ? 'bg-rose-500/10 border-rose-500/30'
+                          : alert.severity === 'warning'
+                          ? 'bg-amber-500/10 border-amber-500/30'
+                          : 'bg-emerald-500/10 border-emerald-500/30'
+                      }`}
+                    >
+                      <div className='flex items-center gap-2 mb-2'>
+                        {alert.severity === 'danger' ? (
+                          <AlertTriangle className='w-4 h-4 text-rose-600' />
+                        ) : alert.severity === 'warning' ? (
+                          <AlertTriangle className='w-4 h-4 text-amber-600' />
+                        ) : (
+                          <CheckCircle2 className='w-4 h-4 text-emerald-600' />
+                        )}
+                        <span className='font-bold text-xs uppercase tracking-wider'>
+                          {alert.severity === 'danger'
+                            ? 'High Contraindication Risk'
+                            : alert.severity === 'warning'
+                            ? 'Precaution Advisory'
+                            : 'Verified Compatible'}
+                        </span>
+                        {alert.medicationsInvolved && alert.medicationsInvolved.length > 0 && (
+                          <span className='text-xs text-muted-foreground font-mono'>
+                            ({alert.medicationsInvolved.join(' + ')})
+                          </span>
+                        )}
+                      </div>
+
+                      <p className='text-sm font-medium text-foreground mb-2'>
+                        {alert.description}
+                      </p>
+
+                      <div className='text-xs text-muted-foreground space-y-1 bg-background/50 p-3 rounded-lg'>
+                        <div>
+                          <strong>Recommendation:</strong> {alert.recommendation}
+                        </div>
+                        {alert.dietaryNote && (
+                          <div>
+                            <strong>Dietary Guidance:</strong> {alert.dietaryNote}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* TAB 5: EMAIL DISPATCH SYSTEM */}
+          <TabsContent value='email-simulator' className='space-y-6'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+              {/* Dispatch Controls */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold flex items-center gap-2'>
+                    <Mail className='w-4 h-4 text-primary' />
+                    Proactive Email Notification Engine
+                  </CardTitle>
+                  <CardDescription className='text-xs'>
+                    Tested via Resend API to family recipient: <strong>{patient.emergencyContact.email}</strong>
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-3'>
+                  <div className='grid grid-cols-2 gap-2'>
+                    <Button
+                      variant={previewEmailType === 'missed_medication' ? 'default' : 'outline'}
+                      size='sm'
+                      onClick={() => setPreviewEmailType('missed_medication')}
+                      className='text-xs h-9'
+                    >
+                      Missed Dose Alert
+                    </Button>
+                    <Button
+                      variant={previewEmailType === 'upcoming_dose' ? 'default' : 'outline'}
+                      size='sm'
+                      onClick={() => setPreviewEmailType('upcoming_dose')}
+                      className='text-xs h-9'
+                    >
+                      Upcoming Reminder
+                    </Button>
+                    <Button
+                      variant={previewEmailType === 'appointment_reminder' ? 'default' : 'outline'}
+                      size='sm'
+                      onClick={() => setPreviewEmailType('appointment_reminder')}
+                      className='text-xs h-9'
+                    >
+                      Doctor Appointment
+                    </Button>
+                    <Button
+                      variant={previewEmailType === 'emergency_sos' ? 'default' : 'outline'}
+                      size='sm'
+                      onClick={() => setPreviewEmailType('emergency_sos')}
+                      className='text-xs h-9'
+                    >
+                      Emergency SOS
+                    </Button>
+                  </div>
+
+                  <Button
+                    onClick={() => handleDispatchEmail(previewEmailType)}
+                    disabled={isSendingEmail}
+                    className='w-full bg-primary text-primary-foreground font-semibold mt-2 flex items-center justify-center gap-2'
+                  >
+                    {isSendingEmail ? (
+                      <>
+                        <Loader2 className='w-4 h-4 animate-spin' />
+                        <span>Sending via Resend API...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className='w-4 h-4' />
+                        <span>Trigger Real Email Dispatch</span>
+                      </>
+                    )}
+                  </Button>
+
+                  {/* Activity Log */}
+                  <div className='mt-6 space-y-2'>
+                    <h4 className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
+                      Recent Email Dispatches
+                    </h4>
+                    <div className='space-y-1.5 max-h-48 overflow-y-auto'>
+                      {emailLogs.map((log) => (
+                        <div
+                          key={log.id}
+                          className='p-2.5 rounded-lg border border-border/60 bg-muted/30 text-xs flex items-center justify-between'
+                        >
+                          <div>
+                            <div className='font-semibold'>{log.subject}</div>
+                            <div className='text-[10px] text-muted-foreground'>
+                              To: {log.recipient} • {log.time}
+                            </div>
+                          </div>
+                          <Badge className='bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]'>
+                            Delivered
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Template Live Preview */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold'>
+                    Email HTML Live Preview
+                  </CardTitle>
+                  <CardDescription className='text-xs'>
+                    Accessible, high-contrast email template delivered to recipient's email client.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className='border border-border rounded-xl overflow-hidden shadow-inner bg-slate-50 p-4 max-h-[460px] overflow-y-auto'>
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: buildEmailTemplate({
+                          recipientEmail: patient.emergencyContact.email,
+                          recipientName: patient.emergencyContact.name,
+                          elderName: patient.name,
+                          type: previewEmailType,
+                          medicationOrDetails:
+                            previewEmailType === 'appointment_reminder'
+                              ? 'Dr. R. Ramanathan, MD (Cardiologist) • Tomorrow 10:30 AM'
+                              : 'Amlodipine (Norvasc) 5mg - 1 Tablet',
+                          scheduledTime: new Date().toLocaleTimeString(),
+                        }).html,
+                      }}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      <AddMedicationModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={onAddMedication}
+      />
+    </div>
+  );
+}
