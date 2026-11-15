@@ -4,6 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Sun,
   CloudSun,
   Sunset,
@@ -17,11 +24,37 @@ import {
   Heart,
   VolumeX,
   Users,
+  MessageSquare,
+  ShieldAlert,
+  Stethoscope,
 } from 'lucide-react';
 import { speakText, stopSpeaking } from '@/services/voiceService';
 import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare';
 import { sendEmailNotification } from '@/services/emailService';
 import { toast } from 'sonner';
+
+function triggerPhoneCall(phoneNumber: string) {
+  const cleanPhone = phoneNumber.replace(/[^0-9+]/g, '');
+  if (!cleanPhone) return;
+
+  if (typeof window !== 'undefined') {
+    const isTest =
+      (window as unknown as { __vitest_browser__?: boolean }).__vitest_browser__ ||
+      window.location.pathname.includes('__vitest__');
+    if (!isTest) {
+      try {
+        const link = document.createElement('a');
+        link.href = `tel:${cleanPhone}`;
+        link.setAttribute('rel', 'noopener noreferrer');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch {
+        window.location.href = `tel:${cleanPhone}`;
+      }
+    }
+  }
+}
 
 interface SeniorModeViewProps {
   patient?: PatientProfile;
@@ -45,6 +78,7 @@ export function SeniorModeView({
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot>('morning');
   const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
   const [isEmergencyTriggered, setIsEmergencyTriggered] = useState(false);
+  const [isCallingDialogOpen, setIsCallingDialogOpen] = useState(false);
 
   const activeHonorific =
     patient?.honorific === 'Custom'
@@ -59,6 +93,19 @@ export function SeniorModeView({
       : activeHonorific === 'Grandma'
       ? '👵'
       : '👴';
+
+  const activeChildContact = patient?.childrenContact || {
+    name: 'Sanjai Gopal',
+    relationship: 'Son & Primary Caregiver',
+    email: 'sanjai23062008g@gmail.com',
+    phone: '+91 98401 23456',
+  };
+
+  const cleanChildPhone = activeChildContact.phone.replace(/[^0-9+]/g, '');
+  const waChildPhone = activeChildContact.phone.replace(/[^0-9]/g, '');
+  const cleanDoctorPhone = (
+    patient?.doctorContact?.phone || '+91 44 2829 0200'
+  ).replace(/[^0-9+]/g, '');
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -107,38 +154,38 @@ export function SeniorModeView({
 
   const handleTriggerSOS = async () => {
     setIsEmergencyTriggered(true);
-    const childContact = patient?.childrenContact || {
-      name: 'Sanjai Gopal',
-      email: 'sanjai23062008g@gmail.com',
-      phone: '+91 98401 23456',
-    };
+    setIsCallingDialogOpen(true);
 
-    toast.error(`Emergency SOS Dispatched to ${childContact.name} & Doctor!`, {
+    // 1. Immediately initiate native phone call to children
+    triggerPhoneCall(activeChildContact.phone);
+
+    toast.error(`Calling ${activeChildContact.name} (${activeChildContact.phone}) • SOS Dispatched!`, {
       duration: 6000,
     });
 
+    // 2. Clear, reassuring voice audio
     speakText(
-      `Emergency assistance alert has been sent to your children and doctor. Help is on the way, ${activeHonorific}.`
+      `Calling your child ${activeChildContact.name} now at ${activeChildContact.phone}. Emergency alerts sent to family and doctor. Help is on the way, ${activeHonorific}.`
     );
 
-    // Send email to children
+    // 3. Dispatch high-priority emergency email to children
     await sendEmailNotification({
-      recipientEmail: childContact.email,
-      recipientName: childContact.name,
+      recipientEmail: activeChildContact.email,
+      recipientName: activeChildContact.name,
       elderName: `${activeHonorific} (${patient?.name || patientName})`,
       type: 'emergency_sos',
-      medicationOrDetails: `Immediate Care Assistance Requested by ${activeHonorific} from Senior Mode`,
+      medicationOrDetails: `Immediate Emergency Call & Care Assistance Requested by ${activeHonorific} to ${activeChildContact.name} (${activeChildContact.phone})`,
       scheduledTime: new Date().toLocaleTimeString(),
     });
 
-    // Send email to doctor if available
+    // 4. Send email to doctor if available
     if (patient?.doctorContact?.email) {
       await sendEmailNotification({
         recipientEmail: patient.doctorContact.email,
         recipientName: patient.doctorContact.doctorName,
         elderName: `${activeHonorific} (${patient?.name || patientName})`,
         type: 'emergency_sos',
-        medicationOrDetails: `Clinical SOS Notification: ${activeHonorific} triggered assistance alert.`,
+        medicationOrDetails: `Clinical SOS Notification: ${activeHonorific} triggered emergency call to ${activeChildContact.name}.`,
         scheduledTime: new Date().toLocaleTimeString(),
       });
     }
@@ -170,6 +217,16 @@ export function SeniorModeView({
         </div>
 
         <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+          {/* Quick Call Child Emergency Button */}
+          <Button
+            size='sm'
+            onClick={handleTriggerSOS}
+            className='h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 animate-pulse'
+          >
+            <PhoneCall className='w-4 h-4' />
+            <span>Call {activeChildContact.name.split(' ')[0]} (SOS)</span>
+          </Button>
+
           {onOpenOnboarding && (
             <Button
               variant='outline'
@@ -177,7 +234,7 @@ export function SeniorModeView({
               className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
             >
               <Users className='w-4 h-4 text-primary' />
-              <span>Care Circle Setup</span>
+              <span>Care Circle</span>
             </Button>
           )}
 
@@ -365,31 +422,142 @@ export function SeniorModeView({
       </div>
 
       {/* Emergency Assistance Footer */}
-      <div className='mt-10 p-6 rounded-3xl bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-200 shadow-sm'>
+      <div className='mt-10 p-6 rounded-3xl bg-gradient-to-r from-rose-50 to-orange-50 border-2 border-rose-300 shadow-md'>
         <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
           <div className='space-y-1 text-center md:text-left'>
-            <h3 className='text-xl font-bold text-rose-950 flex items-center justify-center md:justify-start gap-2'>
+            <div className='flex items-center justify-center md:justify-start gap-2 text-xs font-bold text-rose-700 uppercase tracking-wider'>
+              <span className='inline-block w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping' />
+              <span>Direct Phone Call to Children • Instant SOS</span>
+            </div>
+            <h3 className='text-2xl font-bold text-rose-950 flex items-center justify-center md:justify-start gap-2'>
               <PhoneCall className='w-6 h-6 text-rose-600' />
-              Emergency Assistance & 1-Tap SOS
+              Emergency Assistance for {activeHonorific}
             </h3>
-            <p className='text-sm text-rose-800'>
-              Feeling dizzy, unwell, or need immediate help? Tap below to alert your family immediately.
+            <p className='text-sm text-rose-800 max-w-xl'>
+              Feeling dizzy, unwell, or need immediate help? Pressing this will immediately <strong>call {activeChildContact.name} ({activeChildContact.phone})</strong> and send urgent alerts to your doctor.
             </p>
           </div>
 
           <Button
             size='lg'
             onClick={handleTriggerSOS}
-            className={`h-14 px-8 font-bold text-lg rounded-2xl shadow-lg transition-all ${
+            className={`h-16 px-8 font-extrabold text-lg rounded-2xl shadow-xl transition-all flex items-center gap-3 ${
               isEmergencyTriggered
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95'
+                : 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95 animate-pulse'
             }`}
           >
-            {isEmergencyTriggered ? '✓ Family Alert Dispatched' : '🚨 1-Tap Emergency SOS'}
+            <PhoneCall className='w-6 h-6' />
+            <span>
+              {isEmergencyTriggered
+                ? `✓ Calling ${activeChildContact.name.split(' ')[0]}`
+                : `🚨 Call ${activeChildContact.name.split(' ')[0]} Now`}
+            </span>
           </Button>
         </div>
       </div>
+
+      {/* Emergency Calling Dialog */}
+      <Dialog
+        open={isCallingDialogOpen}
+        onOpenChange={(open) => {
+          setIsCallingDialogOpen(open);
+          if (!open) {
+            stopSpeaking();
+          }
+        }}
+      >
+        <DialogContent className='sm:max-w-md bg-white border-2 border-rose-300 text-slate-900 rounded-3xl p-6 shadow-2xl'>
+          <DialogHeader>
+            <div className='flex items-center gap-3'>
+              <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-white animate-pulse shadow-md'>
+                <PhoneCall className='h-6 w-6' />
+              </div>
+              <div>
+                <DialogTitle className='text-xl font-bold text-rose-950 flex items-center gap-2'>
+                  <span>Calling {activeChildContact.name}</span>
+                </DialogTitle>
+                <DialogDescription className='text-xs text-rose-700 font-medium'>
+                  Emergency Phone Call Triggered • Caregiver Alert
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className='py-4 space-y-4 text-center'>
+            {/* Phone display */}
+            <div className='p-4 rounded-2xl bg-rose-50 border border-rose-200'>
+              <div className='text-xs font-semibold text-rose-800 uppercase tracking-wider mb-1'>
+                Dialing Children's Phone Number
+              </div>
+              <div className='text-2xl sm:text-3xl font-extrabold font-mono text-rose-950'>
+                {activeChildContact.phone}
+              </div>
+              <div className='text-xs text-rose-700 mt-1 font-medium'>
+                {activeChildContact.relationship || 'Son & Primary Caregiver'}
+              </div>
+            </div>
+
+            {/* Direct Calling Buttons */}
+            <div className='space-y-2.5'>
+              <a
+                href={`tel:${cleanChildPhone}`}
+                className='w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95'
+              >
+                <PhoneCall className='w-5 h-5' />
+                <span>📞 Call {activeChildContact.name} ({activeChildContact.phone})</span>
+              </a>
+
+              <a
+                href={`https://wa.me/${waChildPhone}?text=${encodeURIComponent(
+                  `EMERGENCY SOS: ${activeHonorific} (${patient?.name || patientName}) needs immediate assistance! Please check CareNest AI or call immediately.`
+                )}`}
+                target='_blank'
+                rel='noopener noreferrer'
+                className='w-full h-12 bg-green-700 hover:bg-green-800 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2'
+              >
+                <MessageSquare className='w-4 h-4' />
+                <span>💬 WhatsApp SOS to {activeChildContact.name}</span>
+              </a>
+
+              {patient?.doctorContact?.phone && (
+                <a
+                  href={`tel:${cleanDoctorPhone}`}
+                  className='w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs shadow-sm flex items-center justify-center gap-2'
+                >
+                  <Stethoscope className='w-4 h-4' />
+                  <span>Call Doctor: {patient.doctorContact.doctorName} ({patient.doctorContact.phone})</span>
+                </a>
+              )}
+
+              <a
+                href='tel:108'
+                className='w-full h-11 bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 rounded-xl font-semibold text-xs flex items-center justify-center gap-2'
+              >
+                <ShieldAlert className='w-4 h-4 text-rose-600' />
+                <span>Call Emergency Ambulance (108 / 911)</span>
+              </a>
+            </div>
+
+            <p className='text-xs text-muted-foreground pt-1'>
+              Automated high-priority emails have been dispatched to {activeChildContact.email}.
+            </p>
+          </div>
+
+          <div className='flex justify-center pt-2 border-t'>
+            <Button
+              variant='outline'
+              onClick={() => {
+                setIsCallingDialogOpen(false);
+                stopSpeaking();
+              }}
+              className='h-10 px-6 rounded-xl text-xs font-semibold'
+            >
+              Close / I am safe now
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

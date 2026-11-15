@@ -608,14 +608,23 @@ export function CaretakerDashboard({
                   <p className='text-muted-foreground'>
                     If {honorificLabel} triggers SOS from bedside tablet or caregiver detects an emergency:
                   </p>
-                  <Button
-                    size='sm'
-                    onClick={() => handleDispatchEmail('emergency_sos')}
-                    disabled={isSendingEmail}
-                    className='w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-10 shadow-md'
-                  >
-                    🚨 Broadcast Emergency SOS to Care Circle
-                  </Button>
+                  <div className='space-y-2'>
+                    <Button
+                      size='sm'
+                      onClick={() => handleDispatchEmail('emergency_sos')}
+                      disabled={isSendingEmail}
+                      className='w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-10 shadow-md'
+                    >
+                      🚨 Broadcast Emergency SOS to Care Circle
+                    </Button>
+                    <a
+                      href={`tel:${(patient.childrenContact?.phone || '+91 98401 23456').replace(/[^0-9+]/g, '')}`}
+                      className='w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm flex items-center justify-center gap-1.5'
+                    >
+                      <Phone className='w-3.5 h-3.5' />
+                      <span>📞 Call Child: {patient.childrenContact?.name || 'Sanjai Gopal'} ({patient.childrenContact?.phone || '+91 98401 23456'})</span>
+                    </a>
+                  </div>
                   <div className='text-[11px] text-muted-foreground text-center'>
                     Target: {patient.childrenContact?.email} & {patient.doctorContact?.email}
                   </div>
