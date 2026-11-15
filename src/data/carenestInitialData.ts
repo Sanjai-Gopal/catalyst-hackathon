@@ -1,4 +1,11 @@
-import { PatientProfile, Medication, DoctorAppointment, AdherenceRecord } from '../types/carenest';
+import {
+  PatientProfile,
+  Medication,
+  DoctorAppointment,
+  AdherenceRecord,
+  HealthVitalRecord,
+  LabReportRecord,
+} from '../types/carenest';
 
 export const INITIAL_PATIENT: PatientProfile = {
   id: 'pt_lakshmi_01',
@@ -131,5 +138,77 @@ export const INITIAL_ADHERENCE: AdherenceRecord[] = [
     status: 'taken',
     loggedAt: '08:35 AM',
     loggedBy: 'elder',
+  },
+];
+
+export const INITIAL_VITALS: HealthVitalRecord[] = [
+  {
+    id: 'vit_01',
+    vitalType: 'blood_pressure',
+    value: '122/78',
+    unit: 'mmHg',
+    status: 'normal',
+    loggedAt: 'Today, 08:15 AM',
+    notes: 'Resting morning measurement. Post-breakfast.',
+  },
+  {
+    id: 'vit_02',
+    vitalType: 'blood_glucose',
+    value: '108',
+    unit: 'mg/dL',
+    status: 'normal',
+    loggedAt: 'Today, 07:30 AM',
+    notes: 'Fasting blood sugar. Optimal glycemic range.',
+  },
+  {
+    id: 'vit_03',
+    vitalType: 'heart_rate',
+    value: '72',
+    unit: 'bpm',
+    status: 'normal',
+    loggedAt: 'Today, 08:15 AM',
+    notes: 'Regular sinus rhythm.',
+  },
+  {
+    id: 'vit_04',
+    vitalType: 'spo2',
+    value: '98',
+    unit: '%',
+    status: 'normal',
+    loggedAt: 'Today, 08:15 AM',
+    notes: 'Pulse oximetry reading on room air.',
+  },
+];
+
+export const INITIAL_LAB_REPORTS: LabReportRecord[] = [
+  {
+    id: 'lab_01',
+    testName: 'Comprehensive Metabolic & Lipid Panel',
+    category: 'Biochemistry',
+    date: 'Nov 10, 2026',
+    diagnosticCenter: 'Apollo Diagnostics Centre',
+    status: 'normal',
+    keyFinding: 'Total Cholesterol 178 mg/dL (Normal <200), LDL 94 mg/dL. Statins functioning well.',
+    doctorReviewed: true,
+  },
+  {
+    id: 'lab_02',
+    testName: 'HbA1c Glycated Hemoglobin',
+    category: 'Diabetes Care',
+    date: 'Nov 02, 2026',
+    diagnosticCenter: 'Dr. Mohan’s Diabetes Centre',
+    status: 'normal',
+    keyFinding: 'HbA1c 6.7% (Good control for geriatric diabetes; target <7.5%).',
+    doctorReviewed: true,
+  },
+  {
+    id: 'lab_03',
+    testName: '12-Lead Electrocardiogram (ECG)',
+    category: 'Cardiology',
+    date: 'Oct 24, 2026',
+    diagnosticCenter: 'Apollo Speciality Hospitals',
+    status: 'normal',
+    keyFinding: 'Normal sinus rhythm, no acute ischemic ST-T changes. Baseline healthy.',
+    doctorReviewed: true,
   },
 ];

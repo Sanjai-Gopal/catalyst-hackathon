@@ -27,6 +27,7 @@ import {
   MessageSquare,
   ShieldAlert,
   Stethoscope,
+  Video,
 } from 'lucide-react';
 import {
   speakText,
@@ -39,6 +40,7 @@ import { sendEmailNotification } from '@/services/emailService';
 import { useLanguage } from '@/context/language-context';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { VoiceAssistantWidget } from './VoiceAssistantWidget';
+import { TelehealthConsultationModal } from './TelehealthConsultationModal';
 import { toast } from 'sonner';
 
 function triggerPhoneCall(phoneNumber: string) {
@@ -87,6 +89,7 @@ export function SeniorModeView({
   const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
   const [isEmergencyTriggered, setIsEmergencyTriggered] = useState(false);
   const [isCallingDialogOpen, setIsCallingDialogOpen] = useState(false);
+  const [isDoctorVideoOpen, setIsDoctorVideoOpen] = useState(false);
 
   const { t, currentLanguage } = useLanguage();
 
@@ -275,6 +278,16 @@ export function SeniorModeView({
             <span>{t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}</span>
           </Button>
 
+          {/* Quick Doctor Video Teleconsultation */}
+          <Button
+            size='sm'
+            onClick={() => setIsDoctorVideoOpen(true)}
+            className='h-11 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5'
+          >
+            <Video className='w-4 h-4' />
+            <span>{currentLanguage === 'ta' ? 'டாக்டர் வீடியோ' : currentLanguage === 'hi' ? 'डॉक्टर वीडियो' : 'Doctor Video'}</span>
+          </Button>
+
           {onOpenOnboarding && (
             <Button
               variant='outline'
@@ -295,6 +308,31 @@ export function SeniorModeView({
             <span>{t('caregiverPortal')}</span>
           </Button>
         </div>
+      </div>
+
+      {/* Bedside Clinical Vitals Bar */}
+      <div className='my-4 px-4 py-2.5 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-wrap items-center justify-between text-xs text-[#5C554E] gap-2'>
+        <div className='flex items-center gap-4 flex-wrap'>
+          <span className='flex items-center gap-1.5 font-medium'>
+            <span className='h-2 w-2 rounded-full bg-emerald-500'></span>
+            <strong>BP:</strong> 122/78 mmHg
+          </span>
+          <span className='flex items-center gap-1.5 font-medium'>
+            <span className='h-2 w-2 rounded-full bg-amber-500'></span>
+            <strong>Blood Sugar:</strong> 108 mg/dL
+          </span>
+          <span className='flex items-center gap-1.5 font-medium'>
+            <span className='h-2 w-2 rounded-full bg-rose-500'></span>
+            <strong>Heart Rate:</strong> 72 bpm
+          </span>
+          <span className='flex items-center gap-1.5 font-medium'>
+            <span className='h-2 w-2 rounded-full bg-blue-500'></span>
+            <strong>SpO2:</strong> 98%
+          </span>
+        </div>
+        <span className='text-[11px] font-mono text-[#8C827A]'>
+          Live Clinical Telemetry Active ✓
+        </span>
       </div>
 
       {/* Voice Assistant - Instant Low-Latency Voice Interaction */}
@@ -632,6 +670,17 @@ export function SeniorModeView({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Doctor Video Teleconsultation Modal */}
+      <TelehealthConsultationModal
+        isOpen={isDoctorVideoOpen}
+        onClose={() => setIsDoctorVideoOpen(false)}
+        doctorName={patient?.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}
+        specialty={`${patient?.doctorContact?.specialty || 'Senior Cardiologist'} • ${patient?.doctorContact?.clinic || 'Apollo Speciality Hospitals'}`}
+        honorific={activeHonorific}
+        patientName={patientName}
+        language={currentLanguage}
+      />
     </div>
   );
 }

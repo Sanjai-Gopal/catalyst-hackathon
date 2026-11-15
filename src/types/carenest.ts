@@ -90,3 +90,24 @@ export interface EmailNotificationPayload {
   medicationOrDetails: string;
   scheduledTime: string;
 }
+
+export interface HealthVitalRecord {
+  id: string;
+  vitalType: 'blood_pressure' | 'blood_glucose' | 'heart_rate' | 'spo2' | 'temperature';
+  value: string;
+  unit: string;
+  status: 'normal' | 'elevated' | 'critical';
+  loggedAt: string;
+  notes?: string;
+}
+
+export interface LabReportRecord {
+  id: string;
+  testName: string;
+  category: string;
+  date: string;
+  diagnosticCenter: string;
+  status: 'normal' | 'borderline' | 'attention';
+  keyFinding: string;
+  doctorReviewed: boolean;
+}

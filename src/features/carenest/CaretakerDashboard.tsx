@@ -39,11 +39,16 @@ import {
   Stethoscope,
   AlertCircle,
   Volume2,
+  Video,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
 import { speakText } from '@/services/voiceService';
 import { AddMedicationModal } from './AddMedicationModal';
+import { VitalsTrackerWidget } from './VitalsTrackerWidget';
+import { TelehealthConsultationModal } from './TelehealthConsultationModal';
+import { PharmacyRefillDialog } from './PharmacyRefillDialog';
+import { LabReportsVault } from './LabReportsVault';
 import { CobeGlobe } from '@/components/design-system/CobeGlobe';
 import { useLanguage } from '@/context/language-context';
 import { LanguageSwitcher } from '@/components/language-switcher';
@@ -83,6 +88,8 @@ export function CaretakerDashboard({
 }: CaretakerDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isTelehealthOpen, setIsTelehealthOpen] = useState(false);
+  const [isRefillDialogOpen, setIsRefillDialogOpen] = useState(false);
 
   const { t, currentLanguage } = useLanguage();
 
@@ -683,6 +690,14 @@ export function CaretakerDashboard({
               <div className='flex items-center gap-2'>
                 <Button
                   size='sm'
+                  onClick={() => setIsTelehealthOpen(true)}
+                  className='text-xs h-9 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5'
+                >
+                  <Video className='w-3.5 h-3.5' />
+                  Launch TeleHealth Room
+                </Button>
+                <Button
+                  size='sm'
                   onClick={() => setIsAddModalOpen(true)}
                   className='text-xs h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold'
                 >
@@ -800,24 +815,38 @@ export function CaretakerDashboard({
                 </CardContent>
               </Card>
             </div>
+
+            {/* Clinical Telemetry & Diagnostics Vault */}
+            <VitalsTrackerWidget patientName={patient.name} honorific={honorificLabel} />
+            <LabReportsVault patientName={patient.name} honorific={honorificLabel} />
           </TabsContent>
 
           {/* TAB 2: MEDICATIONS */}
           <TabsContent value='medications' className='space-y-4'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-wrap items-center justify-between gap-3'>
               <div>
                 <h3 className='text-lg font-bold'>Medication Management</h3>
                 <p className='text-xs text-muted-foreground'>
                   Add, edit, or remove prescriptions. Gemini AI OCR is available for auto-fill.
                 </p>
               </div>
-              <Button
-                onClick={() => setIsAddModalOpen(true)}
-                className='text-xs h-9 bg-primary text-primary-foreground font-semibold'
-              >
-                <Plus className='w-4 h-4 mr-1.5' />
-                Add New Medication
-              </Button>
+              <div className='flex items-center gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => setIsRefillDialogOpen(true)}
+                  className='text-xs h-9 border-primary/30 text-primary hover:bg-primary/10 flex items-center gap-1.5'
+                >
+                  <Pill className='w-3.5 h-3.5' />
+                  Pill Stock &amp; Refills
+                </Button>
+                <Button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className='text-xs h-9 bg-primary text-primary-foreground'
+                >
+                  <Plus className='w-3.5 h-3.5 mr-1' />
+                  Add Medication
+                </Button>
+              </div>
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
@@ -1158,6 +1187,23 @@ export function CaretakerDashboard({
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={onAddMedication}
+      />
+
+      <TelehealthConsultationModal
+        isOpen={isTelehealthOpen}
+        onClose={() => setIsTelehealthOpen(false)}
+        doctorName={patient.doctorContact?.doctorName}
+        specialty={`${patient.doctorContact?.specialty} • ${patient.doctorContact?.clinic}`}
+        honorific={honorificLabel}
+        patientName={patient.name}
+        language={currentLanguage}
+      />
+
+      <PharmacyRefillDialog
+        isOpen={isRefillDialogOpen}
+        onClose={() => setIsRefillDialogOpen(false)}
+        medications={medications}
+        honorific={honorificLabel}
       />
     </div>
   );
