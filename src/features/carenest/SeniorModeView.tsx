@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Medication, AdherenceRecord, TimeSlot } from '@/types/carenest';
+import { Medication, AdherenceRecord, TimeSlot, PatientProfile } from '@/types/carenest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +16,7 @@ import {
   Sparkles,
   Heart,
   VolumeX,
+  Users,
 } from 'lucide-react';
 import { speakText, stopSpeaking } from '@/services/voiceService';
 import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare';
@@ -23,23 +24,41 @@ import { sendEmailNotification } from '@/services/emailService';
 import { toast } from 'sonner';
 
 interface SeniorModeViewProps {
-  patientName: string;
+  patient?: PatientProfile;
+  patientName?: string;
   medications: Medication[];
   adherence: AdherenceRecord[];
   onMarkTaken: (medicationId: string, slot: TimeSlot) => void;
   onOpenPasscodeModal: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 export function SeniorModeView({
-  patientName,
+  patient,
+  patientName = 'Lakshmi Narayanan',
   medications,
   adherence,
   onMarkTaken,
   onOpenPasscodeModal,
+  onOpenOnboarding,
 }: SeniorModeViewProps) {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot>('morning');
   const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
   const [isEmergencyTriggered, setIsEmergencyTriggered] = useState(false);
+
+  const activeHonorific =
+    patient?.honorific === 'Custom'
+      ? patient.customHonorific || 'Elder'
+      : patient?.honorific || 'Amma';
+
+  const honorificEmoji =
+    activeHonorific === 'Amma'
+      ? '🌸'
+      : activeHonorific === 'Appa'
+      ? '🌿'
+      : activeHonorific === 'Grandma'
+      ? '👵'
+      : '👴';
 
   const todayStr = new Date().toISOString().split('T')[0];
 
@@ -65,36 +84,64 @@ export function SeniorModeView({
     }
 
     setSpeakingMedId(med.id);
-    toast.info('Generating gentle voice guidance...', { duration: 2000 });
+    toast.info(`Generating gentle voice guidance for ${activeHonorific}...`, { duration: 2000 });
 
     try {
-      const guidance = await generateElderFriendlyExplanation(med.name, med.instructions);
+      const guidance = await generateElderFriendlyExplanation(
+        med.name,
+        med.instructions,
+        activeHonorific
+      );
       speakText(guidance, () => {
         setSpeakingMedId(null);
       });
     } catch {
-      speakText(`Amma, please take your ${med.name}. ${med.instructions}`, () => {
-        setSpeakingMedId(null);
-      });
+      speakText(
+        `${activeHonorific}, please take your ${med.name}. ${med.instructions}`,
+        () => {
+          setSpeakingMedId(null);
+        }
+      );
     }
   };
 
   const handleTriggerSOS = async () => {
     setIsEmergencyTriggered(true);
-    toast.error('Emergency SOS Dispatched to Family Caregiver!', {
+    const childContact = patient?.childrenContact || {
+      name: 'Sanjai Gopal',
+      email: 'sanjai23062008g@gmail.com',
+      phone: '+91 98401 23456',
+    };
+
+    toast.error(`Emergency SOS Dispatched to ${childContact.name} & Doctor!`, {
       duration: 6000,
     });
 
-    speakText('Emergency assistance alert has been sent to your son Sanjai. Help is on the way.');
+    speakText(
+      `Emergency assistance alert has been sent to your children and doctor. Help is on the way, ${activeHonorific}.`
+    );
 
+    // Send email to children
     await sendEmailNotification({
-      recipientEmail: 'sanjai23062008g@gmail.com',
-      recipientName: 'Sanjai Gopal',
-      elderName: patientName,
+      recipientEmail: childContact.email,
+      recipientName: childContact.name,
+      elderName: `${activeHonorific} (${patient?.name || patientName})`,
       type: 'emergency_sos',
-      medicationOrDetails: 'Immediate Care Assistance Requested from Senior Mode',
+      medicationOrDetails: `Immediate Care Assistance Requested by ${activeHonorific} from Senior Mode`,
       scheduledTime: new Date().toLocaleTimeString(),
     });
+
+    // Send email to doctor if available
+    if (patient?.doctorContact?.email) {
+      await sendEmailNotification({
+        recipientEmail: patient.doctorContact.email,
+        recipientName: patient.doctorContact.doctorName,
+        elderName: `${activeHonorific} (${patient?.name || patientName})`,
+        type: 'emergency_sos',
+        medicationOrDetails: `Clinical SOS Notification: ${activeHonorific} triggered assistance alert.`,
+        scheduledTime: new Date().toLocaleTimeString(),
+      });
+    }
   };
 
   return (
@@ -111,10 +158,10 @@ export function SeniorModeView({
             </span>
           </div>
           <h1 className='text-3xl md:text-4xl font-serif font-bold text-[#1E1B18]'>
-            Good Day, {patientName.split(' ')[0]}! 🌸
+            Good Day, {activeHonorific}! {honorificEmoji}
           </h1>
           <p className='text-base text-[#6E665E]'>
-            {new Date().toLocaleDateString('en-US', {
+            Caring for {activeHonorific} with love • {new Date().toLocaleDateString('en-US', {
               weekday: 'long',
               month: 'long',
               day: 'numeric',
@@ -122,11 +169,22 @@ export function SeniorModeView({
           </p>
         </div>
 
-        <div className='flex items-center gap-3'>
+        <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+          {onOpenOnboarding && (
+            <Button
+              variant='outline'
+              onClick={onOpenOnboarding}
+              className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
+            >
+              <Users className='w-4 h-4 text-primary' />
+              <span>Care Circle Setup</span>
+            </Button>
+          )}
+
           <Button
             variant='outline'
             onClick={onOpenPasscodeModal}
-            className='h-12 px-5 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl font-medium shadow-sm flex items-center gap-2'
+            className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
           >
             <Shield className='w-4 h-4 text-[#8C827A]' />
             <span>Caregiver Portal</span>
@@ -198,9 +256,9 @@ export function SeniorModeView({
         <div className='mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3 shadow-sm'>
           <Sparkles className='w-6 h-6 text-emerald-600 flex-shrink-0' />
           <div>
-            <h4 className='font-bold text-base'>Wonderful job! All {selectedSlot} medicines completed.</h4>
+            <h4 className='font-bold text-base'>Wonderful job, {activeHonorific}! All {selectedSlot} medicines completed.</h4>
             <p className='text-sm text-emerald-700'>
-              Your caregiver and family have been notified of your good health habits.
+              {patient?.childrenContact?.name || 'Your family'} and your doctor have been updated on your positive adherence.
             </p>
           </div>
         </div>

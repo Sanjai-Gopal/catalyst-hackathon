@@ -2,6 +2,10 @@ export type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'night';
 
 export type AdherenceStatus = 'taken' | 'skipped' | 'snoozed' | 'pending';
 
+export type ElderHonorific = 'Amma' | 'Appa' | 'Grandma' | 'Grandpa' | 'Custom';
+
+export type UserPersona = 'elder' | 'children' | 'doctor';
+
 export interface Medication {
   id: string;
   name: string;
@@ -42,17 +46,32 @@ export interface DoctorAppointment {
 export interface PatientProfile {
   id: string;
   name: string;
+  honorific: ElderHonorific;
+  customHonorific?: string;
   age: number;
   bloodGroup: string;
-  passcode: string; // 6-digit family access code, e.g. "CARE-8492"
+  passcode: string; // Family access code, e.g. "CARE-8492"
+  medicalConditions: string[];
+  allergies: string[];
+  childrenContact: {
+    name: string;
+    relationship: string;
+    phone: string;
+    email: string;
+  };
+  doctorContact: {
+    doctorName: string;
+    specialty: string;
+    clinic: string;
+    phone: string;
+    email: string;
+  };
   emergencyContact: {
     name: string;
     relationship: string;
     phone: string;
     email: string;
   };
-  allergies: string[];
-  medicalConditions: string[];
 }
 
 export interface DrugInteractionAlert {
@@ -67,7 +86,7 @@ export interface EmailNotificationPayload {
   recipientEmail: string;
   recipientName: string;
   elderName: string;
-  type: 'missed_medication' | 'upcoming_dose' | 'appointment_reminder' | 'emergency_sos';
+  type: 'missed_medication' | 'upcoming_dose' | 'appointment_reminder' | 'emergency_sos' | 'doctor_update';
   medicationOrDetails: string;
   scheduledTime: string;
 }

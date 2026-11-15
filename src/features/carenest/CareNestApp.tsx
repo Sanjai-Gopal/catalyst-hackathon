@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   PatientProfile,
   Medication,
@@ -15,17 +15,68 @@ import {
 import { SeniorModeView } from './SeniorModeView';
 import { CaretakerDashboard } from './CaretakerDashboard';
 import { PasscodeModal } from './PasscodeModal';
+import { CareCircleOnboardingModal } from './CareCircleOnboardingModal';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
 export function CareNestApp() {
-  const [patient] = useState<PatientProfile>(INITIAL_PATIENT);
-  const [medications, setMedications] = useState<Medication[]>(INITIAL_MEDICATIONS);
+  const [patient, setPatient] = useState<PatientProfile>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('carenest_patient_profile');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_PATIENT;
+  });
+
+  const [medications, setMedications] = useState<Medication[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('carenest_medications');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return INITIAL_MEDICATIONS;
+  });
+
   const [appointments] = useState<DoctorAppointment[]>(INITIAL_APPOINTMENTS);
   const [adherence, setAdherence] = useState<AdherenceRecord[]>(INITIAL_ADHERENCE);
 
   const [mode, setMode] = useState<'senior' | 'caretaker'>('senior');
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const shouldOnboard = localStorage.getItem('carenest_start_onboarding');
+      if (shouldOnboard === 'true') {
+        setIsOnboardingOpen(true);
+      }
+    }
+  }, []);
+
+  const handleOnboardingComplete = (
+    updatedProfile: PatientProfile,
+    updatedMeds: Medication[]
+  ) => {
+    setPatient(updatedProfile);
+    setMedications(updatedMeds);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('carenest_patient_profile', JSON.stringify(updatedProfile));
+      localStorage.setItem('carenest_medications', JSON.stringify(updatedMeds));
+      localStorage.setItem('carenest_onboarded', 'true');
+      localStorage.removeItem('carenest_start_onboarding');
+    }
+    setIsOnboardingOpen(false);
+    toast.success(
+      `Care Circle for ${updatedProfile.honorific || 'Amma'} successfully configured!`
+    );
+  };
 
   // Mark Medication Taken
   const handleMarkTaken = (medicationId: string, slot: TimeSlot) => {
@@ -68,28 +119,43 @@ export function CareNestApp() {
       )
     );
 
-    toast.success(`Logged dose for ${medName}! You are doing wonderful. 🌸`);
+    const honorific = patient.honorific || 'Amma';
+    toast.success(`Logged dose for ${medName}! ${honorific} is doing wonderful. 🌸`);
   };
 
   // Add Medication
   const handleAddMedication = (newMed: Medication) => {
-    setMedications((prev) => [newMed, ...prev]);
+    setMedications((prev) => {
+      const updated = [newMed, ...prev];
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('carenest_medications', JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   // Delete Medication
   const handleDeleteMedication = (id: string) => {
-    setMedications((prev) => prev.filter((m) => m.id !== id));
+    setMedications((prev) => {
+      const updated = prev.filter((m) => m.id !== id);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('carenest_medications', JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
   return (
     <div className='min-h-screen bg-background'>
       {mode === 'senior' ? (
         <SeniorModeView
+          patient={patient}
           patientName={patient.name}
           medications={medications}
           adherence={adherence}
           onMarkTaken={handleMarkTaken}
           onOpenPasscodeModal={() => setIsPasscodeModalOpen(true)}
+          onOpenOnboarding={() => setIsOnboardingOpen(true)}
         />
       ) : (
         <CaretakerDashboard
@@ -101,6 +167,7 @@ export function CareNestApp() {
           onDeleteMedication={handleDeleteMedication}
           onMarkTaken={handleMarkTaken}
           onSwitchToSeniorMode={() => setMode('senior')}
+          onOpenOnboarding={() => setIsOnboardingOpen(true)}
         />
       )}
 
@@ -113,6 +180,20 @@ export function CareNestApp() {
           setMode('caretaker');
           toast.success('Passcode verified! Caregiver Portal unlocked.');
         }}
+      />
+
+      {/* Care Circle Onboarding Wizard */}
+      <CareCircleOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => {
+          setIsOnboardingOpen(false);
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('carenest_start_onboarding');
+          }
+        }}
+        onComplete={handleOnboardingComplete}
+        initialProfile={patient}
+        initialMeds={medications}
       />
     </div>
   );

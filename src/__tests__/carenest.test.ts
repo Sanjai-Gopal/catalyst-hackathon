@@ -126,8 +126,11 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
   describe('5. Patient Data Integrity & Safety Profile', () => {
     it('should contain verified emergency contact and critical medical info', () => {
       expect(INITIAL_PATIENT.name).toBeDefined();
+      expect(INITIAL_PATIENT.honorific).toBe('Amma');
       expect(INITIAL_PATIENT.passcode).toBe('CARE-8492');
       expect(INITIAL_PATIENT.emergencyContact.email).toBe('sanjai23062008g@gmail.com');
+      expect(INITIAL_PATIENT.childrenContact?.email).toBe('sanjai23062008g@gmail.com');
+      expect(INITIAL_PATIENT.doctorContact?.email).toBe('dr.ramanathan@apollohospitals.com');
       expect(INITIAL_PATIENT.allergies).toContain('Penicillin');
       expect(INITIAL_PATIENT.medicalConditions).toContain('Hypertension');
     });

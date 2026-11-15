@@ -136,13 +136,14 @@ Return a strict JSON array of medications:
  */
 export async function generateElderFriendlyExplanation(
   medicationName: string,
-  instructions: string
+  instructions: string,
+  honorific: string = 'Amma'
 ): Promise<string> {
   if (!aiInstance) {
-    return `Please take your ${medicationName} with a glass of water as advised by your doctor.`;
+    return `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`;
   }
 
-  const prompt = `Convert the following medical instruction into an empathetic, warm, easy-to-understand 2-sentence audio reminder for an elderly grandmother named Amma. Keep it affectionate, crystal clear, and reassuring:
+  const prompt = `Convert the following medical instruction into an empathetic, warm, easy-to-understand 2-sentence audio reminder for an elderly elder affectionately addressed as "${honorific}". Keep it affectionate, crystal clear, respectful, and reassuring:
 Medication: ${medicationName}
 Medical Instructions: ${instructions}`;
 
@@ -155,8 +156,8 @@ Medical Instructions: ${instructions}`;
       },
     });
 
-    return response.text?.trim() || `Please remember to take your ${medicationName}.`;
+    return response.text?.trim() || `${honorific}, please remember to take your ${medicationName}.`;
   } catch {
-    return `Amma, please take your ${medicationName} now with some water.`;
+    return `${honorific}, please take your ${medicationName} now with some water.`;
   }
 }

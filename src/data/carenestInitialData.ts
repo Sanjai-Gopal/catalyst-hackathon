@@ -2,18 +2,33 @@ import { PatientProfile, Medication, DoctorAppointment, AdherenceRecord } from '
 
 export const INITIAL_PATIENT: PatientProfile = {
   id: 'pt_lakshmi_01',
-  name: 'Lakshmi Narayanan (Amma)',
+  name: 'Lakshmi Narayanan',
+  honorific: 'Amma',
+  customHonorific: 'Amma',
   age: 74,
   bloodGroup: 'B+ Positive',
   passcode: 'CARE-8492',
+  childrenContact: {
+    name: 'Sanjai Gopal',
+    relationship: 'Son & Primary Caregiver',
+    phone: '+91 98401 23456',
+    email: 'sanjai23062008g@gmail.com',
+  },
+  doctorContact: {
+    doctorName: 'Dr. R. Ramanathan, MD',
+    specialty: 'Senior Cardiologist',
+    clinic: 'Apollo Speciality Hospitals',
+    phone: '+91 44 2829 0200',
+    email: 'dr.ramanathan@apollohospitals.com',
+  },
   emergencyContact: {
     name: 'Sanjai Gopal',
-    relationship: 'Son & Primary Caretaker',
+    relationship: 'Son & Primary Caregiver',
     phone: '+91 98401 23456',
     email: 'sanjai23062008g@gmail.com',
   },
   allergies: ['Penicillin', 'Sulfa drugs'],
-  medicalConditions: ['Type 2 Diabetes', 'Hypertension', 'Mild Osteoarthritis'],
+  medicalConditions: ['Hypertension', 'Type 2 Diabetes', 'Mild Osteoarthritis'],
 };
 
 export const INITIAL_MEDICATIONS: Medication[] = [

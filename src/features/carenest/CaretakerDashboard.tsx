@@ -35,6 +35,9 @@ import {
   Loader2,
   Heart,
   User,
+  UserCheck,
+  Stethoscope,
+  AlertCircle,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
@@ -51,6 +54,7 @@ interface CaretakerDashboardProps {
   onDeleteMedication: (id: string) => void;
   onMarkTaken: (medId: string, slot: TimeSlot) => void;
   onSwitchToSeniorMode: () => void;
+  onOpenOnboarding?: () => void;
 }
 
 interface EmailLogItem {
@@ -71,9 +75,15 @@ export function CaretakerDashboard({
   onDeleteMedication,
   onMarkTaken,
   onSwitchToSeniorMode,
+  onOpenOnboarding,
 }: CaretakerDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const honorificLabel =
+    patient.honorific === 'Custom'
+      ? patient.customHonorific || 'Amma'
+      : patient.honorific || 'Amma';
 
   // Gemini Drug Interaction State
   const [interactionAlerts, setInteractionAlerts] = useState<DrugInteractionAlert[]>([]);
@@ -183,20 +193,33 @@ export function CaretakerDashboard({
                 <Badge variant='outline' className='font-mono text-xs border-primary/30 text-primary'>
                   Passcode: {patient.passcode}
                 </Badge>
+                <Badge className='text-[10px] bg-primary/10 text-primary border-primary/20'>
+                  Caring for {honorificLabel} 🌸
+                </Badge>
               </div>
               <p className='text-xs text-muted-foreground'>
-                Patient: <span className='font-semibold text-foreground'>{patient.name}</span> ({patient.age}y) • Caretaker: {patient.emergencyContact.name}
+                Elder: <span className='font-semibold text-foreground'>{honorificLabel} ({patient.name})</span> • Child: <span className='font-medium text-foreground'>{patient.childrenContact?.name || patient.emergencyContact.name}</span> • Doctor: <span className='font-medium text-foreground'>{patient.doctorContact?.doctorName || 'Dr. Ramanathan'}</span>
               </p>
             </div>
           </div>
 
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+            {onOpenOnboarding && (
+              <Button
+                variant='outline'
+                onClick={onOpenOnboarding}
+                className='h-10 px-3.5 text-xs font-semibold rounded-xl border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 flex items-center gap-1.5'
+              >
+                <Sparkles className='w-3.5 h-3.5' />
+                <span>Care Circle Setup</span>
+              </Button>
+            )}
             <Button
               variant='outline'
               onClick={onSwitchToSeniorMode}
               className='h-10 px-4 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
             >
-              👵 Switch to Senior Mode
+              👵 {honorificLabel} Safe Mode
             </Button>
             <Button
               onClick={() => setIsAddModalOpen(true)}
@@ -275,22 +298,25 @@ export function CaretakerDashboard({
 
         {/* Main Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
-          <TabsList className='grid grid-cols-2 sm:grid-cols-5 w-full max-w-3xl h-11 bg-muted/60 p-1 rounded-xl'>
+          <TabsList className='grid grid-cols-3 sm:grid-cols-6 w-full max-w-4xl h-11 bg-muted/60 p-1 rounded-xl'>
             <TabsTrigger value='overview' className='text-xs font-medium'>
               Overview
             </TabsTrigger>
-            <TabsTrigger value='medications' className='text-xs font-medium'>
-              Medications ({medications.length})
+            <TabsTrigger value='children-portal' className='text-xs font-medium'>
+              👨‍👩‍👧 Children Portal
             </TabsTrigger>
-            <TabsTrigger value='appointments' className='text-xs font-medium'>
-              Appointments ({appointments.length})
+            <TabsTrigger value='doctor-portal' className='text-xs font-medium'>
+              🩺 Doctor Portal
+            </TabsTrigger>
+            <TabsTrigger value='medications' className='text-xs font-medium'>
+              Meds ({medications.length})
             </TabsTrigger>
             <TabsTrigger value='safety' className='text-xs font-medium flex items-center gap-1.5'>
               <Sparkles className='w-3 h-3 text-amber-500' />
-              Gemini Shield
+              Gemini Safety
             </TabsTrigger>
             <TabsTrigger value='email-simulator' className='text-xs font-medium'>
-              Email System
+              Email Alerts
             </TabsTrigger>
           </TabsList>
 
@@ -465,6 +491,274 @@ export function CaretakerDashboard({
                   </CardContent>
                 </Card>
               </div>
+            </div>
+          </TabsContent>
+
+          {/* TAB: CHILDREN PORTAL */}
+          <TabsContent value='children-portal' className='space-y-6'>
+            <div className='p-4 rounded-2xl bg-primary/5 border border-primary/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-sm'>
+                  <UserCheck className='h-6 w-6' />
+                </div>
+                <div>
+                  <h3 className='text-lg font-bold text-foreground'>
+                    Children & Family Care Portal for {honorificLabel}
+                  </h3>
+                  <p className='text-xs text-muted-foreground'>
+                    Primary Family Caregiver: <strong>{patient.childrenContact?.name || 'Sanjai Gopal'}</strong> • Automated Alert Recipient: <strong>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</strong>
+                  </p>
+                </div>
+              </div>
+              <Button
+                size='sm'
+                onClick={() => handleDispatchEmail('missed_medication')}
+                disabled={isSendingEmail}
+                className='text-xs h-9 bg-primary text-primary-foreground font-semibold shadow-sm'
+              >
+                <Send className='w-3.5 h-3.5 mr-1.5' />
+                Send Test Missed Dose Alert to Children
+              </Button>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              {/* Children Contact Card */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold flex items-center gap-2'>
+                    <User className='w-4 h-4 text-primary' />
+                    <span>Family Caregiver Profile</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-3 text-xs'>
+                  <div className='flex justify-between border-b pb-2'>
+                    <span className='text-muted-foreground'>Name:</span>
+                    <span className='font-bold text-foreground'>{patient.childrenContact?.name || 'Sanjai Gopal'}</span>
+                  </div>
+                  <div className='flex justify-between border-b pb-2'>
+                    <span className='text-muted-foreground'>Relationship:</span>
+                    <span className='font-semibold text-foreground'>{patient.childrenContact?.relationship || 'Son & Caregiver'}</span>
+                  </div>
+                  <div className='flex justify-between border-b pb-2'>
+                    <span className='text-muted-foreground'>Email for Alerts:</span>
+                    <span className='font-mono font-medium text-primary'>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</span>
+                  </div>
+                  <div className='flex justify-between border-b pb-2'>
+                    <span className='text-muted-foreground'>Phone / WhatsApp:</span>
+                    <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 98401 23456'}</span>
+                  </div>
+                  <div className='pt-2 flex items-center justify-between text-[11px] text-emerald-600 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20'>
+                    <span className='font-semibold'>✓ Real-time Email & SOS active</span>
+                    <Badge variant='outline' className='text-[10px] bg-emerald-500/20 text-emerald-700'>
+                      Connected
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Medication Refill Alerts */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold flex items-center gap-2'>
+                    <Pill className='w-4 h-4 text-amber-500' />
+                    <span>Pill Supply & Refill Watch</span>
+                  </CardTitle>
+                  <CardDescription className='text-xs'>
+                    Monitoring {honorificLabel}'s pill box remaining counts
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-2.5 text-xs max-h-60 overflow-y-auto'>
+                  {medications.map((med) => {
+                    const lowStock = med.remainingPills <= 15;
+                    return (
+                      <div
+                        key={med.id}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                          lowStock ? 'border-amber-500/30 bg-amber-500/5' : 'border-border/60 bg-muted/20'
+                        }`}
+                      >
+                        <div>
+                          <div className='font-bold text-foreground'>{med.name}</div>
+                          <div className='text-[10px] text-muted-foreground'>{med.dosage} • {med.time}</div>
+                        </div>
+                        <Badge
+                          variant={lowStock ? 'destructive' : 'secondary'}
+                          className='text-[10px] font-mono'
+                        >
+                          {med.remainingPills} left
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+
+              {/* 1-Tap Emergency Broadcast */}
+              <Card className='border-rose-500/30 bg-rose-500/5'>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold text-rose-700 dark:text-rose-400 flex items-center gap-2'>
+                    <AlertTriangle className='w-4 h-4' />
+                    <span>Emergency SOS Center</span>
+                  </CardTitle>
+                  <CardDescription className='text-xs text-rose-600/80'>
+                    Instant alert sent across Children's email and treating Doctor
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='space-y-3 text-xs'>
+                  <p className='text-muted-foreground'>
+                    If {honorificLabel} triggers SOS from bedside tablet or caregiver detects an emergency:
+                  </p>
+                  <Button
+                    size='sm'
+                    onClick={() => handleDispatchEmail('emergency_sos')}
+                    disabled={isSendingEmail}
+                    className='w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-10 shadow-md'
+                  >
+                    🚨 Broadcast Emergency SOS to Care Circle
+                  </Button>
+                  <div className='text-[11px] text-muted-foreground text-center'>
+                    Target: {patient.childrenContact?.email} & {patient.doctorContact?.email}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* TAB: DOCTOR PORTAL */}
+          <TabsContent value='doctor-portal' className='space-y-6'>
+            <div className='p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-600 text-white shadow-sm'>
+                  <Stethoscope className='h-6 w-6' />
+                </div>
+                <div>
+                  <h3 className='text-lg font-bold text-foreground'>
+                    Doctor Clinical Portal for {honorificLabel} ({patient.name})
+                  </h3>
+                  <p className='text-xs text-muted-foreground'>
+                    Treating Physician: <strong>{patient.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}</strong> • Clinical Email: <strong>{patient.doctorContact?.email || 'dr.ramanathan@apollohospitals.com'}</strong>
+                  </p>
+                </div>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Button
+                  size='sm'
+                  onClick={() => setIsAddModalOpen(true)}
+                  className='text-xs h-9 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold'
+                >
+                  <Plus className='w-3.5 h-3.5 mr-1.5' />
+                  Add Clinical Prescription
+                </Button>
+              </div>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+              {/* Doctor Clinical Profile & Diagnoses */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className='text-base font-bold flex items-center gap-2'>
+                    <Stethoscope className='w-4 h-4 text-indigo-600' />
+                    <span>Clinical Profile & Diagnoses</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-3 text-xs'>
+                  <div className='space-y-1.5'>
+                    <span className='font-semibold text-muted-foreground'>Active Diagnosed Conditions:</span>
+                    <div className='flex flex-wrap gap-1.5 pt-1'>
+                      {patient.medicalConditions.map((cond) => (
+                        <Badge key={cond} variant='outline' className='bg-primary/5 text-primary border-primary/20 text-xs font-medium'>
+                          {cond}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className='space-y-1.5 pt-2 border-t'>
+                    <span className='font-semibold text-rose-600'>Known Drug Allergies:</span>
+                    <div className='flex flex-wrap gap-1.5 pt-1'>
+                      {patient.allergies.map((allergy) => (
+                        <Badge key={allergy} variant='destructive' className='text-xs'>
+                          ⚠️ {allergy}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className='pt-2 border-t space-y-1'>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Treating Physician:</span>
+                      <span className='font-bold text-foreground'>{patient.doctorContact?.doctorName}</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Clinic / Hospital:</span>
+                      <span className='text-foreground'>{patient.doctorContact?.clinic || 'Apollo Speciality Hospitals'}</span>
+                    </div>
+                    <div className='flex justify-between'>
+                      <span className='text-muted-foreground'>Doctor Contact Email:</span>
+                      <span className='font-mono text-indigo-600 font-semibold'>{patient.doctorContact?.email}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Gemini Clinical Interaction Audit */}
+              <Card className='md:col-span-2'>
+                <CardHeader>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <CardTitle className='text-base font-bold flex items-center gap-2'>
+                        <Sparkles className='w-4 h-4 text-amber-500' />
+                        <span>Google Gemini 2.5 Flash Clinical Audit</span>
+                      </CardTitle>
+                      <CardDescription className='text-xs'>
+                        Automated contraindication and drug-disease interaction audit for {honorificLabel}
+                      </CardDescription>
+                    </div>
+                    <Button
+                      size='sm'
+                      variant='outline'
+                      onClick={handleRunSafetyCheck}
+                      disabled={isCheckingInteractions}
+                      className='text-xs h-8 border-primary/30 text-primary'
+                    >
+                      {isCheckingInteractions ? <Loader2 className='w-3.5 h-3.5 animate-spin' /> : 'Re-scan Interactions'}
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent className='space-y-3 text-xs'>
+                  {interactionAlerts.length === 0 ? (
+                    <div className='p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center gap-2'>
+                      <CheckCircle2 className='w-4 h-4 text-emerald-600 flex-shrink-0' />
+                      <span>All current {medications.length} medications are clinically safe with zero major contraindications.</span>
+                    </div>
+                  ) : (
+                    interactionAlerts.map((alert, i) => (
+                      <div
+                        key={i}
+                        className={`p-3.5 rounded-xl border space-y-1.5 ${
+                          alert.severity === 'danger'
+                            ? 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
+                            : 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-200'
+                        }`}
+                      >
+                        <div className='flex items-center justify-between'>
+                          <span className='font-bold flex items-center gap-1.5'>
+                            <AlertCircle className='w-3.5 h-3.5' />
+                            {alert.medicationsInvolved.join(' + ')}
+                          </span>
+                          <Badge variant={alert.severity === 'danger' ? 'destructive' : 'outline'} className='text-[10px] uppercase'>
+                            {alert.severity}
+                          </Badge>
+                        </div>
+                        <p className='text-[11px] leading-relaxed'>{alert.description}</p>
+                        <div className='text-[10px] font-semibold bg-background/60 p-2 rounded-lg'>
+                          <strong>Clinical Recommendation:</strong> {alert.recommendation}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 

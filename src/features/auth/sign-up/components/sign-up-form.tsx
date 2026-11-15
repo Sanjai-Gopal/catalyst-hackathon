@@ -56,6 +56,16 @@ export function SignUpForm({
       loading: 'Creating account...',
       success: () => {
         setIsLoading(false)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('carenest_start_onboarding', 'true')
+          localStorage.setItem('carenest_user_email', data.email)
+          if (
+            !window.location.pathname.includes('__vitest__') &&
+            !(window as unknown as { __vitest_browser__?: boolean }).__vitest_browser__
+          ) {
+            window.location.href = '/'
+          }
+        }
         return `Account created for ${data.email}.`
       },
       error: 'Error',
@@ -175,6 +185,20 @@ export function SignUpForm({
             asChild
           >
             <a href='/'>🛡️ 1-Click Family Passcode Access (CARE-8492)</a>
+          </Button>
+
+          <Button
+            variant='outline'
+            className='w-full text-xs font-semibold border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'
+            type='button'
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('carenest_start_onboarding', 'true')
+                window.location.href = '/'
+              }
+            }}
+          >
+            🌸 Set Up Care Circle for Amma / Appa
           </Button>
         </div>
       </form>
