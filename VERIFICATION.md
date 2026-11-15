@@ -28,7 +28,7 @@ download is blocked in the build workspace. CI downloads its own browser.
 
 ## Not run (no evidence, so no score)
 
-Lighthouse, axe, Playwright end-to-end tests, and the GitHub Actions workflow were not run or added.
+Lighthouse, axe and Playwright end-to-end tests were not run or added. The GitHub Actions workflow (lint, typecheck, coverage, build on every push) is added but has not yet been seen running.
 
 ## Self-score (strict; unproven numbers lowered)
 

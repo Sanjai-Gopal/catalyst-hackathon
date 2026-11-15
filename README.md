@@ -203,7 +203,7 @@ Gemini and Resend are called only from server functions in `/api` (set `GEMINI_A
 - `/api/email/send` can email any address for a signed-in user (10 per hour); restrict to stored contacts.
 - Rate limiting is in-memory per serverless instance, not a global quota.
 - Resend's default sender only delivers to the account owner; a verified domain is needed for real alerts.
-- Test coverage is 69% overall (target was 90%); no Playwright e2e or CI workflow yet.
+- Test coverage is 69% overall (target was 90%); no Playwright e2e tests yet. The CI workflow is added but not yet seen running.
 - No Lighthouse or axe results; accessibility and performance are unmeasured.
 - The social preview image is a placeholder screenshot, not a CareNest-specific image.
 - Three large components (`CaretakerDashboard`, `SeniorModeView`, `CareCircleOnboardingModal`) are not split.
