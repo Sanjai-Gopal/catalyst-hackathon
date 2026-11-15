@@ -44,7 +44,7 @@ export function VoiceAssistantWidget({
   language = 'en',
   currentSlot,
   slotMeds,
-  childName = 'Sanjai',
+  childName = 'Caregiver',
   doctorName = 'Dr. Radhakrishnan',
   onMarkSlotTaken,
   onTriggerCallChild,

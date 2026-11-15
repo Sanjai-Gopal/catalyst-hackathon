@@ -112,10 +112,10 @@ export function SeniorModeView({
       : '👴';
 
   const activeChildContact = patient?.childrenContact || {
-    name: 'Sanjai Gopal',
+    name: 'Family Caregiver',
     relationship: 'Son & Primary Caregiver',
-    email: 'sanjai23062008g@gmail.com',
-    phone: '+91 98401 23456',
+    email: 'caregiver@example.com',
+    phone: '+91 90000 00000',
   };
 
   const cleanChildPhone = activeChildContact.phone.replace(/[^0-9+]/g, '');

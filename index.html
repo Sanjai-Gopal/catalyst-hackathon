@@ -38,7 +38,7 @@
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://catalyst-hackathon.vercel.app" />
+    <meta property="og:url" content="https://catalyst-hackathon-lime.vercel.app" />
     <meta property="og:title" content="CareNest AI — Elderly Care & Medication Ecosystem" />
     <meta
       property="og:description"
@@ -47,7 +47,7 @@
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://catalyst-hackathon.vercel.app" />
+    <meta property="twitter:url" content="https://catalyst-hackathon-lime.vercel.app" />
     <meta property="twitter:title" content="CareNest AI — Elderly Care & Medication Ecosystem" />
     <meta
       property="twitter:description"
@@ -110,39 +110,10 @@
 
     <meta name="theme-color" content="#fff" />
     <!-- Web Model Context Protocol (WebMCP) Registration for Agentic AI Browsers -->
-    <script>
-      if (typeof window !== 'undefined') {
-        window.__webmcp_manifest = {
-          name: "CareNest AI Agent Tools",
-          version: "1.0.0",
-          tools: [
-            {
-              name: "read_medication_schedule",
-              description: "Read active medication schedule and adherence status",
-              inputSchema: { type: "object", properties: { slot: { type: "string", enum: ["morning", "afternoon", "evening", "night"] } } }
-            },
-            {
-              name: "log_medication_adherence",
-              description: "Log adherence confirmation for a scheduled medication",
-              inputSchema: { type: "object", properties: { medId: { type: "string" } }, required: ["medId"] }
-            }
-          ]
-        };
-        if ('modelContext' in navigator && typeof navigator.modelContext.registerTool === 'function') {
-          try {
-            navigator.modelContext.registerTool({
-              name: "read_medication_schedule",
-              description: "Read active medication schedule",
-              inputSchema: { type: "object", properties: {} },
-              execute: async () => JSON.parse(localStorage.getItem('carenest_medications') || '[]')
-            });
-          } catch (e) {}
-        }
-      }
-    </script>
-    <meta property="og:image" content="https://bolt.new/static/og_default.png">
+    <script src="/webmcp.js"></script>
+    <meta property="og:image" content="https://catalyst-hackathon-lime.vercel.app/images/shadcn-admin.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="https://bolt.new/static/og_default.png">
+    <meta name="twitter:image" content="https://catalyst-hackathon-lime.vercel.app/images/shadcn-admin.png">
   </head>
 
   <body>

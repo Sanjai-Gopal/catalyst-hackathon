@@ -188,3 +188,22 @@ npm run build
 - **Known limitation (demo build):** `VITE_` variables are bundled into public JavaScript, so the Gemini and Resend keys are visible to anyone who opens the site. Use restricted/throwaway keys, and move these calls behind a serverless function before real use.
 - **Known limitation (demo build):** the caregiver passcode is a client-side gate, not real authentication. It is not suitable for protecting real patient data.
 - **Accessibility:** senior-friendly touch targets, high-contrast colours, large type and multilingual audio guidance. Run an accessibility audit (axe / Lighthouse) before claiming a WCAG level.
+
+## Status and Known limitations
+
+See `VERIFICATION.md` for exact commands, measured results and an honest self-score.
+
+Gemini and Resend are called only from server functions in `/api` (set `GEMINI_API_KEY`, `RESEND_API_KEY`,
+`EMAIL_FROM` in Vercel; see `.env.example`). Still **not** done:
+
+- The family passcode is still a client-side gate; there are no server-enforced roles or lockout.
+- Patient data is stored in localStorage, not per-user Appwrite documents; no realtime sync.
+- No scheduled missed-dose or appointment reminders (no cron), and no appointment edit/cancel.
+- Voice emergency phrases are not extended to all 7 languages and there is no undo confirmation.
+- `/api/email/send` can email any address for a signed-in user (10 per hour); restrict to stored contacts.
+- Rate limiting is in-memory per serverless instance, not a global quota.
+- Resend's default sender only delivers to the account owner; a verified domain is needed for real alerts.
+- Test coverage is 69% overall (target was 90%); no Playwright e2e or CI workflow yet.
+- No Lighthouse or axe results; accessibility and performance are unmeasured.
+- The social preview image is a placeholder screenshot, not a CareNest-specific image.
+- Three large components (`CaretakerDashboard`, `SeniorModeView`, `CareCircleOnboardingModal`) are not split.

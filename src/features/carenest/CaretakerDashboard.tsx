@@ -569,7 +569,7 @@ export function CaretakerDashboard({
                     Children & Family Care Portal for {honorificLabel}
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Primary Family Caregiver: <strong>{patient.childrenContact?.name || 'Sanjai Gopal'}</strong> • Automated Alert Recipient: <strong>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</strong>
+                    Primary Family Caregiver: <strong>{patient.childrenContact?.name || 'Family Caregiver'}</strong> • Automated Alert Recipient: <strong>{patient.childrenContact?.email || 'caregiver@example.com'}</strong>
                   </p>
                 </div>
               </div>
@@ -596,7 +596,7 @@ export function CaretakerDashboard({
                 <CardContent className='space-y-3 text-xs'>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Name:</span>
-                    <span className='font-bold text-foreground'>{patient.childrenContact?.name || 'Sanjai Gopal'}</span>
+                    <span className='font-bold text-foreground'>{patient.childrenContact?.name || 'Family Caregiver'}</span>
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Relationship:</span>
@@ -604,11 +604,11 @@ export function CaretakerDashboard({
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Email for Alerts:</span>
-                    <span className='font-mono font-medium text-primary'>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</span>
+                    <span className='font-mono font-medium text-primary'>{patient.childrenContact?.email || 'caregiver@example.com'}</span>
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Phone / WhatsApp:</span>
-                    <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 98401 23456'}</span>
+                    <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 90000 00000'}</span>
                   </div>
                   <div className='pt-2 flex items-center justify-between text-[11px] text-emerald-700 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20'>
                     <span className='font-semibold'>✓ Real-time Email & SOS active</span>
@@ -681,11 +681,11 @@ export function CaretakerDashboard({
                       🚨 Broadcast Emergency SOS to Care Circle
                     </Button>
                     <a
-                      href={`tel:${(patient.childrenContact?.phone || '+91 98401 23456').replace(/[^0-9+]/g, '')}`}
+                      href={`tel:${(patient.childrenContact?.phone || '+91 90000 00000').replace(/[^0-9+]/g, '')}`}
                       className='w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm flex items-center justify-center gap-1.5'
                     >
                       <Phone className='w-3.5 h-3.5' />
-                      <span>📞 Call Child: {patient.childrenContact?.name || 'Sanjai Gopal'} ({patient.childrenContact?.phone || '+91 98401 23456'})</span>
+                      <span>📞 Call Child: {patient.childrenContact?.name || 'Family Caregiver'} ({patient.childrenContact?.phone || '+91 90000 00000'})</span>
                     </a>
                   </div>
                   <div className='text-[11px] text-muted-foreground text-center'>
@@ -708,7 +708,7 @@ export function CaretakerDashboard({
                     Doctor Clinical Portal for {honorificLabel} ({patient.name})
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Treating Physician: <strong>{patient.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}</strong> • Clinical Email: <strong>{patient.doctorContact?.email || 'dr.ramanathan@apollohospitals.com'}</strong>
+                    Treating Physician: <strong>{patient.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}</strong> • Clinical Email: <strong>{patient.doctorContact?.email || 'doctor@example.com'}</strong>
                   </p>
                 </div>
               </div>
@@ -1206,9 +1206,11 @@ export function CaretakerDashboard({
                 </CardHeader>
                 <CardContent>
                   <div className='border border-border rounded-xl overflow-hidden shadow-inner bg-slate-50 p-4 max-h-[460px] overflow-y-auto'>
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: buildEmailTemplate({
+                    <iframe
+                      title='Email preview'
+                      sandbox=''
+                      className='h-[420px] w-full border-0 bg-white'
+                      srcDoc={buildEmailTemplate({
                           recipientEmail: patient.emergencyContact.email,
                           recipientName: patient.emergencyContact.name,
                           elderName: patient.name,
@@ -1218,8 +1220,7 @@ export function CaretakerDashboard({
                               ? 'Dr. R. Ramanathan, MD (Cardiologist) • Tomorrow 10:30 AM'
                               : 'Amlodipine (Norvasc) 5mg - 1 Tablet',
                           scheduledTime: new Date().toLocaleTimeString(),
-                        }).html,
-                      }}
+                        }).html}
                     />
                   </div>
                 </CardContent>

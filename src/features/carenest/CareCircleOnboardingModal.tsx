@@ -120,7 +120,7 @@ export function CareCircleOnboardingModal({
 
   // Step 4: Circle of Care (Children's & Doctor's Email)
   const [childName, setChildName] = useState(
-    initialProfile?.childrenContact?.name || 'Sanjai Gopal'
+    initialProfile?.childrenContact?.name || 'Family Caregiver'
   );
   const [childEmail, setChildEmail] = useState(
     initialProfile?.childrenContact?.email || ''
@@ -525,7 +525,7 @@ export function CareCircleOnboardingModal({
                 <div className='space-y-1'>
                   <Label className='text-[11px] font-semibold'>Child's Name</Label>
                   <Input
-                    placeholder='e.g., Sanjai Gopal'
+                    placeholder='e.g., Jane Doe'
                     value={childName}
                     onChange={(e) => setChildName(e.target.value)}
                     className='h-8 text-xs'
@@ -546,7 +546,7 @@ export function CareCircleOnboardingModal({
               <div className='space-y-1'>
                 <Label className='text-[11px] font-semibold'>Child's Phone / WhatsApp</Label>
                 <Input
-                  placeholder='e.g., +91 98401 23456'
+                  placeholder='e.g., +91 90000 00000'
                   value={childPhone}
                   onChange={(e) => setChildPhone(e.target.value)}
                   className='h-8 text-xs'

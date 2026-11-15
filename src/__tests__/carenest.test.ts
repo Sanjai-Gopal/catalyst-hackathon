@@ -75,8 +75,8 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
   describe('4. Proactive Email Notification Engine', () => {
     it('should generate urgent subject and markup for missed medication', () => {
       const template = buildEmailTemplate({
-        recipientEmail: 'sanjai23062008g@gmail.com',
-        recipientName: 'Sanjai Gopal',
+        recipientEmail: 'caregiver@example.com',
+        recipientName: 'Family Caregiver',
         elderName: 'Amma Lakshmi',
         type: 'missed_medication',
         medicationOrDetails: 'Amlodipine 5mg',
@@ -92,8 +92,8 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
 
     it('should generate appointment reminder email template', () => {
       const template = buildEmailTemplate({
-        recipientEmail: 'sanjai23062008g@gmail.com',
-        recipientName: 'Sanjai Gopal',
+        recipientEmail: 'caregiver@example.com',
+        recipientName: 'Family Caregiver',
         elderName: 'Amma Lakshmi',
         type: 'appointment_reminder',
         medicationOrDetails: 'Dr. R. Ramanathan, MD (Cardiologist) • Tomorrow 10:30 AM',
@@ -107,8 +107,8 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
 
     it('should generate emergency SOS broadcast email template', () => {
       const template = buildEmailTemplate({
-        recipientEmail: 'sanjai23062008g@gmail.com',
-        recipientName: 'Sanjai Gopal',
+        recipientEmail: 'caregiver@example.com',
+        recipientName: 'Family Caregiver',
         elderName: 'Amma Lakshmi',
         type: 'emergency_sos',
         medicationOrDetails: '1-Tap Bedside Assistance Triggered',
@@ -125,9 +125,9 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       expect(INITIAL_PATIENT.name).toBeDefined();
       expect(INITIAL_PATIENT.honorific).toBe('Amma');
       expect(INITIAL_PATIENT.passcode).toBe('CARE-8492');
-      expect(INITIAL_PATIENT.emergencyContact.email).toBe('sanjai23062008g@gmail.com');
-      expect(INITIAL_PATIENT.childrenContact?.email).toBe('sanjai23062008g@gmail.com');
-      expect(INITIAL_PATIENT.doctorContact?.email).toBe('dr.ramanathan@apollohospitals.com');
+      expect(INITIAL_PATIENT.emergencyContact.email).toBe('caregiver@example.com');
+      expect(INITIAL_PATIENT.childrenContact?.email).toBe('caregiver@example.com');
+      expect(INITIAL_PATIENT.doctorContact?.email).toBe('doctor@example.com');
       expect(INITIAL_PATIENT.allergies).toContain('Penicillin');
       expect(INITIAL_PATIENT.medicalConditions).toContain('Hypertension');
     });
