@@ -76,10 +76,10 @@ export function PharmacyRefillDialog({
         </DialogHeader>
 
         {/* Pharmacy Partner Selector */}
-        <div className='space-y-2 py-2'>
-          <label className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
+        <div className='space-y-2 py-2' role='group' aria-labelledby='pharmacy-partner-label'>
+          <p id='pharmacy-partner-label' className='text-xs font-semibold text-muted-foreground uppercase tracking-wider'>
             Fulfilled by Partner Pharmacy
-          </label>
+          </p>
           <div className='grid grid-cols-3 gap-2'>
             {[
               { id: 'apollo', name: 'Apollo Pharmacy', badge: '1-Hour Express', eta: 'Today 2 PM' },

@@ -1,0 +1,22 @@
+# CareNest AI — Full Technical Specification for Autonomous AI Agents
+
+## Overview
+CareNest AI is an open-source geriatric healthcare and medication adherence web application.
+
+## System Architecture
+- Frontend: React 19, TypeScript (strict mode), Tailwind CSS v4, Lucide Icons, Radix UI primitives.
+- Routing: TanStack Router.
+- State & Telemetry: LocalStorage persistence with real-time biometric feeds (BP, Blood Sugar, Pulse, SpO2).
+- AI Engine: Google Gemini 2.5 Flash API for geriatric medication instruction simplification and multi-drug interaction safety analysis.
+- Audio Engine: Web Speech API with sub-10ms localized fallback templates for instant speech synthesis.
+
+## User Roles
+1. Senior / Elder: Interacts via voice commands or high-contrast tactile cards with affectionate honorifics (Amma, Appa).
+2. Family Caregiver: Monitors routine completion, receives email alerts, and manages refill schedules.
+3. Attending Physician: Reviews vital signs, adjusts drug dosages, and initiates WebRTC telehealth consultations.
+
+## Agent Guidelines for Automated Browsing
+- Root URL: https://catalyst-hackathon-lime.vercel.app/
+- Senior Mode is default active.
+- To switch to Caretaker Dashboard: Click 'Caregiver Portal' button and enter passcode 'CARE-8492'.
+- To reset routine to pending: Click 'Reset Routine'.

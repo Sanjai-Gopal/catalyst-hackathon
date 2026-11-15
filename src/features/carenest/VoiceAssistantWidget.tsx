@@ -296,8 +296,8 @@ export function VoiceAssistantWidget({
 
   const toggleSpeed = () => {
     setSpeechRate((prev) => {
-      if (prev === 0.85) return 0.95;
-      if (prev === 0.95) return 1.15;
+      if (Math.abs(prev - 0.85) < 0.01) return 0.95;
+      if (Math.abs(prev - 0.95) < 0.01) return 1.15;
       return 0.85;
     });
   };
@@ -312,6 +312,7 @@ export function VoiceAssistantWidget({
           <button
             type='button'
             onClick={toggleListening}
+            aria-label={isListening ? 'Stop listening' : prompts.pressToSpeak}
             className={`relative flex items-center justify-center h-14 w-14 rounded-2xl transition-all shadow-md active:scale-95 ${
               isListening
                 ? 'bg-rose-600 text-white animate-pulse ring-4 ring-rose-400/50'
@@ -404,6 +405,7 @@ export function VoiceAssistantWidget({
             size='sm'
             variant='ghost'
             onClick={toggleSpeed}
+            aria-label={`Toggle speech rate, current rate is ${speechRate}x`}
             className='h-9 px-2 text-[11px] font-mono font-bold text-[#5C554E] dark:text-muted-foreground bg-neutral-100 dark:bg-neutral-800 hover:text-foreground'
             title='Toggle speech rate'
           >
@@ -417,6 +419,7 @@ export function VoiceAssistantWidget({
               size='sm'
               variant='destructive'
               onClick={stopSpeaking}
+              aria-label='Stop audio readout'
               className='h-9 px-2 text-xs font-semibold'
               title='Stop audio'
             >

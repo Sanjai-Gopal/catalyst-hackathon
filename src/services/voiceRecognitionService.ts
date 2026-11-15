@@ -129,22 +129,22 @@ const INTENT_PATTERNS: Record<VoiceIntentType, RegExp[]> = {
     /médico/i,
   ],
   READ_SCHEDULE: [
-    /what.*(medicine|pill|tablet|routine|schedule)/i,
-    /read.*(medicine|schedule)/i,
-    /tell.*(medicine|schedule)/i,
+    /what\s+(medicine|pill|tablet|routine|schedule)/i,
+    /read\s+(medicine|schedule)/i,
+    /tell\s+(medicine|schedule)/i,
     /my pills/i,
     /what to take/i,
     // Tamil
-    /என்ன.*(மருந்து|மாத்திரை)/i,
+    /என்ன\s+(மருந்து|மாத்திரை)/i,
     /பட்டியல்/i,
-    /இப்போ.*என்ன/i,
+    /இப்போ\s+என்ன/i,
     // Hindi
-    /कौन.*सी.*दवा/i,
-    /दवा.*बताओ/i,
-    /क्या.*खाना/i,
+    /कौन\s+दवा/i,
+    /दवा\s+बताओ/i,
+    /क्या\s+खाना/i,
     // Telugu
-    /ఏ.*మందులు/i,
-    /ఏమి.*వేసుకోవాలి/i,
+    /ఏ\s+మందులు/i,
+    /ఏమి\s+వేసుకోవాలి/i,
     // Kannada
     /ಯಾವ.*ಔಷಧಿ/i,
     // Malayalam

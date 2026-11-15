@@ -49,10 +49,10 @@ type ProfileFormValues = z.infer<typeof profileFormSchema>
 
 // This can come from your database or API.
 const defaultValues: Partial<ProfileFormValues> = {
-  bio: 'I own a computer.',
+  bio: 'CareNest AI family healthcare coordinator.',
   urls: [
-    { value: 'https://shadcn.com' },
-    { value: 'http://twitter.com/shadcn' },
+    { value: 'https://carenest.ai' },
+    { value: 'https://twitter.com/carenest_ai' },
   ],
 }
 

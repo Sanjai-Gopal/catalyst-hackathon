@@ -123,7 +123,7 @@ export function CaretakerDashboard({
 
   // Run initial interaction check
   useEffect(() => {
-    handleRunSafetyCheck();
+    void handleRunSafetyCheck();
   }, [medications.length]);
 
   const handleRunSafetyCheck = async () => {

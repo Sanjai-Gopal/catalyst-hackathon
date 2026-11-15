@@ -192,8 +192,9 @@ export function useTableUrlState(
 
   const ensurePageInRange = (
     pageCount: number,
-    opts: { resetTo?: 'first' | 'last' } = { resetTo: 'first' }
+    opts?: { resetTo?: 'first' | 'last' }
   ) => {
+    const resetTo = opts?.resetTo ?? 'first'
     const currentPage = (search as SearchRecord)[pageKey]
     const pageNum = typeof currentPage === 'number' ? currentPage : defaultPage
     if (pageCount > 0 && pageNum > pageCount) {
@@ -201,7 +202,7 @@ export function useTableUrlState(
         replace: true,
         search: (prev) => ({
           ...(prev as SearchRecord),
-          [pageKey]: opts.resetTo === 'last' ? pageCount : undefined,
+          [pageKey]: resetTo === 'last' ? pageCount : undefined,
         }),
       })
     }

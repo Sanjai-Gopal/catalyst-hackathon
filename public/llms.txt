@@ -1,0 +1,16 @@
+# CareNest AI
+
+> Intelligent Elderly Care & Medication Management Ecosystem
+
+CareNest AI bridges elderly parents, adult children, and attending physicians through an accessible, voice-first medication management platform with real-time biometric telemetry and clinical AI safety auditing.
+
+## Core Capabilities
+- Senior Safe Mode: High-contrast, tactile UI with large typography, multilingual voice readouts (English, Tamil, Hindi, Telugu, Kannada, Malayalam, Spanish), and 1-tap emergency calling to family and doctors.
+- Caretaker Command Dashboard: Clinical schedule management, drug-drug interaction screening via Google Gemini 2.5 Flash, real-time vitals telemetry (BP, Glucose, Heart Rate, SpO2), and digital health report vault.
+- Proactive Family Alerts: Automated notification engine alerting caregivers of missed doses or emergency triggers.
+- Privacy & Rate Limiting: 5-attempt brute-force lockout protection, 0-mock live adherence tracking.
+
+## API & Interaction Endpoints
+- Web App: https://catalyst-hackathon-lime.vercel.app/
+- Passcode Security: CARE-8492
+- OpenAPI / Spec: https://catalyst-hackathon-lime.vercel.app/llms-full.txt

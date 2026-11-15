@@ -314,7 +314,7 @@ export function AddMedicationModal({
                 <Input
                   type='number'
                   value={totalPills}
-                  onChange={(e) => setTotalPills(parseInt(e.target.value) || 30)}
+                  onChange={(e) => setTotalPills(Number.parseInt(e.target.value, 10) || 30)}
                 />
               </div>
             </div>

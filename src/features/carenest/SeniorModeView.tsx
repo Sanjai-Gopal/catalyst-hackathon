@@ -239,7 +239,7 @@ export function SeniorModeView({
   };
 
   return (
-    <div className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto'>
+    <main role='main' aria-label='Senior Care Dashboard' className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto'>
       {/* Top Header */}
       <div className='flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#E8E2D9]'>
         <div className='space-y-1'>
@@ -247,7 +247,7 @@ export function SeniorModeView({
             <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#E87A5D]/15 text-[#E87A5D]'>
               <Heart className='w-5 h-5 fill-current' />
             </span>
-            <span className='text-sm font-semibold tracking-wider uppercase text-[#8C827A]'>
+            <span className='text-sm font-semibold tracking-wider uppercase text-[#5C554E]'>
               CareNest • {t('seniorMode')}
             </span>
           </div>
@@ -319,7 +319,7 @@ export function SeniorModeView({
             onClick={onOpenPasscodeModal}
             className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
           >
-            <Shield className='w-4 h-4 text-[#8C827A]' />
+            <Shield className='w-4 h-4 text-[#5C554E]' />
             <span>{t('caregiverPortal')}</span>
           </Button>
         </div>
@@ -385,7 +385,7 @@ export function SeniorModeView({
         >
           <Sun className='w-8 h-8 text-amber-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('morning')}</span>
-          <span className='text-xs text-[#8C827A] font-medium'>{t('morningTime')}</span>
+          <span className='text-xs text-[#5C554E] font-medium'>{t('morningTime')}</span>
         </button>
 
         <button
@@ -399,7 +399,7 @@ export function SeniorModeView({
         >
           <CloudSun className='w-8 h-8 text-orange-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('afternoon')}</span>
-          <span className='text-xs text-[#8C827A] font-medium'>{t('afternoonTime')}</span>
+          <span className='text-xs text-[#5C554E] font-medium'>{t('afternoonTime')}</span>
         </button>
 
         <button
@@ -413,7 +413,7 @@ export function SeniorModeView({
         >
           <Sunset className='w-8 h-8 text-indigo-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('evening')}</span>
-          <span className='text-xs text-[#8C827A] font-medium'>{t('eveningTime')}</span>
+          <span className='text-xs text-[#5C554E] font-medium'>{t('eveningTime')}</span>
         </button>
 
         <button
@@ -427,7 +427,7 @@ export function SeniorModeView({
         >
           <Moon className='w-8 h-8 text-purple-600 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('night')}</span>
-          <span className='text-xs text-[#8C827A] font-medium'>{t('nightTime')}</span>
+          <span className='text-xs text-[#5C554E] font-medium'>{t('nightTime')}</span>
         </button>
       </div>
 
@@ -493,7 +493,7 @@ export function SeniorModeView({
             <h3 className='text-xl font-bold text-[#2C2825]'>
               {t('noMedsScheduled', { slot: t(selectedSlot) })}
             </h3>
-            <p className='text-sm text-[#8C827A] mt-1'>
+            <p className='text-sm text-[#5C554E] mt-1'>
               {t('takeRest')}
             </p>
           </div>
@@ -738,6 +738,6 @@ export function SeniorModeView({
         patientName={patientName}
         language={currentLanguage}
       />
-    </div>
+    </main>
   );
 }
