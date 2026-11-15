@@ -21,7 +21,7 @@ interface PasscodeModalProps {
 const MAX_ATTEMPTS = 5;
 // The one-tap demo passcode is only shown when the deployment opts in
 // (VITE_DEMO_MODE=true). The code itself is still listed in the README for judges.
-const SHOW_DEMO_PASSCODE = import.meta.env.VITE_DEMO_MODE === 'true';
+const SHOW_DEMO_PASSCODE = false; // removed with real auth in a later commit
 
 export function PasscodeModal({
   isOpen,

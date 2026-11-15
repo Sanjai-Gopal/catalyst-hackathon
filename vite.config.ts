@@ -22,7 +22,7 @@ export default defineConfig({
     },
   },
   optimizeDeps: {
-    include: ['appwrite', '@google/genai', 'cobe', 'canvas-confetti'],
+    include: ['appwrite', 'cobe', 'canvas-confetti'],
   },
   test: {
     silent: 'passed-only',

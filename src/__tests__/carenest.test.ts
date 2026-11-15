@@ -213,11 +213,12 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       }
     });
 
-    it('should reject (not invent medicines) when the prescription parser is unavailable', async () => {
+    it('should reject (not invent medicines) when the prescription parser cannot run', async () => {
       const { parsePrescriptionWithGemini } = await import('../services/geminiHealthcare');
-      await expect(
-        parsePrescriptionWithGemini('Rx: Telmisartan 40mg once daily')
-      ).rejects.toThrow(/not available/i);
+      // No signed-in session in unit tests, so the server call cannot be made.
+      await expect(parsePrescriptionWithGemini('Rx: Telmisartan 40mg once daily')).rejects.toThrow(
+        /not signed in/i
+      );
     });
   });
 
