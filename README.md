@@ -1,20 +1,21 @@
 # CareNest AI — Intelligent Elderly Care & Medication Management Platform
+
 > **PromptWars × Catalyst | Powered by Google for Developers × Hack2Skill × MnM**  
 > **Challenge:** Elderly Care & Medication Management Platform  
 > **Author:** Sanjai Gopal ([@Sanjai-Gopal](https://github.com/Sanjai-Gopal))  
 > **Live Production URL:** [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app)  
-> **Public GitHub Repository:** [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon)  
+> **Public GitHub Repository:** [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon)
 
 ---
 
 ## 📋 Hackathon Submission Requirements (All 4 Met)
 
-| Requirement | Details | Status |
-|---|---|:---:|
-| **Requirement 1/4: GitHub Repository Link** | [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon) | ✅ Submitted |
-| **Requirement 2/4: Public Access** | Repository is published and set to **Public Access** | ✅ Verified |
-| **Requirement 3/4: Deployed Project Link** | [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app) (Verified HTTP 200 OK) | ✅ Live & Working |
-| **Requirement 4/4: Project Description** | Comprehensive description below ready for platform submission | ✅ Complete |
+| Requirement                                 | Details                                                                                                         |      Status       |
+| ------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | :---------------: |
+| **Requirement 1/4: GitHub Repository Link** | [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon)        |   ✅ Submitted    |
+| **Requirement 2/4: Public Access**          | Repository is published and set to **Public Access**                                                            |    ✅ Verified    |
+| **Requirement 3/4: Deployed Project Link**  | [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app) (Verified HTTP 200 OK) | ✅ Live & Working |
+| **Requirement 4/4: Project Description**    | Comprehensive description below ready for platform submission                                                   |    ✅ Complete    |
 
 ---
 
@@ -72,9 +73,9 @@ Elderly healthcare is fraught with fragmented care routines: seniors struggle wi
          ▼                                     ▼                                     ▼
 👵 ELDER VIEW (AMMA / APPA)           👨‍👩‍👧 CHILDREN PORTAL                    🩺 DOCTOR PORTAL
 • Giant tactile cards & high contrast  • Passcode-Protected Access (CARE-8492)• Clinical Drug Safety Shield
-• Affectionate Address ("Amma"/"Appa") • Real-time adherence logs (% rate)    • Prescription OCR parsing
+• Affectionate Address ("Amma"/"Appa") • Real-time adherence logs (% rate)    • Prescription text parsing
 • 7-Language Switcher (Tamil, Hindi..) • 1-Tap Direct Phone Call to Child    • Appointment management
-• Zero-Latency Voice Assistant (<10ms) • Proactive Email Reminders (Resend)   • Patient health condition log
+• Zero-Latency Voice Assistant (instant, pre-cached) • Proactive Email Reminders (Resend)   • Patient health condition log
 • 1-Tap Emergency SOS Dialer (tel:..)  • Care Circle Onboarding Wizard        • Contraindication alerts
          │                                     │                                     │
          └─────────────────────────────────────┴─────────────────────────────────────┘
@@ -99,13 +100,16 @@ Elderly healthcare is fraught with fragmented care routines: seniors struggle wi
 ## 🚀 Key Innovations & Architectural Highlights
 
 ### 1. Collaborative Tri-Party Care Circle
+
 - **Elderly Parents:** Affectionately addressed as **"Amma"** or **"Appa"** (Mother/Father) instead of cold clinical names. Supported with gentle, large high-contrast visual cues and voice prompts.
 - **Children (Primary Caregivers):** Remote oversight dashboard, real-time adherence logs, speed-dial links, and immediate emergency alerts.
 - **Doctors:** Clinical portal tracking upcoming appointments, prescription schedules, and AI contraindication reports.
 - **Care Circle Onboarding Wizard:** 5-step guided onboarding collecting health conditions, current daily medicines, children contact details, and primary physician information.
 
 ### 2. Multi-Language Switcher (7 Languages Supported)
+
 Native UI translations, voice prompts, and AI explanations supporting:
+
 - 🇬🇧 **English** (`en`)
 - 🇮🇳 **Tamil** (`ta` - தமிழ்)
 - 🇮🇳 **Hindi** (`hi` - हिन्दी)
@@ -114,29 +118,35 @@ Native UI translations, voice prompts, and AI explanations supporting:
 - 🇮🇳 **Malayalam** (`ml` - മലയാളം)
 - 🇪🇸 **Spanish** (`es` - Español)
 
-### 3. Instant Voice Assistant & Speech Intelligence (< 10ms Latency)
+### 3. Instant Voice Assistant & Speech Intelligence (Pre-cached, Low Latency)
+
 - **Speech Recognition (STT):** Elders can simply speak commands in their native language:
-  - *"I took my morning medicine"* / *"மாத்திரை போட்டேன்"* / *"दवा खा ली"* -> instantly marks medicines as taken.
-  - *"Call my child"* / *"மகனுக்கு போன் பண்ணு"* / *"बेटे को कॉल करो"* -> instantly opens device dialer.
-  - *"Read my schedule"* / *"மருந்து பட்டியல் சொல்"* / *"दवा बताओ"* -> reads active medicines aloud.
-- **Zero-Latency TTS Engine:** Uses warm pre-cached localized speech templates for immediate (< 10ms) auditory response, eliminating network delay.
+  - _"I took my morning medicine"_ / _"மாத்திரை போட்டேன்"_ / _"दवा खा ली"_ -> instantly marks medicines as taken.
+  - _"Call my child"_ / _"மகனுக்கு போன் பண்ணு"_ / _"बेटे को कॉल करो"_ -> instantly opens device dialer.
+  - _"Read my schedule"_ / _"மருந்து பட்டியல் சொல்"_ / _"दवा बताओ"_ -> reads active medicines aloud.
+- **Zero-Latency TTS Engine:** Uses warm pre-cached localized speech templates for immediate auditory response, eliminating network delay.
 - **Speech Speed Control:** Accessible speed selector (`0.85x Gentle`, `0.95x Normal`, `1.15x Fast`) customized for geriatric listening comfort.
 
 ### 4. Emergency SOS with Direct Child Calling
+
 - Pressing the Emergency SOS button immediately launches the native phone dialer (`tel:+91...`) connecting the elder directly to their child.
 - Opens an interactive Emergency Calling Dialog featuring WhatsApp SOS distress message, Doctor speed dial, and 108 Ambulance hotline.
 - Sounds multilingual reassuring voice guidance to calm the elder.
 
 ### 5. Google Gemini 2.5 Flash Clinical Safety Shield
+
 - **Drug-Drug Interaction Analysis:** Automatically inspects active prescriptions for clinical contraindications (e.g., verifying combinations of Amlodipine, Metformin, Calcium, and Atorvastatin).
 - **Dietary Warning Engine:** Flags critical food contraindications (e.g., avoiding grapefruit juice with statins).
 - **Prescription OCR Parser:** Caretakers can paste doctor consultation notes or prescription text, and Gemini extracts structured dosage, frequency, and time slot schedules automatically.
 
 ### 6. Passcode-Protected Caregiver Barrier
+
 - Sensitive medical settings, prescription modification, and clinical appointment management are protected by secure passcode verification (`CARE-8492` or `CARE-2026`).
 
 ### 7. Proactive Automated Email Reminders (Resend API)
+
 CareNest automatically formats and dispatches responsive HTML emails for:
+
 - ⚠️ **Missed Medication Alerts**
 - ⏰ **Upcoming Dose Reminders**
 - 📅 **Doctor Appointment Reminders**
@@ -146,46 +156,51 @@ CareNest automatically formats and dispatches responsive HTML emails for:
 
 ## 🛠️ Tech Stack
 
-| Layer | Technologies |
-|---|---|
+| Layer                  | Technologies                                                    |
+| ---------------------- | --------------------------------------------------------------- |
 | **Frontend Framework** | React 19, TypeScript 5.8 (Strict Mode), Vite 8, TanStack Router |
-| **Design System** | Tailwind CSS v4, Radix UI, Lucide Icons, Canvas Confetti |
-| **AI Intelligence** | **Google Gemini 2.5 Flash** (`@google/genai`) |
-| **Speech Engine** | **Web Speech API** (BCP-47 SpeechRecognition + SpeechSynthesis) |
-| **Authentication** | **Google OAuth 2.0** + Appwrite Cloud (Singapore `sgp`) |
-| **Database & Sync** | Appwrite Cloud Database (`6af86b4100238c0101ef`) |
-| **Email Service** | Resend API (Transactional HTML templates) |
-| **3D Graphics** | WebGL / Cobe 3D Globe |
-| **Testing** | Vitest, Playwright Headless Chromium, Strict Coverage |
+| **Design System**      | Tailwind CSS v4, Radix UI, Lucide Icons, Canvas Confetti        |
+| **AI Intelligence**    | **Google Gemini 2.5 Flash** (`@google/genai`)                   |
+| **Speech Engine**      | **Web Speech API** (BCP-47 SpeechRecognition + SpeechSynthesis) |
+| **Authentication**     | **Google OAuth 2.0** + Appwrite Cloud (Singapore `sgp`)         |
+| **Database & Sync**    | Appwrite Cloud Database (`6af86b4100238c0101ef`)                |
+| **Email Service**      | Resend API (Transactional HTML templates)                       |
+| **3D Graphics**        | WebGL / Cobe 3D Globe                                           |
+| **Testing**            | Vitest, Playwright Headless Chromium, Strict Coverage           |
 
 ---
 
 ## 🧪 Testing & Verification
 
-CareNest AI includes automated unit tests covering all core healthcare algorithms:
-- **Test Files:** 22 passed (22)
-- **Tests:** 145 passed (145) (100% pass rate)
-- Passcode access validation (`CARE-8492`, `8492`, rejection of invalid tokens)
-- Medication adherence calculation formulas
-- Time slot filtering and schedule grouping
-- Multilingual intent recognition (English, Tamil, Hindi)
-- Instant voice template generation
-- Email template payload generation and HTML formatting
-- Patient safety data contracts and allergy integrity
+| Suite                                                        | Command                | Environment                    | Tests |
+| ------------------------------------------------------------ | ---------------------- | ------------------------------ | :---: |
+| Unit (business logic, Gemini safety contract, email service) | `npm test`             | Node — no browser needed       |  35   |
+| Component (forms, dialogs, providers)                        | `npm run test:browser` | Headless Chromium (Playwright) |  70   |
+| Everything                                                   | `npm run test:all`     | Both                           |  105  |
+
+Highlights of what is verified against the **real application modules** (not copies):
+
+- Passcode validation, lockout constants, adherence formula (clamped 0–100), time-slot filtering
+- **Clinical-safety contract:** if the Gemini check fails or is unconfigured, the app shows an explicit _"NOT verified"_ warning — it never reports medications as safe, and never fabricates prescription data
+- AI output is shape-validated before being trusted
+- Email templates HTML-escape all user text; header-injection characters are stripped; a failed send is reported as failed (never as "delivered")
+- Multilingual voice-intent parsing (English, Tamil, Hindi) and voice templates
 
 ```bash
-# Run unit tests
-npm test
-
-# Run strict TypeScript build validation (0 errors)
-npm run build
+npm ci
+npm run lint          # ESLint — 0 errors, 0 warnings
+npm run format:check  # Prettier
+npm test              # unit tests
+npm run build         # strict TypeScript + production bundle
 ```
 
 ---
 
-## 🔒 Security & Performance
+## 🔒 Security, Privacy & Performance
 
-- **Zero Committed Secrets:** All sensitive credentials managed server-side and via `.env.local`.
-- **Zero Console Errors:** Clean production runtime.
-- **Accessibility:** Senior-friendly touch targets (min 48px), high contrast text (WCAG AAA), high-legibility fonts, and multilingual audio guidance.
-- **Sub-Second Response Times:** Client-side speech synthesis and cache layer eliminate latency.
+- **No secrets in the browser bundle.** Gemini and Resend are called through server-side Vercel Functions (`api/gemini.ts`, `api/send-email.ts`). Set `GEMINI_API_KEY` and `RESEND_API_KEY` (no `VITE_` prefix) in the Vercel dashboard — see `.env.example`.
+- Strict **Content-Security-Policy**, HSTS, `X-Frame-Options: DENY`, `nosniff`, and a scoped Permissions-Policy (camera/microphone for telehealth and voice only) in `vercel.json`.
+- Email relay validates recipient/subject/body and supports an `ALLOWED_EMAIL_RECIPIENTS` allow-list.
+- The caregiver passcode is a **demo-only client-side gate** (with lockout). A production deployment would verify credentials server-side via Appwrite Auth.
+- **Accessibility:** skip-to-content link targets a real `<main>`, icon-only buttons have accessible names, no text below 12px in the care views, large touch targets and high-contrast senior mode.
+- **Performance:** the unused admin-template code (and its fake-data library) was removed from the production bundle, and the Gemini SDK no longer ships to the browser.

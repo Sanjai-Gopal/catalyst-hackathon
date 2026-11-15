@@ -1,71 +1,100 @@
-import { type EmailNotificationPayload } from '../types/carenest';
-
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
+import { logger } from '@/lib/logger'
+import { getApiAuthHeaders } from '@/lib/auth'
+import { type EmailNotificationPayload } from '../types/carenest'
 
 export interface EmailDispatchResult {
-  success: boolean;
-  messageId?: string;
-  error?: string;
-  previewHtml: string;
-  sentAt: string;
+  success: boolean
+  messageId?: string
+  error?: string
+  previewHtml: string
+  sentAt: string
+}
+
+/** Escapes user-supplied text before it is placed inside email HTML. */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+/** Subject lines are plain text, so undo the HTML escaping applied above. */
+function unescapeForSubject(value: string): string {
+  return value
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, '&')
+}
+
+/** Subjects are plain text: strip line breaks to prevent header injection. */
+function sanitizeSubject(value: string): string {
+  return value.replace(/[\r\n]+/g, ' ').trim()
 }
 
 /**
  * Builds an accessible, high-contrast, premium HTML email template
  */
 export function buildEmailTemplate(payload: EmailNotificationPayload): {
-  subject: string;
-  html: string;
+  subject: string
+  html: string
 } {
-  const { elderName, type, medicationOrDetails, scheduledTime } = payload;
+  const type = payload.type
+  // Everything below is interpolated into HTML, so escape all user-controlled text.
+  const elderName = escapeHtml(payload.elderName)
+  const medicationOrDetails = escapeHtml(payload.medicationOrDetails)
+  const scheduledTime = escapeHtml(payload.scheduledTime)
 
-  let subject = '';
-  let badgeColor = '#0284c7';
-  let badgeText = 'HEALTHCARE REMINDER';
-  let mainHeadline = '';
-  let detailLabel = 'Details';
-  let actionAdvice = '';
+  let subject = ''
+  let badgeColor = '#0284c7'
+  let badgeText = 'HEALTHCARE REMINDER'
+  let mainHeadline = ''
+  let detailLabel = 'Details'
+  let actionAdvice = ''
 
   switch (type) {
     case 'missed_medication':
-      subject = `⚠️ URGENT: Missed Medication Alert for ${elderName}`;
-      badgeColor = '#dc2626';
-      badgeText = 'MISSED MEDICATION ALERT';
-      mainHeadline = `${elderName} has not confirmed taking their scheduled medication.`;
-      detailLabel = 'Missed Dose';
+      subject = `⚠️ URGENT: Missed Medication Alert for ${elderName}`
+      badgeColor = '#dc2626'
+      badgeText = 'MISSED MEDICATION ALERT'
+      mainHeadline = `${elderName} has not confirmed taking their scheduled medication.`
+      detailLabel = 'Missed Dose'
       actionAdvice =
-        'Please check in with them immediately or verify if they took it without logging.';
-      break;
+        'Please check in with them immediately or verify if they took it without logging.'
+      break
 
     case 'upcoming_dose':
-      subject = `⏰ Upcoming Medication Reminder: ${medicationOrDetails} for ${elderName}`;
-      badgeColor = '#0284c7';
-      badgeText = 'UPCOMING MEDICATION';
-      mainHeadline = `A scheduled dose is due soon for ${elderName}.`;
-      detailLabel = 'Prescribed Medication';
+      subject = `⏰ Upcoming Medication Reminder: ${medicationOrDetails} for ${elderName}`
+      badgeColor = '#0284c7'
+      badgeText = 'UPCOMING MEDICATION'
+      mainHeadline = `A scheduled dose is due soon for ${elderName}.`
+      detailLabel = 'Prescribed Medication'
       actionAdvice =
-        'Ensure water and prescribed meals are prepared for smooth adherence.';
-      break;
+        'Ensure water and prescribed meals are prepared for smooth adherence.'
+      break
 
     case 'appointment_reminder':
-      subject = `📅 Doctor Appointment Reminder: ${elderName}`;
-      badgeColor = '#7c3aed';
-      badgeText = 'CLINICAL APPOINTMENT';
-      mainHeadline = `Upcoming clinical consultation scheduled for ${elderName}.`;
-      detailLabel = 'Appointment & Doctor';
+      subject = `📅 Doctor Appointment Reminder: ${elderName}`
+      badgeColor = '#7c3aed'
+      badgeText = 'CLINICAL APPOINTMENT'
+      mainHeadline = `Upcoming clinical consultation scheduled for ${elderName}.`
+      detailLabel = 'Appointment & Doctor'
       actionAdvice =
-        'Please prepare previous medical records, current medication list, and arrive 15 minutes early.';
-      break;
+        'Please prepare previous medical records, current medication list, and arrive 15 minutes early.'
+      break
 
     case 'emergency_sos':
-      subject = `🚨 EMERGENCY SOS BROADCAST: Immediate Attention Needed for ${elderName}`;
-      badgeColor = '#b91c1c';
-      badgeText = 'EMERGENCY SOS ALERT';
-      mainHeadline = `EMERGENCY ALERT: ${elderName} triggered the 1-Tap SOS Assistance Button!`;
-      detailLabel = 'Emergency Signal';
+      subject = `🚨 EMERGENCY SOS BROADCAST: Immediate Attention Needed for ${elderName}`
+      badgeColor = '#b91c1c'
+      badgeText = 'EMERGENCY SOS ALERT'
+      mainHeadline = `EMERGENCY ALERT: ${elderName} triggered the 1-Tap SOS Assistance Button!`
+      detailLabel = 'Emergency Signal'
       actionAdvice =
-        'Call the elder immediately or dispatch local emergency contact / primary physician.';
-      break;
+        'Call the elder immediately or dispatch local emergency contact / primary physician.'
+      break
   }
 
   const html = `
@@ -105,63 +134,56 @@ export function buildEmailTemplate(payload: EmailNotificationPayload): {
     </div>
   </div>
 </body>
-</html>`;
+</html>`
 
-  return { subject, html };
+  return { subject: sanitizeSubject(unescapeForSubject(subject)), html }
 }
 
 /**
- * Dispatches an automated email notification via Resend API
+ * Dispatches an email through the server-side relay (/api/send-email).
+ * `success` is true ONLY if the provider actually accepted the message.
  */
 export async function sendEmailNotification(
   payload: EmailNotificationPayload
 ): Promise<EmailDispatchResult> {
-  const { subject, html } = buildEmailTemplate(payload);
-  const now = new Date().toLocaleTimeString();
+  const { subject, html } = buildEmailTemplate(payload)
+  const sentAt = new Date().toLocaleTimeString()
 
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('/api/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        ...(await getApiAuthHeaders()),
       },
-      body: JSON.stringify({
-        from: 'CareNest AI <onboarding@resend.dev>',
-        to: [payload.recipientEmail],
-        subject: subject,
-        html: html,
-      }),
-    });
+      body: JSON.stringify({ to: payload.recipientEmail, subject, html }),
+    })
 
-    if (res.ok) {
-      const data = await res.json();
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '')
+      logger.warn(
+        '[EmailService] Relay responded with error:',
+        res.status,
+        detail
+      )
       return {
-        success: true,
-        messageId: data.id,
+        success: false,
         previewHtml: html,
-        sentAt: now,
-      };
-    } else {
-      const errorText = await res.text();
-      console.warn('[EmailService] Resend API responded with error:', errorText);
-      return {
-        success: true, // Gracefully simulated delivery in case of domain sandbox restrictions
-        messageId: `sim_${Date.now()}`,
-        previewHtml: html,
-        sentAt: now,
-        error: errorText,
-      };
+        sentAt,
+        error: `Email service unavailable (HTTP ${res.status})`,
+      }
     }
-  } catch (err: unknown) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    console.warn('[EmailService] Resend network fetch error (fallback to local dispatch log):', errorMessage);
+
+    const data = (await res.json()) as { id?: string | null }
     return {
       success: true,
-      messageId: `local_${Date.now()}`,
+      messageId: data.id ?? undefined,
       previewHtml: html,
-      sentAt: now,
-      error: errorMessage,
-    };
+      sentAt,
+    }
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err)
+    logger.warn('[EmailService] Network error while sending:', errorMessage)
+    return { success: false, previewHtml: html, sentAt, error: errorMessage }
   }
 }

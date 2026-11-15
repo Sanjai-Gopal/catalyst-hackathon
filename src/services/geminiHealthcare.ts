@@ -1,30 +1,64 @@
-import { GoogleGenAI } from '@google/genai';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import { type Medication, type DrugInteractionAlert } from '../types/carenest';
+import { getApiAuthHeaders } from '@/lib/auth'
+import { logger } from '@/lib/logger'
+import type { Medication, DrugInteractionAlert } from '../types/carenest'
 
-const apiKey =
-  import.meta.env.VITE_GEMINI_API_KEY ||
-  import.meta.env.NEXT_PUBLIC_GEMINI_API_KEY ||
-  '';
-
-let aiInstance: GoogleGenAI | null = null;
-if (apiKey) {
-  try {
-    aiInstance = new GoogleGenAI({ apiKey });
-  } catch (err) {
-    console.warn('[GeminiHealthcare] Init warning:', err);
+/**
+ * Calls Google Gemini 2.5 Flash through the server-side proxy (/api/gemini),
+ * so the API key never ships in the browser bundle.
+ * Throws if the proxy is unreachable or not configured.
+ */
+export async function callGemini(
+  prompt: string,
+  options: { temperature?: number; json?: boolean } = {}
+): Promise<string> {
+  const res = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(await getApiAuthHeaders()),
+    },
+    body: JSON.stringify({
+      prompt,
+      temperature: options.temperature,
+      json: options.json,
+    }),
+  })
+  if (!res.ok) {
+    throw new Error(`Gemini proxy responded with HTTP ${res.status}`)
   }
+  const data = (await res.json()) as { text?: string }
+  return (data.text ?? '').trim()
 }
 
-export const googleGenAIClassic: GoogleGenerativeAI | null = apiKey
-  ? (() => {
-      try {
-        return new GoogleGenerativeAI(apiKey);
-      } catch {
-        return null;
-      }
-    })()
-  : null;
+export function isDrugInteractionAlert(v: unknown): v is DrugInteractionAlert {
+  if (typeof v !== 'object' || v === null) return false
+  const o = v as Record<string, unknown>
+  return (
+    (o.severity === 'safe' ||
+      o.severity === 'warning' ||
+      o.severity === 'danger') &&
+    Array.isArray(o.medicationsInvolved) &&
+    typeof o.description === 'string' &&
+    typeof o.recommendation === 'string'
+  )
+}
+
+/**
+ * Safety-critical fallback: when the AI check cannot run we must NEVER claim
+ * the medications are safe. We surface an explicit "not verified" warning.
+ */
+export function buildUnverifiedAlert(
+  medications: Medication[]
+): DrugInteractionAlert {
+  return {
+    severity: 'warning',
+    medicationsInvolved: medications.map((m) => m.name),
+    description:
+      'The AI interaction check could not be completed, so these medications have NOT been verified.',
+    recommendation:
+      'Please confirm this combination with your doctor or pharmacist before changing any dose.',
+  }
+}
 
 /**
  * 1. AI Clinical Drug-Drug Interaction Analyzer
@@ -33,16 +67,16 @@ export const googleGenAIClassic: GoogleGenerativeAI | null = apiKey
 export async function analyzeDrugInteractionsWithGemini(
   medications: Medication[]
 ): Promise<DrugInteractionAlert[]> {
-  if (!aiInstance || medications.length < 2) {
+  if (medications.length < 2) {
     return [
       {
         severity: 'safe',
         medicationsInvolved: medications.map((m) => m.name),
-        description: 'No critical adverse contraindications detected between current active medications.',
-        recommendation: 'Ensure consistent timing and take with prescribed meals.',
-        dietaryNote: 'Avoid grapefruit juice when taking cholesterol-lowering statins.',
+        description:
+          'Fewer than two active medications, so no drug-drug interaction is possible.',
+        recommendation: 'Take as prescribed by your doctor.',
       },
-    ];
+    ]
   }
 
   const prompt = `You are an expert clinical pharmacist specializing in geriatric healthcare.
@@ -59,31 +93,18 @@ Respond with a strict JSON array of objects with these exact keys:
     "recommendation": "Actionable advice for the caretaker/elder",
     "dietaryNote": "Any food/drink that must be avoided"
   }
-]`;
+]`
 
   try {
-    const response = await aiInstance.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        temperature: 0.2,
-      },
-    });
-
-    const text = response.text?.trim() || '[]';
-    const parsed = JSON.parse(text);
-    return Array.isArray(parsed) ? parsed : [parsed];
+    const text =
+      (await callGemini(prompt, { json: true, temperature: 0.2 })) || '[]'
+    const parsed: unknown = JSON.parse(text)
+    const list = Array.isArray(parsed) ? parsed : [parsed]
+    const valid = list.filter(isDrugInteractionAlert)
+    return valid.length > 0 ? valid : [buildUnverifiedAlert(medications)]
   } catch (error) {
-    console.error('[GeminiHealthcare] Interaction check failed:', error);
-    return [
-      {
-        severity: 'safe',
-        medicationsInvolved: medications.map((m) => m.name),
-        description: 'All medications verified compatible by baseline clinical rules.',
-        recommendation: 'Continue daily regimen as scheduled by your doctor.',
-      },
-    ];
+    logger.error('[GeminiHealthcare] Interaction check failed:', error)
+    return [buildUnverifiedAlert(medications)]
   }
 }
 
@@ -93,19 +114,6 @@ Respond with a strict JSON array of objects with these exact keys:
 export async function parsePrescriptionWithGemini(
   prescriptionText: string
 ): Promise<Partial<Medication>[]> {
-  if (!aiInstance) {
-    return [
-      {
-        name: 'Parsed Medication Example',
-        dosage: '10mg - 1 Tablet',
-        slot: 'morning',
-        instructions: 'Take after food with water',
-        purpose: 'Maintenance therapy',
-        criticality: 'medium',
-      },
-    ];
-  }
-
   const prompt = `You are a medical OCR specialist. Extract structured medication schedules from this doctor prescription notes or pill bottle text:
 """
 ${prescriptionText}
@@ -122,42 +130,18 @@ Return a strict JSON array of medications:
     "purpose": "Primary condition treated (e.g. Blood Pressure, Diabetes)",
     "criticality": "high" | "medium" | "low"
   }
-]`;
+]`
 
   try {
-    const response = await aiInstance.models.generateContent({
-      model: 'gemini-1.5-flash',
-      contents: prompt,
-      config: {
-        responseMimeType: 'application/json',
-        temperature: 0.1,
-      },
-    });
-
-    const text = response.text?.trim() || '[]';
-    return JSON.parse(text);
+    // Never invent medication data for a patient: if Gemini is unavailable this throws
+    // and the UI asks the user to enter the medication manually.
+    const text =
+      (await callGemini(prompt, { json: true, temperature: 0.1 })) || '[]'
+    const parsed: unknown = JSON.parse(text)
+    return Array.isArray(parsed) ? (parsed as Partial<Medication>[]) : []
   } catch (err) {
-    console.warn('[GeminiHealthcare] Prescription parse fallback due to API notice:', err);
-    return [
-      {
-        name: 'Amlodipine Besylate',
-        dosage: '5mg',
-        slot: 'morning',
-        time: '08:00 AM',
-        instructions: 'Take 1 tablet orally with water after breakfast',
-        purpose: 'Hypertension Management',
-        criticality: 'high',
-      },
-      {
-        name: 'Metformin HCl',
-        dosage: '500mg',
-        slot: 'night',
-        time: '08:00 PM',
-        instructions: 'Take 1 tablet with dinner',
-        purpose: 'Type-2 Diabetes',
-        criticality: 'medium',
-      },
-    ];
+    logger.error('[GeminiHealthcare] Prescription parse error:', err)
+    throw err
   }
 }
 
@@ -169,7 +153,7 @@ const LANGUAGE_NAMES: Record<string, string> = {
   kn: 'Kannada (ಕನ್ನಡ)',
   ml: 'Malayalam (മലയാളം)',
   es: 'Spanish (Español)',
-};
+}
 
 /**
  * 3. AI Elder Companion / Voice Explainer with Multi-Language Support
@@ -180,46 +164,38 @@ export async function generateElderFriendlyExplanation(
   honorific: string = 'Amma',
   language: string = 'en'
 ): Promise<string> {
-  const targetLanguageName = LANGUAGE_NAMES[language] || 'English';
+  const targetLanguageName = LANGUAGE_NAMES[language] || 'English'
 
-  if (!aiInstance) {
+  const fallbackMessage = (): string => {
     if (language === 'ta') {
-      return `${honorific}, மருத்துவர் கூறியபடி ${medicationName} மருந்தை வெதுவெதுப்பான நீருடன் எடுத்துக் கொள்ளுங்கள்.`;
+      return `${honorific}, மருத்துவர் கூறியபடி ${medicationName} மருந்தை வெதுவெதுப்பான நீருடன் எடுத்துக் கொள்ளுங்கள்.`
     }
     if (language === 'hi') {
-      return `${honorific}, डॉक्टर के बताए अनुसार ${medicationName} दवा पानी के साथ ले लीजिए।`;
+      return `${honorific}, डॉक्टर के बताए अनुसार ${medicationName} दवा पानी के साथ ले लीजिए।`
     }
     if (language === 'te') {
-      return `${honorific}, డాక్టర్ చెప్పినట్లుగా ${medicationName} మందును నీటితో తీసుకోండి.`;
+      return `${honorific}, డాక్టర్ చెప్పినట్లుగా ${medicationName} మందును నీటితో తీసుకోండి.`
     }
     if (language === 'kn') {
-      return `${honorific}, ವೈದ್ಯರು ತಿಳಿಸಿದಂತೆ ${medicationName} ಔಷಧಿಯನ್ನು ನೀರಿನೊಂದಿಗೆ ಸೇವಿಸಿ.`;
+      return `${honorific}, ವೈದ್ಯರು ತಿಳಿಸಿದಂತೆ ${medicationName} ಔಷಧಿಯನ್ನು ನೀರಿನೊಂದಿಗೆ ಸೇವಿಸಿ.`
     }
     if (language === 'ml') {
-      return `${honorific}, ഡോക്ടർ പറഞ്ഞതുപോലെ ${medicationName} മരുന്ന് വെള്ളത്തോടൊപ്പം കഴിക്കൂ.`;
+      return `${honorific}, ഡോക്ടർ പറഞ്ഞതുപോലെ ${medicationName} മരുന്ന് വെള്ളത്തോടൊപ്പം കഴിക്കൂ.`
     }
     if (language === 'es') {
-      return `${honorific}, por favor tome su medicamento ${medicationName} con agua según las indicaciones de su médico.`;
+      return `${honorific}, por favor tome su medicamento ${medicationName} con agua según las indicaciones de su médico.`
     }
-    return `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`;
+    return `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`
   }
 
   const prompt = `Convert the following medical instruction into an empathetic, warm, easy-to-understand 2-sentence audio reminder for an elderly elder affectionately addressed as "${honorific}".
 Target Language: Write the entire response strictly in ${targetLanguageName}. Keep it culturally affectionate, respectful, reassuring, and crystal clear so that an elder listening to voice audio understands immediately:
 Medication: ${medicationName}
-Medical Instructions: ${instructions}`;
+Medical Instructions: ${instructions}`
 
   try {
-    const response = await aiInstance.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-      config: {
-        temperature: 0.4,
-      },
-    });
-
-    return response.text?.trim() || `${honorific}, please remember to take your ${medicationName}.`;
+    return (await callGemini(prompt, { temperature: 0.4 })) || fallbackMessage()
   } catch {
-    return `${honorific}, please take your ${medicationName} now with some water.`;
+    return fallbackMessage()
   }
 }

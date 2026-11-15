@@ -3,6 +3,12 @@ import { type Models } from 'appwrite';
 
 export type UserType = Models.User<Models.Preferences> | null;
 
+/** Create a short-lived Appwrite JWT for protected same-origin API calls. */
+export async function getApiAuthHeaders(): Promise<Record<string, string>> {
+  const { jwt } = await account.createJWT();
+  return { Authorization: `Bearer ${jwt}` };
+}
+
 /**
  * Initiates Google OAuth2 login flow with Appwrite
  */

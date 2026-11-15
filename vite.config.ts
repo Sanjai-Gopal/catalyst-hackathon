@@ -18,30 +18,47 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
+      '@': path.resolve(import.meta.dirname, './src'),
     },
   },
   optimizeDeps: {
-    include: ['appwrite', '@google/genai', 'cobe', 'canvas-confetti'],
+    include: ['appwrite', 'cobe', 'canvas-confetti'],
   },
   test: {
     silent: 'passed-only',
     unstubEnvs: true,
-    browser: {
-      enabled: true,
-      provider: playwright(),
-      instances: [{ browser: 'chromium' }],
-    },
     coverage: {
-      // include: ['src/**/*.{js,jsx,ts,tsx}'], // Uncomment to expand the report to all src/**/* so untested modules appear as 0% coverage.
+      include: ['src/lib/carenest-logic.ts', 'src/services/**/*.ts'],
       exclude: [
         'src/components/ui/**',
-        'src/assets/**',
-        'src/tanstack-table.d.ts',
         'src/routeTree.gen.ts',
         'src/test-utils/**',
-        'src/routes/**',
       ],
     },
+    projects: [
+      {
+        // Pure-logic tests: run in Node, no browser needed (works in any CI/sandbox).
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'node',
+          include: ['src/**/*.unit.test.ts'],
+        },
+      },
+      {
+        // Component tests: run in real headless Chromium via Playwright.
+        extends: true,
+        test: {
+          name: 'browser',
+          include: ['src/**/*.test.{ts,tsx}'],
+          exclude: ['src/**/*.unit.test.ts'],
+          browser: {
+            enabled: true,
+            provider: playwright(),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+    ],
   },
 })
