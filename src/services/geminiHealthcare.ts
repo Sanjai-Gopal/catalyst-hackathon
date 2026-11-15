@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { Medication, DrugInteractionAlert } from '../types/carenest';
+import { type Medication, type DrugInteractionAlert } from '../types/carenest';
 
 const apiKey =
   import.meta.env.VITE_GEMINI_API_KEY ||

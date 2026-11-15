@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Medication, TimeSlot } from '@/types/carenest';
+import { type Medication, type TimeSlot } from '@/types/carenest';
 import { parsePrescriptionWithGemini } from '@/services/geminiHealthcare';
 import { Sparkles, Pill, FileText, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';

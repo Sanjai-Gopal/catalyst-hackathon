@@ -1,5 +1,5 @@
 import { account, OAuthProvider } from './appwrite';
-import { Models } from 'appwrite';
+import { type Models } from 'appwrite';
 
 export type UserType = Models.User<Models.Preferences> | null;
 

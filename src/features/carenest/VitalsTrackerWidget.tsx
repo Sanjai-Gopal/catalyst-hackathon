@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { HealthVitalRecord } from '@/types/carenest';
+import { type HealthVitalRecord } from '@/types/carenest';
 import { INITIAL_VITALS } from '@/data/carenestInitialData';
 
 interface VitalsTrackerWidgetProps {

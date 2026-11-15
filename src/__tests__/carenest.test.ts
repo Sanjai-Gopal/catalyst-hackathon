@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { Medication, TimeSlot } from '../types/carenest';
+import { type Medication, type TimeSlot } from '../types/carenest';
 import { buildEmailTemplate } from '../services/emailService';
 import { INITIAL_MEDICATIONS, INITIAL_PATIENT } from '../data/carenestInitialData';
 

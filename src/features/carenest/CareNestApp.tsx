@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import {
-  PatientProfile,
-  Medication,
-  DoctorAppointment,
-  AdherenceRecord,
-  TimeSlot,
+  type PatientProfile,
+  type Medication,
+  type DoctorAppointment,
+  type AdherenceRecord,
+  type TimeSlot,
 } from '@/types/carenest';
 import {
   INITIAL_PATIENT,
@@ -59,7 +59,12 @@ export function CareNestApp() {
 
   const [mode, setMode] = useState<'senior' | 'caretaker'>('senior');
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('carenest_start_onboarding') === 'true';
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -74,15 +79,6 @@ export function CareNestApp() {
     }
     toast.success('Live routine reset: All medications marked as Pending!');
   };
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const shouldOnboard = localStorage.getItem('carenest_start_onboarding');
-      if (shouldOnboard === 'true') {
-        setIsOnboardingOpen(true);
-      }
-    }
-  }, []);
 
   const handleOnboardingComplete = (
     updatedProfile: PatientProfile,

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { LabReportRecord } from '@/types/carenest';
+import { type LabReportRecord } from '@/types/carenest';
 import { INITIAL_LAB_REPORTS } from '@/data/carenestInitialData';
 
 interface LabReportsVaultProps {

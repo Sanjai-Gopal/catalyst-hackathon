@@ -1,4 +1,4 @@
-import { EmailNotificationPayload } from '../types/carenest';
+import { type EmailNotificationPayload } from '../types/carenest';
 
 const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY || '';
 

@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Medication } from '@/types/carenest';
+import { type Medication } from '@/types/carenest';
 
 interface PharmacyRefillDialogProps {
   isOpen: boolean;

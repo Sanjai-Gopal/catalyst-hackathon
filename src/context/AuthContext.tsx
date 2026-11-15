@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { UserType, getCurrentUser, signInWithGoogle, signOut } from '../lib/auth';
+import { type UserType, getCurrentUser, signInWithGoogle, signOut } from '../lib/auth';
 
 interface AuthContextType {
   user: UserType;
@@ -33,8 +33,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    let isMounted = true;
+    getCurrentUser()
+      .then((currentUser) => {
+        if (isMounted) {
+          setUser(currentUser);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setUser(null);
+          setLoading(false);
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSignIn = async () => {
     await signInWithGoogle();

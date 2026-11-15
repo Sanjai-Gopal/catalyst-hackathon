@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import {
-  Medication,
-  DoctorAppointment,
-  AdherenceRecord,
-  PatientProfile,
-  DrugInteractionAlert,
-  TimeSlot,
+  type Medication,
+  type DoctorAppointment,
+  type AdherenceRecord,
+  type PatientProfile,
+  type DrugInteractionAlert,
+  type TimeSlot,
 } from '@/types/carenest';
 import { Button } from '@/components/ui/button';
 import {
@@ -121,11 +121,6 @@ export function CaretakerDashboard({
     'missed_medication' | 'upcoming_dose' | 'appointment_reminder' | 'emergency_sos'
   >('missed_medication');
 
-  // Run initial interaction check
-  useEffect(() => {
-    void handleRunSafetyCheck();
-  }, [medications.length]);
-
   const handleRunSafetyCheck = async () => {
     setIsCheckingInteractions(true);
     try {
@@ -137,6 +132,21 @@ export function CaretakerDashboard({
       setIsCheckingInteractions(false);
     }
   };
+
+  // Run initial interaction check asynchronously
+  useEffect(() => {
+    let isMounted = true;
+    analyzeDrugInteractionsWithGemini(medications)
+      .then((alerts) => {
+        if (isMounted) {
+          setInteractionAlerts(alerts);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [medications]);
 
   // Dispatch Email Handler
   const handleDispatchEmail = async (

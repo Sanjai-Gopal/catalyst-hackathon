@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLanguage, LanguageCode } from '@/context/language-context';
+import { useLanguage, type LanguageCode } from '@/context/language-context';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

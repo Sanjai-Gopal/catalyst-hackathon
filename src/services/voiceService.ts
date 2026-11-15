@@ -30,7 +30,7 @@ export function getInstantElderVoiceTemplate(
     return speechGuidanceCache.get(cacheKey)!;
   }
 
-  let text = '';
+  let text: string;
   switch (lang) {
     case 'ta':
       text = `${honorific}, உங்கள் ${medName} மருந்தை குறித்த நேரத்தில் எடுத்துக் கொள்ளுங்கள். குறிப்பு: ${instructions}. உடல் நலனை கவனித்துக் கொள்ளுங்கள்!`;

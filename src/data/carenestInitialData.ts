@@ -1,10 +1,10 @@
 import {
-  PatientProfile,
-  Medication,
-  DoctorAppointment,
-  AdherenceRecord,
-  HealthVitalRecord,
-  LabReportRecord,
+  type PatientProfile,
+  type Medication,
+  type DoctorAppointment,
+  type AdherenceRecord,
+  type HealthVitalRecord,
+  type LabReportRecord,
 } from '../types/carenest';
 
 export const INITIAL_PATIENT: PatientProfile = {

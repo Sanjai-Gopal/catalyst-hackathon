@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Medication, AdherenceRecord, TimeSlot, PatientProfile } from '@/types/carenest';
+import { type Medication, type AdherenceRecord, type TimeSlot, type PatientProfile } from '@/types/carenest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';

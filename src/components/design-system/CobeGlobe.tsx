@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import createGlobe, { Globe } from 'cobe';
+import createGlobe, { type Globe } from 'cobe';
 
 interface CobeGlobeProps {
   className?: string;

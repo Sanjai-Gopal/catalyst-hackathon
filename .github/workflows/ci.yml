@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-
   pull_request:
     branches:
       - main
@@ -15,36 +14,25 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
 
       - name: Setup Node.js
-        uses: actions/setup-node@60edb5dd545a775178f52524783379cf808bc1a0 # v4.0.2
+        uses: actions/setup-node@60edb5dd545a775178f52524783379cf808bc1a0
         with:
           node-version: 20
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@a3252b78c470c02df07e9d79298aa2cce9498885 # v4.0.0
-        with:
-          version: 9.15.4
-          run_install: false
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Lint the code
-        run: pnpm lint
-
-      # - name: Analyze unused files and dependencies
-      #   run: pnpm knip
-
-      - name: Run Prettier check
-        run: pnpm format:check
+        run: npm run lint
 
       - name: Install browsers
-        run: pnpm test:browser:install
+        run: npx playwright install chromium --with-deps
 
       - name: Run tests
-        run: pnpm test
+        run: npm test
 
       - name: Build the project
-        run: pnpm build
+        run: npm run build

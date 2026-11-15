@@ -17,14 +17,14 @@ import {
   startListening,
   stopListening,
   isSpeechRecognitionSupported,
-  ParsedVoiceCommand,
+  type ParsedVoiceCommand,
 } from '@/services/voiceRecognitionService';
 import {
   speakText,
   stopSpeaking,
   isSpeaking,
 } from '@/services/voiceService';
-import { Medication, TimeSlot } from '@/types/carenest';
+import { type Medication, type TimeSlot } from '@/types/carenest';
 
 interface VoiceAssistantWidgetProps {
   patientName?: string;
