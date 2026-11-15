@@ -8,17 +8,23 @@ const apiKey =
   '';
 
 let aiInstance: GoogleGenAI | null = null;
-let googleGenAIClassic: GoogleGenerativeAI | null = null;
 if (apiKey) {
   try {
     aiInstance = new GoogleGenAI({ apiKey });
-    googleGenAIClassic = new GoogleGenerativeAI(apiKey);
   } catch (err) {
     console.warn('[GeminiHealthcare] Init warning:', err);
   }
 }
 
-export { googleGenAIClassic };
+export const googleGenAIClassic: GoogleGenerativeAI | null = apiKey
+  ? (() => {
+      try {
+        return new GoogleGenerativeAI(apiKey);
+      } catch {
+        return null;
+      }
+    })()
+  : null;
 
 /**
  * 1. AI Clinical Drug-Drug Interaction Analyzer
