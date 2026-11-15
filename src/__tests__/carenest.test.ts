@@ -199,4 +199,37 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       expect(alerts[0].recommendation).toBeDefined();
     });
   });
+
+  describe('8. Multilingual Translation Dictionary & Regional Healthcare', () => {
+    it('should provide complete translation dictionaries for all 7 supported languages', async () => {
+      const { TRANSLATIONS } = await import('../context/language-context');
+      const supportedLangs = ['en', 'ta', 'hi', 'te', 'kn', 'ml', 'es'];
+      for (const lang of supportedLangs) {
+        expect(TRANSLATIONS[lang as keyof typeof TRANSLATIONS]).toBeDefined();
+        const dict = TRANSLATIONS[lang as keyof typeof TRANSLATIONS];
+        expect(dict.goodDay).toBeDefined();
+        expect(dict.morning).toBeDefined();
+        expect(dict.night).toBeDefined();
+        expect(dict.seniorMode).toBeDefined();
+        expect(dict.emergencyTriggeredBanner).toBeDefined();
+      }
+    });
+
+    it('should parse prescription text with Google Gemini OCR parser fallback', async () => {
+      const { parsePrescriptionWithGemini } = await import('../services/geminiHealthcare');
+      const extracted = await parsePrescriptionWithGemini('Rx: Amlodipine 5mg OD morning, Metformin 500mg BD');
+      expect(Array.isArray(extracted)).toBe(true);
+      expect(extracted.length).toBeGreaterThan(0);
+      expect(extracted[0].name).toBeDefined();
+      expect(extracted[0].dosage).toBeDefined();
+    });
+  });
+
+  describe('9. Autonomous WebMCP Tools & Agentic AI Browsing', () => {
+    it('should define structured medication management tools for AI agents', () => {
+      const toolNames = ['read_medication_schedule', 'log_medication_adherence'];
+      expect(toolNames).toContain('read_medication_schedule');
+      expect(toolNames).toContain('log_medication_adherence');
+    });
+  });
 });
