@@ -10,7 +10,6 @@ import {
   INITIAL_PATIENT,
   INITIAL_MEDICATIONS,
   INITIAL_APPOINTMENTS,
-  INITIAL_ADHERENCE,
 } from '@/data/carenestInitialData';
 import { SeniorModeView } from './SeniorModeView';
 import { CaretakerDashboard } from './CaretakerDashboard';
@@ -46,11 +45,35 @@ export function CareNestApp() {
   });
 
   const [appointments] = useState<DoctorAppointment[]>(INITIAL_APPOINTMENTS);
-  const [adherence, setAdherence] = useState<AdherenceRecord[]>(INITIAL_ADHERENCE);
+  const [adherence, setAdherence] = useState<AdherenceRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('carenest_adherence');
+        if (stored) return JSON.parse(stored);
+      } catch {
+        // fallback
+      }
+    }
+    return [];
+  });
 
   const [mode, setMode] = useState<'senior' | 'caretaker'>('senior');
   const [isPasscodeModalOpen, setIsPasscodeModalOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('carenest_adherence', JSON.stringify(adherence));
+    }
+  }, [adherence]);
+
+  const handleResetRoutine = () => {
+    setAdherence([]);
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('carenest_adherence');
+    }
+    toast.success('Live routine reset: All medications marked as Pending!');
+  };
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -158,6 +181,7 @@ export function CareNestApp() {
             onMarkTaken={handleMarkTaken}
             onOpenPasscodeModal={() => setIsPasscodeModalOpen(true)}
             onOpenOnboarding={() => setIsOnboardingOpen(true)}
+            onResetRoutine={handleResetRoutine}
           />
         ) : (
           <CaretakerDashboard
@@ -170,6 +194,7 @@ export function CareNestApp() {
             onMarkTaken={handleMarkTaken}
             onSwitchToSeniorMode={() => setMode('senior')}
             onOpenOnboarding={() => setIsOnboardingOpen(true)}
+            onResetRoutine={handleResetRoutine}
           />
         )}
 

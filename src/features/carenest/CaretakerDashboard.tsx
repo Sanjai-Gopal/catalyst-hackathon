@@ -40,6 +40,7 @@ import {
   AlertCircle,
   Volume2,
   Video,
+  RotateCcw,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
@@ -64,6 +65,7 @@ interface CaretakerDashboardProps {
   onMarkTaken: (medId: string, slot: TimeSlot) => void;
   onSwitchToSeniorMode: () => void;
   onOpenOnboarding?: () => void;
+  onResetRoutine?: () => void;
 }
 
 interface EmailLogItem {
@@ -85,6 +87,7 @@ export function CaretakerDashboard({
   onMarkTaken,
   onSwitchToSeniorMode,
   onOpenOnboarding,
+  onResetRoutine,
 }: CaretakerDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -241,6 +244,17 @@ export function CaretakerDashboard({
               >
                 <Sparkles className='w-3.5 h-3.5' />
                 <span>{t('careCircleSetup')}</span>
+              </Button>
+            )}
+            {onResetRoutine && (
+              <Button
+                variant='outline'
+                onClick={onResetRoutine}
+                className='h-10 px-3.5 text-xs font-semibold rounded-xl border-border hover:bg-muted flex items-center gap-1.5'
+                title='Reset daily routine to pending'
+              >
+                <RotateCcw className='w-3.5 h-3.5 text-emerald-600' />
+                <span>Reset Routine</span>
               </Button>
             )}
             <Button

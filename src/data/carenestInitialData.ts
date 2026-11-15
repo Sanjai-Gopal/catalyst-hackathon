@@ -118,28 +118,7 @@ export const INITIAL_APPOINTMENTS: DoctorAppointment[] = [
   },
 ];
 
-export const INITIAL_ADHERENCE: AdherenceRecord[] = [
-  {
-    id: 'adh_01',
-    medicationId: 'med_01',
-    medicationName: 'Amlodipine (Norvasc)',
-    slot: 'morning',
-    date: new Date().toISOString().split('T')[0],
-    status: 'taken',
-    loggedAt: '08:12 AM',
-    loggedBy: 'elder',
-  },
-  {
-    id: 'adh_02',
-    medicationId: 'med_02',
-    medicationName: 'Metformin Hydrochloride',
-    slot: 'morning',
-    date: new Date().toISOString().split('T')[0],
-    status: 'taken',
-    loggedAt: '08:35 AM',
-    loggedBy: 'elder',
-  },
-];
+export const INITIAL_ADHERENCE: AdherenceRecord[] = [];
 
 export const INITIAL_VITALS: HealthVitalRecord[] = [
   {

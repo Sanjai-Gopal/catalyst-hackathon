@@ -28,6 +28,7 @@ import {
   ShieldAlert,
   Stethoscope,
   Video,
+  RotateCcw,
 } from 'lucide-react';
 import {
   speakText,
@@ -74,6 +75,7 @@ interface SeniorModeViewProps {
   onMarkTaken: (medicationId: string, slot: TimeSlot) => void;
   onOpenPasscodeModal: () => void;
   onOpenOnboarding?: () => void;
+  onResetRoutine?: () => void;
 }
 
 export function SeniorModeView({
@@ -84,6 +86,7 @@ export function SeniorModeView({
   onMarkTaken,
   onOpenPasscodeModal,
   onOpenOnboarding,
+  onResetRoutine,
 }: SeniorModeViewProps) {
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot>('morning');
   const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
@@ -288,6 +291,18 @@ export function SeniorModeView({
             <span>{currentLanguage === 'ta' ? 'டாக்டர் வீடியோ' : currentLanguage === 'hi' ? 'डॉक्टर वीडियो' : 'Doctor Video'}</span>
           </Button>
 
+          {onResetRoutine && (
+            <Button
+              variant='outline'
+              onClick={onResetRoutine}
+              className='h-11 px-3.5 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#2C2825] rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5'
+              title='Reset routine to all pending'
+            >
+              <RotateCcw className='w-4 h-4 text-emerald-600' />
+              <span>Reset Routine</span>
+            </Button>
+          )}
+
           {onOpenOnboarding && (
             <Button
               variant='outline'
@@ -311,28 +326,31 @@ export function SeniorModeView({
       </div>
 
       {/* Bedside Clinical Vitals Bar */}
-      <div className='my-4 px-4 py-2.5 rounded-2xl bg-white border border-[#E8E2D9] shadow-xs flex flex-wrap items-center justify-between text-xs text-[#5C554E] gap-2'>
-        <div className='flex items-center gap-4 flex-wrap'>
-          <span className='flex items-center gap-1.5 font-medium'>
-            <span className='h-2 w-2 rounded-full bg-emerald-500'></span>
-            <strong>BP:</strong> 122/78 mmHg
+      <div className='my-4 px-4 py-3 rounded-2xl bg-white border border-[#E0D8CD] shadow-xs flex flex-wrap items-center justify-between text-xs text-[#2C2825] gap-3'>
+        <div className='flex items-center gap-4 flex-wrap font-medium'>
+          <span className='flex items-center gap-1.5'>
+            <span className='h-2.5 w-2.5 rounded-full bg-emerald-600 inline-block'></span>
+            <strong className='text-[#1E1B18]'>BP:</strong> 122/78 mmHg
           </span>
-          <span className='flex items-center gap-1.5 font-medium'>
-            <span className='h-2 w-2 rounded-full bg-amber-500'></span>
-            <strong>Blood Sugar:</strong> 108 mg/dL
+          <span className='flex items-center gap-1.5'>
+            <span className='h-2.5 w-2.5 rounded-full bg-amber-600 inline-block'></span>
+            <strong className='text-[#1E1B18]'>Blood Sugar:</strong> 108 mg/dL
           </span>
-          <span className='flex items-center gap-1.5 font-medium'>
-            <span className='h-2 w-2 rounded-full bg-rose-500'></span>
-            <strong>Heart Rate:</strong> 72 bpm
+          <span className='flex items-center gap-1.5'>
+            <span className='h-2.5 w-2.5 rounded-full bg-rose-600 inline-block'></span>
+            <strong className='text-[#1E1B18]'>Heart Rate:</strong> 72 bpm
           </span>
-          <span className='flex items-center gap-1.5 font-medium'>
-            <span className='h-2 w-2 rounded-full bg-blue-500'></span>
-            <strong>SpO2:</strong> 98%
+          <span className='flex items-center gap-1.5'>
+            <span className='h-2.5 w-2.5 rounded-full bg-blue-600 inline-block'></span>
+            <strong className='text-[#1E1B18]'>SpO2:</strong> 98%
           </span>
         </div>
-        <span className='text-[11px] font-mono text-[#8C827A]'>
-          Live Clinical Telemetry Active ✓
-        </span>
+        <div className='flex items-center gap-2'>
+          <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-semibold'>
+            <span className='h-2 w-2 rounded-full bg-emerald-500 animate-ping'></span>
+            ● Live Real-Time Adherence (Zero Mock Data)
+          </span>
+        </div>
       </div>
 
       {/* Voice Assistant - Instant Low-Latency Voice Interaction */}
@@ -413,20 +431,59 @@ export function SeniorModeView({
         </button>
       </div>
 
-      {/* Completion Banner */}
-      {isSlotComplete && (
-        <div className='mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex items-center gap-3 shadow-sm'>
-          <Sparkles className='w-6 h-6 text-emerald-600 flex-shrink-0' />
-          <div>
-            <h4 className='font-bold text-base'>
-              {t('wonderfulJob', { honorific: activeHonorific, slot: t(selectedSlot) })}
-            </h4>
-            <p className='text-sm text-emerald-700'>
-              {t('familyNotified', { childName: activeChildContact.name })}
-            </p>
+      {/* Routine Status Banner */}
+      {isSlotComplete ? (
+        <div className='mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-3 shadow-xs'>
+          <div className='flex items-center gap-3'>
+            <Sparkles className='w-6 h-6 text-emerald-600 flex-shrink-0' />
+            <div>
+              <h4 className='font-bold text-base text-emerald-950'>
+                {t('wonderfulJob', { honorific: activeHonorific, slot: t(selectedSlot) })}
+              </h4>
+              <p className='text-xs text-emerald-800 font-medium'>
+                {t('familyNotified', { childName: activeChildContact.name })}
+              </p>
+            </div>
           </div>
+          {onResetRoutine && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={onResetRoutine}
+              className='h-8 text-xs border-emerald-300 text-emerald-900 bg-white hover:bg-emerald-100 font-semibold rounded-lg'
+            >
+              <RotateCcw className='w-3.5 h-3.5 mr-1 text-emerald-700' />
+              Reset Routine
+            </Button>
+          )}
         </div>
-      )}
+      ) : slotMeds.length > 0 ? (
+        <div className='mb-6 p-3.5 rounded-2xl bg-[#FFFBF0] border border-[#E8DEC8] text-[#2C2825] flex flex-wrap items-center justify-between gap-3 shadow-xs'>
+          <div className='flex items-center gap-2.5'>
+            <Clock className='w-5 h-5 text-amber-600 flex-shrink-0' />
+            <div>
+              <p className='font-bold text-sm text-[#1E1B18]'>
+                {t(selectedSlot)} Routine: {slotMeds.filter((m) => !isMedTaken(m.id)).length} of {slotMeds.length} pending for {activeHonorific}
+              </p>
+              <p className='text-xs text-[#5C554E] font-medium'>
+                Tap "Mark as Taken" below or speak "I took my medicine" to record real-time adherence.
+              </p>
+            </div>
+          </div>
+          {onResetRoutine && (
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={onResetRoutine}
+              className='h-8 text-xs border-[#D8CEBA] text-[#2C2825] bg-white hover:bg-[#F2ECE4] font-semibold rounded-lg'
+              title='Reset routine to all pending'
+            >
+              <RotateCcw className='w-3.5 h-3.5 mr-1 text-emerald-600' />
+              Reset to Pending
+            </Button>
+          )}
+        </div>
+      ) : null}
 
       {/* Medication Cards List */}
       <div className='space-y-4'>

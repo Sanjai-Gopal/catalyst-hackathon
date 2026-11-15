@@ -305,7 +305,7 @@ export function VoiceAssistantWidget({
   const supported = isSpeechRecognitionSupported();
 
   return (
-    <Card className='p-4 border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-amber-500/5 to-rose-500/5 shadow-md rounded-2xl'>
+    <Card className='p-4 border-2 border-[#E8E2D9] dark:border-border bg-white dark:bg-card shadow-md rounded-2xl'>
       <div className='flex flex-col sm:flex-row items-center justify-between gap-3'>
         {/* Left: Assistant Identity & Live Status */}
         <div className='flex items-center gap-3 w-full sm:w-auto'>
@@ -334,7 +334,7 @@ export function VoiceAssistantWidget({
 
           <div className='flex-1'>
             <div className='flex items-center gap-2'>
-              <h3 className='font-bold text-base tracking-tight flex items-center gap-1.5'>
+              <h3 className='font-bold text-base tracking-tight flex items-center gap-1.5 text-[#1E1B18] dark:text-foreground'>
                 <Sparkles className='h-4 w-4 text-primary fill-primary/20' />
                 {prompts.title}
               </h3>
@@ -345,7 +345,7 @@ export function VoiceAssistantWidget({
                 {isListening ? prompts.listening : supported ? 'Fast Voice (0ms)' : 'Voice Enabled'}
               </Badge>
             </div>
-            <p className='text-xs text-muted-foreground line-clamp-1'>
+            <p className='text-xs text-[#5C554E] dark:text-muted-foreground line-clamp-1 font-medium'>
               {transcript
                 ? `"${transcript}"`
                 : isListening
@@ -362,7 +362,7 @@ export function VoiceAssistantWidget({
             size='sm'
             variant='outline'
             onClick={handleReadScheduleAloud}
-            className='h-9 text-xs font-semibold gap-1.5 border-primary/20 hover:bg-primary/10'
+            className='h-9 text-xs font-semibold gap-1.5 border-[#D8D0C5] dark:border-border bg-white dark:bg-background text-[#2C2825] dark:text-foreground hover:bg-[#F2ECE4]'
           >
             <ListMusic className='h-3.5 w-3.5 text-primary' />
             {prompts.readPrompt}
@@ -378,9 +378,9 @@ export function VoiceAssistantWidget({
               speakText(prompts.takenFeedback, undefined, language, speechRate);
               toast.success(prompts.takenFeedback);
             }}
-            className='h-9 text-xs font-semibold gap-1.5 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
+            className='h-9 text-xs font-semibold gap-1.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
           >
-            <CheckCircle2 className='h-3.5 w-3.5' />
+            <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
             {prompts.takenPrompt}
           </Button>
 
@@ -393,9 +393,9 @@ export function VoiceAssistantWidget({
               speakText(prompts.callingChildFeedback, undefined, language, speechRate);
               onTriggerCallChild();
             }}
-            className='h-9 text-xs font-semibold gap-1.5 border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10'
+            className='h-9 text-xs font-semibold gap-1.5 bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-100'
           >
-            <PhoneCall className='h-3.5 w-3.5' />
+            <PhoneCall className='h-3.5 w-3.5 text-rose-600' />
             {prompts.callPrompt}
           </Button>
 
@@ -404,7 +404,7 @@ export function VoiceAssistantWidget({
             size='sm'
             variant='ghost'
             onClick={toggleSpeed}
-            className='h-9 px-2 text-[11px] font-mono text-muted-foreground hover:text-foreground'
+            className='h-9 px-2 text-[11px] font-mono font-bold text-[#5C554E] dark:text-muted-foreground bg-neutral-100 dark:bg-neutral-800 hover:text-foreground'
             title='Toggle speech rate'
           >
             <Zap className='h-3 w-3 mr-0.5 text-amber-500' />

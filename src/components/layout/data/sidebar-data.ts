@@ -9,7 +9,8 @@ import {
   Settings,
   Activity,
   Globe2,
-  ListTodo,
+  Video,
+  FileText,
 } from 'lucide-react'
 import { type SidebarData } from '../types'
 
@@ -61,6 +62,21 @@ export const sidebarData: SidebarData = {
           icon: Calendar,
         },
         {
+          title: 'Clinical Vitals Telemetry',
+          url: '/',
+          icon: Activity,
+        },
+        {
+          title: 'TeleHealth Room',
+          url: '/',
+          icon: Video,
+        },
+        {
+          title: 'Digital Health Vault',
+          url: '/',
+          icon: FileText,
+        },
+        {
           title: 'Gemini Safety Shield',
           url: '/',
           icon: Sparkles,
@@ -69,11 +85,6 @@ export const sidebarData: SidebarData = {
           title: 'Email Notification Engine',
           url: '/',
           icon: Mail,
-        },
-        {
-          title: 'Tasks',
-          url: '/tasks',
-          icon: ListTodo,
         },
       ],
     },
@@ -96,12 +107,16 @@ export const sidebarData: SidebarData = {
           icon: Settings,
           items: [
             {
-              title: 'Account',
-              url: '/settings/account',
+              title: 'Care Circle Contacts',
+              url: '/',
             },
             {
-              title: 'Notifications',
-              url: '/settings/notifications',
+              title: 'Voice Assistant & Speed',
+              url: '/',
+            },
+            {
+              title: 'Security & Passcode',
+              url: '/',
             },
           ],
         },
