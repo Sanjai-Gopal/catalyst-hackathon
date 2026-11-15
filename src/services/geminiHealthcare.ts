@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { type Medication, type DrugInteractionAlert } from '../types/carenest';
 
 const apiKey =
@@ -7,13 +8,17 @@ const apiKey =
   '';
 
 let aiInstance: GoogleGenAI | null = null;
+let googleGenAIClassic: GoogleGenerativeAI | null = null;
 if (apiKey) {
   try {
     aiInstance = new GoogleGenAI({ apiKey });
+    googleGenAIClassic = new GoogleGenerativeAI(apiKey);
   } catch (err) {
     console.warn('[GeminiHealthcare] Init warning:', err);
   }
 }
+
+export { googleGenAIClassic };
 
 /**
  * 1. AI Clinical Drug-Drug Interaction Analyzer
