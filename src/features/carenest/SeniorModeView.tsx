@@ -239,7 +239,13 @@ export function SeniorModeView({
   };
 
   return (
-    <main role='main' aria-label='Senior Care Dashboard' className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto'>
+    <main
+      id='content'
+      tabIndex={-1}
+      role='main'
+      aria-label='Senior Care Dashboard'
+      className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto focus:outline-none'
+    >
       {/* Top Header */}
       <div className='flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#E8E2D9]'>
         <div className='space-y-1'>
@@ -247,14 +253,14 @@ export function SeniorModeView({
             <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#E87A5D]/15 text-[#E87A5D]'>
               <Heart className='w-5 h-5 fill-current' />
             </span>
-            <span className='text-sm font-semibold tracking-wider uppercase text-[#5C554E]'>
+            <span className='text-sm font-semibold tracking-wider uppercase text-[#4A433D]'>
               CareNest • {t('seniorMode')}
             </span>
           </div>
           <h1 className='text-3xl md:text-4xl font-serif font-bold text-[#1E1B18]'>
             {t('goodDay')}, {activeHonorific}! {honorificEmoji}
           </h1>
-          <p className='text-base text-[#6E665E]'>
+          <p className='text-base text-[#4A433D] font-medium'>
             {t('caringWithLove', { honorific: activeHonorific })} •{' '}
             {new Date().toLocaleDateString(
               currentLanguage === 'en' ? 'en-US' : currentLanguage,
@@ -275,6 +281,7 @@ export function SeniorModeView({
           <Button
             size='sm'
             onClick={handleTriggerSOS}
+            aria-label={t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}
             className='h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 animate-pulse'
           >
             <PhoneCall className='w-4 h-4' />
@@ -285,6 +292,7 @@ export function SeniorModeView({
           <Button
             size='sm'
             onClick={() => setIsDoctorVideoOpen(true)}
+            aria-label='Open Doctor Video Teleconsultation'
             className='h-11 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5'
           >
             <Video className='w-4 h-4' />
@@ -295,6 +303,7 @@ export function SeniorModeView({
             <Button
               variant='outline'
               onClick={onResetRoutine}
+              aria-label='Reset routine to all pending'
               className='h-11 px-3.5 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#2C2825] rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5'
               title='Reset routine to all pending'
             >
@@ -307,6 +316,7 @@ export function SeniorModeView({
             <Button
               variant='outline'
               onClick={onOpenOnboarding}
+              aria-label='Configure Care Circle Setup'
               className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
             >
               <Users className='w-4 h-4 text-primary' />
@@ -317,9 +327,10 @@ export function SeniorModeView({
           <Button
             variant='outline'
             onClick={onOpenPasscodeModal}
+            aria-label='Unlock Caregiver Portal with Security Passcode'
             className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
           >
-            <Shield className='w-4 h-4 text-[#5C554E]' />
+            <Shield className='w-4 h-4 text-[#4A433D]' />
             <span>{t('caregiverPortal')}</span>
           </Button>
         </div>
@@ -373,11 +384,14 @@ export function SeniorModeView({
       </div>
 
       {/* Time Slot Switcher - Large, accessible touch targets */}
-      <div className='my-6 grid grid-cols-2 sm:grid-cols-4 gap-3'>
+      <div role='tablist' aria-label='Medication schedule time slots' className='my-6 grid grid-cols-2 sm:grid-cols-4 gap-3'>
         <button
           type='button'
+          role='tab'
+          aria-selected={selectedSlot === 'morning'}
+          aria-label={`${t('morning')} schedule, ${t('morningTime')}`}
           onClick={() => setSelectedSlot('morning')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
             selectedSlot === 'morning'
               ? 'bg-amber-50 border-amber-500 shadow-md scale-[1.02]'
               : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
@@ -385,13 +399,16 @@ export function SeniorModeView({
         >
           <Sun className='w-8 h-8 text-amber-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('morning')}</span>
-          <span className='text-xs text-[#5C554E] font-medium'>{t('morningTime')}</span>
+          <span className='text-xs text-[#4A433D] font-medium'>{t('morningTime')}</span>
         </button>
 
         <button
           type='button'
+          role='tab'
+          aria-selected={selectedSlot === 'afternoon'}
+          aria-label={`${t('afternoon')} schedule, ${t('afternoonTime')}`}
           onClick={() => setSelectedSlot('afternoon')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
             selectedSlot === 'afternoon'
               ? 'bg-orange-50 border-orange-500 shadow-md scale-[1.02]'
               : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
@@ -399,13 +416,16 @@ export function SeniorModeView({
         >
           <CloudSun className='w-8 h-8 text-orange-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('afternoon')}</span>
-          <span className='text-xs text-[#5C554E] font-medium'>{t('afternoonTime')}</span>
+          <span className='text-xs text-[#4A433D] font-medium'>{t('afternoonTime')}</span>
         </button>
 
         <button
           type='button'
+          role='tab'
+          aria-selected={selectedSlot === 'evening'}
+          aria-label={`${t('evening')} schedule, ${t('eveningTime')}`}
           onClick={() => setSelectedSlot('evening')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
             selectedSlot === 'evening'
               ? 'bg-indigo-50 border-indigo-500 shadow-md scale-[1.02]'
               : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
@@ -413,13 +433,16 @@ export function SeniorModeView({
         >
           <Sunset className='w-8 h-8 text-indigo-500 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('evening')}</span>
-          <span className='text-xs text-[#5C554E] font-medium'>{t('eveningTime')}</span>
+          <span className='text-xs text-[#4A433D] font-medium'>{t('eveningTime')}</span>
         </button>
 
         <button
           type='button'
+          role='tab'
+          aria-selected={selectedSlot === 'night'}
+          aria-label={`${t('night')} schedule, ${t('nightTime')}`}
           onClick={() => setSelectedSlot('night')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all ${
+          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
             selectedSlot === 'night'
               ? 'bg-purple-50 border-purple-500 shadow-md scale-[1.02]'
               : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
@@ -427,7 +450,7 @@ export function SeniorModeView({
         >
           <Moon className='w-8 h-8 text-purple-600 mb-1' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('night')}</span>
-          <span className='text-xs text-[#5C554E] font-medium'>{t('nightTime')}</span>
+          <span className='text-xs text-[#4A433D] font-medium'>{t('nightTime')}</span>
         </button>
       </div>
 
@@ -550,6 +573,8 @@ export function SeniorModeView({
                         size='lg'
                         onClick={() => onMarkTaken(med.id, selectedSlot)}
                         disabled={taken}
+                        aria-label={taken ? `${med.name} taken today` : `Mark ${med.name} as taken`}
+                        data-webmcp-tool='log_medication_adherence'
                         className={`h-14 text-base font-bold rounded-xl transition-all shadow-md ${
                           taken
                             ? 'bg-emerald-100 text-emerald-800 cursor-default'
@@ -564,6 +589,7 @@ export function SeniorModeView({
                         variant='outline'
                         size='lg'
                         onClick={() => handleSpeak(med)}
+                        aria-label={speakingMedId === med.id ? `Stop audio guidance for ${med.name}` : `Listen to audio guidance for ${med.name}`}
                         className='h-12 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl font-medium'
                       >
                         {speakingMedId === med.id ? (

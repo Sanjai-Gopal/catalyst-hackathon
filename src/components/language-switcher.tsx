@@ -38,6 +38,7 @@ export function LanguageSwitcher({
         <Button
           variant={variant}
           size={size}
+          aria-label='Select application language'
           className={`h-11 px-3.5 rounded-xl border border-border/80 bg-background/80 hover:bg-muted font-semibold text-xs shadow-sm flex items-center gap-2 ${className}`}
         >
           <Globe className='w-4 h-4 text-primary' />

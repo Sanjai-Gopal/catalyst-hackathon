@@ -363,7 +363,8 @@ export function VoiceAssistantWidget({
             size='sm'
             variant='outline'
             onClick={handleReadScheduleAloud}
-            className='h-9 text-xs font-semibold gap-1.5 border-[#D8D0C5] dark:border-border bg-white dark:bg-background text-[#2C2825] dark:text-foreground hover:bg-[#F2ECE4]'
+            aria-label={prompts.readPrompt}
+            className='h-11 sm:h-9 text-xs font-semibold gap-1.5 border-[#D8D0C5] dark:border-border bg-white dark:bg-background text-[#2C2825] dark:text-foreground hover:bg-[#F2ECE4]'
           >
             <ListMusic className='h-3.5 w-3.5 text-primary' />
             {prompts.readPrompt}
@@ -379,7 +380,8 @@ export function VoiceAssistantWidget({
               speakText(prompts.takenFeedback, undefined, language, speechRate);
               toast.success(prompts.takenFeedback);
             }}
-            className='h-9 text-xs font-semibold gap-1.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
+            aria-label={prompts.takenPrompt}
+            className='h-11 sm:h-9 text-xs font-semibold gap-1.5 bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100'
           >
             <CheckCircle2 className='h-3.5 w-3.5 text-emerald-600' />
             {prompts.takenPrompt}
@@ -394,7 +396,8 @@ export function VoiceAssistantWidget({
               speakText(prompts.callingChildFeedback, undefined, language, speechRate);
               onTriggerCallChild();
             }}
-            className='h-9 text-xs font-semibold gap-1.5 bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-100'
+            aria-label={prompts.callPrompt}
+            className='h-11 sm:h-9 text-xs font-semibold gap-1.5 bg-rose-50 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700 hover:bg-rose-100'
           >
             <PhoneCall className='h-3.5 w-3.5 text-rose-600' />
             {prompts.callPrompt}
@@ -406,7 +409,7 @@ export function VoiceAssistantWidget({
             variant='ghost'
             onClick={toggleSpeed}
             aria-label={`Toggle speech rate, current rate is ${speechRate}x`}
-            className='h-9 px-2 text-[11px] font-mono font-bold text-[#5C554E] dark:text-muted-foreground bg-neutral-100 dark:bg-neutral-800 hover:text-foreground'
+            className='h-11 sm:h-9 px-2 text-[11px] font-mono font-bold text-[#5C554E] dark:text-muted-foreground bg-neutral-100 dark:bg-neutral-800 hover:text-foreground'
             title='Toggle speech rate'
           >
             <Zap className='h-3 w-3 mr-0.5 text-amber-500' />
@@ -420,7 +423,7 @@ export function VoiceAssistantWidget({
               variant='destructive'
               onClick={stopSpeaking}
               aria-label='Stop audio readout'
-              className='h-9 px-2 text-xs font-semibold'
+              className='h-11 sm:h-9 px-2 text-xs font-semibold'
               title='Stop audio'
             >
               <VolumeX className='h-3.5 w-3.5' />

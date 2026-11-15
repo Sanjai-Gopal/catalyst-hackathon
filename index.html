@@ -55,6 +55,11 @@
     />
 
     <link rel="canonical" href="https://catalyst-hackathon-lime.vercel.app/" />
+    <meta name="robots" content="index, follow" />
+    <meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <link rel="alternate" type="text/markdown" href="/llms.txt" title="LLMs Context" />
+    <link rel="alternate" type="text/plain" href="/llms-full.txt" title="Full LLMs Specification" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
     <!-- Schema.org JSON-LD for Agentic AI Browsing & Healthcare WebPage -->
     <script type="application/ld+json">
@@ -104,6 +109,37 @@
     />
 
     <meta name="theme-color" content="#fff" />
+    <!-- Web Model Context Protocol (WebMCP) Registration for Agentic AI Browsers -->
+    <script>
+      if (typeof window !== 'undefined') {
+        window.__webmcp_manifest = {
+          name: "CareNest AI Agent Tools",
+          version: "1.0.0",
+          tools: [
+            {
+              name: "read_medication_schedule",
+              description: "Read active medication schedule and adherence status",
+              inputSchema: { type: "object", properties: { slot: { type: "string", enum: ["morning", "afternoon", "evening", "night"] } } }
+            },
+            {
+              name: "log_medication_adherence",
+              description: "Log adherence confirmation for a scheduled medication",
+              inputSchema: { type: "object", properties: { medId: { type: "string" } }, required: ["medId"] }
+            }
+          ]
+        };
+        if ('modelContext' in navigator && typeof navigator.modelContext.registerTool === 'function') {
+          try {
+            navigator.modelContext.registerTool({
+              name: "read_medication_schedule",
+              description: "Read active medication schedule",
+              inputSchema: { type: "object", properties: {} },
+              execute: async () => JSON.parse(localStorage.getItem('carenest_medications') || '[]')
+            });
+          } catch (e) {}
+        }
+      }
+    </script>
   </head>
 
   <body>
