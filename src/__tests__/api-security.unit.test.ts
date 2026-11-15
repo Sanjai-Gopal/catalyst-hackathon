@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { POST as sendEmail } from '../../api/send-email'
 import { POST as gemini } from '../../api/gemini'
+import { POST as sendEmail } from '../../api/send-email'
 
 const ORIGIN = 'https://carenest.example'
 
@@ -31,9 +31,11 @@ describe('server API security boundaries', () => {
     vi.stubEnv('GEMINI_API_KEY', 'test-key')
     vi.stubEnv('APP_ALLOWED_ORIGINS', '')
 
-    const response = await gemini(jsonRequest('https://carenest.example/api/gemini', {
-      prompt: 'hello',
-    }))
+    const response = await gemini(
+      jsonRequest('https://carenest.example/api/gemini', {
+        prompt: 'hello',
+      })
+    )
 
     expect(response.status).toBe(503)
   })
@@ -43,7 +45,11 @@ describe('server API security boundaries', () => {
     vi.stubEnv('APP_ALLOWED_ORIGINS', ORIGIN)
 
     const response = await gemini(
-      jsonRequest('https://carenest.example/api/gemini', { prompt: 'hello' }, 'https://attacker.example')
+      jsonRequest(
+        'https://carenest.example/api/gemini',
+        { prompt: 'hello' },
+        'https://attacker.example'
+      )
     )
 
     expect(response.status).toBe(403)
@@ -108,7 +114,12 @@ describe('server API security boundaries', () => {
     vi.stubGlobal('fetch', fetchMock)
 
     const response = await gemini(
-      jsonRequest('https://carenest.example/api/gemini', { prompt: 'hello' }, ORIGIN, false)
+      jsonRequest(
+        'https://carenest.example/api/gemini',
+        { prompt: 'hello' },
+        ORIGIN,
+        false
+      )
     )
 
     expect(response.status).toBe(401)

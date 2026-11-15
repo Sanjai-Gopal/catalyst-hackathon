@@ -1,7 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-vi.mock('../lib/auth', () => ({
-  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
-}))
 import { INITIAL_MEDICATIONS } from '../data/carenestInitialData'
 import {
   analyzeDrugInteractionsWithGemini,
@@ -9,6 +6,10 @@ import {
   isDrugInteractionAlert,
   parsePrescriptionWithGemini,
 } from '../services/geminiHealthcare'
+
+vi.mock('../lib/auth', () => ({
+  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
+}))
 
 function mockProxy(response: { ok: boolean; status?: number; body?: unknown }) {
   vi.stubGlobal(

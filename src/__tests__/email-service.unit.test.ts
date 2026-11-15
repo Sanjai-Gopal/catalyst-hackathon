@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-vi.mock('../lib/auth', () => ({
-  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
-}))
 import {
   buildEmailTemplate,
   escapeHtml,
   sendEmailNotification,
 } from '../services/emailService'
+
+vi.mock('../lib/auth', () => ({
+  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
+}))
 
 const base = {
   recipientEmail: 'child@example.com',

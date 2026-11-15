@@ -2,11 +2,12 @@ const JSON_HEADERS = {
   'Content-Type': 'application/json',
   'Cache-Control': 'no-store',
 }
-const serverEnvironment = (
-  globalThis as typeof globalThis & {
-    process?: { env?: Record<string, string | undefined> }
-  }
-).process?.env ?? {}
+const serverEnvironment =
+  (
+    globalThis as typeof globalThis & {
+      process?: { env?: Record<string, string | undefined> }
+    }
+  ).process?.env ?? {}
 
 export function getServerEnv(name: string): string | undefined {
   return serverEnvironment[name]
