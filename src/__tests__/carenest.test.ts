@@ -167,4 +167,36 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       expect(hiVoice).toContain('Metformin');
     });
   });
+
+  describe('7. Clinical Telemetry, Lab Vault & Google Gemini Safety', () => {
+    it('should verify initial clinical vitals have standard normal telemetry ranges', async () => {
+      const { INITIAL_VITALS } = await import('../data/carenestInitialData');
+      expect(INITIAL_VITALS).toHaveLength(4);
+
+      const bp = INITIAL_VITALS.find((v) => v.vitalType === 'blood_pressure');
+      expect(bp).toBeDefined();
+      expect(bp?.value).toBe('122/78');
+      expect(bp?.status).toBe('normal');
+
+      const glucose = INITIAL_VITALS.find((v) => v.vitalType === 'blood_glucose');
+      expect(glucose?.value).toBe('108');
+      expect(glucose?.unit).toBe('mg/dL');
+    });
+
+    it('should verify laboratory reports vault records and physician sign-off', async () => {
+      const { INITIAL_LAB_REPORTS } = await import('../data/carenestInitialData');
+      expect(INITIAL_LAB_REPORTS.length).toBeGreaterThanOrEqual(3);
+      expect(INITIAL_LAB_REPORTS[0].doctorReviewed).toBe(true);
+      expect(INITIAL_LAB_REPORTS[0].diagnosticCenter).toContain('Apollo');
+    });
+
+    it('should execute Google Gemini clinical safety check fallback contract', async () => {
+      const { analyzeDrugInteractionsWithGemini } = await import('../services/geminiHealthcare');
+      const alerts = await analyzeDrugInteractionsWithGemini(INITIAL_MEDICATIONS);
+      expect(Array.isArray(alerts)).toBe(true);
+      expect(alerts.length).toBeGreaterThan(0);
+      expect(alerts[0].severity).toBeDefined();
+      expect(alerts[0].recommendation).toBeDefined();
+    });
+  });
 });
