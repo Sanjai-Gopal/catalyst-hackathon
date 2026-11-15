@@ -7,7 +7,7 @@ import { defineConfig } from 'eslint/config'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig(
-  { ignores: ['dist', 'src/components/ui'] },
+  { ignores: ['dist', 'src/components/ui', 'coverage'] },
   {
     extends: [
       js.configs.recommended,
@@ -25,10 +25,7 @@ export default defineConfig(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
-      'react-refresh/only-export-components': [
-        'warn',
-        { allowConstantExport: true },
-      ],
+      'react-refresh/only-export-components': 'off',
       'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
       'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [

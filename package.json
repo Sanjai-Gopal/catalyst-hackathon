@@ -19,6 +19,9 @@
     "test:coverage": "vitest run --coverage --browser.headless",
     "test:browser:install": "playwright install chromium --with-deps"
   },
+  "overrides": {
+    "minimatch": "^11.0.8"
+  },
   "dependencies": {
     "@clerk/react": "^6.4.3",
     "@google/genai": "^3.3.0",
