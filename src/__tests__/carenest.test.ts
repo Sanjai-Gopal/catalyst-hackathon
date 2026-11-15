@@ -135,4 +135,36 @@ describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
       expect(INITIAL_PATIENT.medicalConditions).toContain('Hypertension');
     });
   });
+
+  describe('6. Voice Recognition & Fast Voice Intelligence', () => {
+    it('should parse "took medicine" as MARK_TAKEN intent in multiple languages', async () => {
+      const { parseVoiceTranscript } = await import('../services/voiceRecognitionService');
+      expect(parseVoiceTranscript('I took my morning pills').intent).toBe('MARK_TAKEN');
+      expect(parseVoiceTranscript('I took my morning pills').slotMentioned).toBe('morning');
+      expect(parseVoiceTranscript('மாத்திரை போட்டேன்').intent).toBe('MARK_TAKEN');
+      expect(parseVoiceTranscript('दवा खा ली').intent).toBe('MARK_TAKEN');
+    });
+
+    it('should parse emergency calling commands for children', async () => {
+      const { parseVoiceTranscript } = await import('../services/voiceRecognitionService');
+      expect(parseVoiceTranscript('Call child emergency').intent).toBe('CALL_CHILD');
+      expect(parseVoiceTranscript('மகனுக்கு போன் பண்ணு').intent).toBe('CALL_CHILD');
+      expect(parseVoiceTranscript('बेटे को कॉल करो').intent).toBe('CALL_CHILD');
+    });
+
+    it('should generate instant 0ms voice templates in English, Tamil, and Hindi', async () => {
+      const { getInstantElderVoiceTemplate } = await import('../services/voiceService');
+      const enVoice = getInstantElderVoiceTemplate('Metformin', 'Take with food', 'Amma', 'en');
+      expect(enVoice).toContain('Amma');
+      expect(enVoice).toContain('Metformin');
+
+      const taVoice = getInstantElderVoiceTemplate('Metformin', 'உணவுக்குப் பின்', 'அம்மா', 'ta');
+      expect(taVoice).toContain('அம்மா');
+      expect(taVoice).toContain('Metformin');
+
+      const hiVoice = getInstantElderVoiceTemplate('Metformin', 'खाने के बाद', 'अम्मा', 'hi');
+      expect(hiVoice).toContain('अम्मा');
+      expect(hiVoice).toContain('Metformin');
+    });
+  });
 });

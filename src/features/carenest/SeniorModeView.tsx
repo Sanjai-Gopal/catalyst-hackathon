@@ -28,11 +28,17 @@ import {
   ShieldAlert,
   Stethoscope,
 } from 'lucide-react';
-import { speakText, stopSpeaking } from '@/services/voiceService';
+import {
+  speakText,
+  stopSpeaking,
+  getInstantElderVoiceTemplate,
+  cacheVoiceExplanation,
+} from '@/services/voiceService';
 import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare';
 import { sendEmailNotification } from '@/services/emailService';
 import { useLanguage } from '@/context/language-context';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { VoiceAssistantWidget } from './VoiceAssistantWidget';
 import { toast } from 'sonner';
 
 function triggerPhoneCall(phoneNumber: string) {
@@ -127,7 +133,16 @@ export function SeniorModeView({
   const takenSlotMeds = slotMeds.filter((m) => isMedTaken(m.id)).length;
   const isSlotComplete = totalSlotMeds > 0 && takenSlotMeds === totalSlotMeds;
 
-  const handleSpeak = async (med: Medication) => {
+  const handleMarkSlotTaken = (slot: TimeSlot) => {
+    const medsToMark = medications.filter((m) => m.slot === slot);
+    medsToMark.forEach((m) => {
+      if (!isMedTaken(m.id)) {
+        onMarkTaken(m.id, slot);
+      }
+    });
+  };
+
+  const handleSpeak = (med: Medication) => {
     if (speakingMedId === med.id) {
       stopSpeaking();
       setSpeakingMedId(null);
@@ -135,45 +150,33 @@ export function SeniorModeView({
     }
 
     setSpeakingMedId(med.id);
-    toast.info(t('generatingVoice'), { duration: 2000 });
 
-    try {
-      const guidance = await generateElderFriendlyExplanation(
-        med.name,
-        med.instructions,
-        activeHonorific,
-        currentLanguage
-      );
-      speakText(
-        guidance,
-        () => {
-          setSpeakingMedId(null);
-        },
-        currentLanguage
-      );
-    } catch {
-      let fallback = `${activeHonorific}, please take your ${med.name}. ${med.instructions}`;
-      if (currentLanguage === 'ta') {
-        fallback = `${activeHonorific}, உங்கள் ${med.name} மருந்தை எடுத்துக் கொள்ளுங்கள். ${med.instructions}`;
-      } else if (currentLanguage === 'hi') {
-        fallback = `${activeHonorific}, कृपया अपनी ${med.name} दवा ले लीजिए। ${med.instructions}`;
-      } else if (currentLanguage === 'te') {
-        fallback = `${activeHonorific}, దయచేసి మీ ${med.name} మందును తీసుకోండి. ${med.instructions}`;
-      } else if (currentLanguage === 'kn') {
-        fallback = `${activeHonorific}, ದಯವಿಟ್ಟು ನಿಮ್ಮ ${med.name} ಔಷಧಿಯನ್ನು ತೆಗೆದುಕೊಳ್ಳಿ. ${med.instructions}`;
-      } else if (currentLanguage === 'ml') {
-        fallback = `${activeHonorific}, ദയവായി നിങ്ങളുടെ ${med.name} മരുന്ന് കഴിക്കൂ. ${med.instructions}`;
-      } else if (currentLanguage === 'es') {
-        fallback = `${activeHonorific}, por favor tome su medicamento ${med.name}. ${med.instructions}`;
-      }
-      speakText(
-        fallback,
-        () => {
-          setSpeakingMedId(null);
-        },
-        currentLanguage
-      );
-    }
+    // 1. Instant speech synthesis using local template (0ms latency!)
+    const instantText = getInstantElderVoiceTemplate(
+      med.name,
+      med.instructions,
+      activeHonorific,
+      currentLanguage
+    );
+    speakText(
+      instantText,
+      () => {
+        setSpeakingMedId(null);
+      },
+      currentLanguage
+    );
+
+    // 2. Asynchronously fetch rich Gemini explanation and update cache for next replay
+    generateElderFriendlyExplanation(
+      med.name,
+      med.instructions,
+      activeHonorific,
+      currentLanguage
+    )
+      .then((richExplanation) => {
+        cacheVoiceExplanation(med.name, activeHonorific, currentLanguage, richExplanation);
+      })
+      .catch(() => {});
   };
 
   const handleTriggerSOS = async () => {
@@ -292,6 +295,25 @@ export function SeniorModeView({
             <span>{t('caregiverPortal')}</span>
           </Button>
         </div>
+      </div>
+
+      {/* Voice Assistant - Instant Low-Latency Voice Interaction */}
+      <div className='my-6'>
+        <VoiceAssistantWidget
+          patientName={patientName}
+          honorific={activeHonorific}
+          language={currentLanguage}
+          currentSlot={selectedSlot}
+          slotMeds={slotMeds}
+          childName={activeChildContact.name.split(' ')[0]}
+          doctorName={patient?.doctorContact?.doctorName || 'Dr. Radhakrishnan'}
+          onMarkSlotTaken={handleMarkSlotTaken}
+          onTriggerCallChild={handleTriggerSOS}
+          onTriggerCallDoctor={() => {
+            triggerPhoneCall(cleanDoctorPhone);
+            toast.info(`🩺 Calling ${patient?.doctorContact?.doctorName || 'Doctor'}...`);
+          }}
+        />
       </div>
 
       {/* Time Slot Switcher - Large, accessible touch targets */}

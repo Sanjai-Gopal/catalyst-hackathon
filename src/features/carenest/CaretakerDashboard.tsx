@@ -38,9 +38,11 @@ import {
   UserCheck,
   Stethoscope,
   AlertCircle,
+  Volume2,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
+import { speakText } from '@/services/voiceService';
 import { AddMedicationModal } from './AddMedicationModal';
 import { CobeGlobe } from '@/components/design-system/CobeGlobe';
 import { useLanguage } from '@/context/language-context';
@@ -82,7 +84,7 @@ export function CaretakerDashboard({
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const { t } = useLanguage();
+  const { t, currentLanguage } = useLanguage();
 
   const honorificLabel =
     patient.honorific === 'Custom'
@@ -182,6 +184,19 @@ export function CaretakerDashboard({
   const takenCount = adherence.filter((a) => a.status === 'taken').length;
   const adherenceRate = Math.min(100, Math.round((takenCount / Math.max(1, medications.length)) * 100));
 
+  const handleReadDailyBrief = () => {
+    let brief = `Daily briefing for ${honorificLabel}: Medication adherence rate is ${adherenceRate} percent. ${takenCount} of ${medications.length} active prescriptions taken today.`;
+    if (currentLanguage === 'ta') {
+      brief = `${honorificLabel} அன்றாட அறிக்கை: மருந்து உட்கொள்ளல் அளவு ${adherenceRate} சதவீதம். இன்று ${medications.length} மருந்துகளில் ${takenCount} மருந்துகள் எடுக்கப்பட்டுள்ளன.`;
+    } else if (currentLanguage === 'hi') {
+      brief = `${honorificLabel} दैनिक विवरण: दवा पालन दर ${adherenceRate} प्रतिशत है। आज ${medications.length} में से ${takenCount} दवाएं ली गईं।`;
+    } else if (currentLanguage === 'te') {
+      brief = `${honorificLabel} రోజువారీ నివేదిక: మందుల పాటంపు రేటు ${adherenceRate} శాతం. నేడు ${medications.length} మందులలో ${takenCount} మందులు వేసుకున్నారు.`;
+    }
+    toast.info(`🔊 Reading ${honorificLabel}'s Health Brief`);
+    speakText(brief, undefined, currentLanguage);
+  };
+
   return (
     <div className='min-h-screen bg-background text-foreground pb-12'>
       {/* Top Bar / Profile Summary */}
@@ -221,6 +236,15 @@ export function CaretakerDashboard({
                 <span>{t('careCircleSetup')}</span>
               </Button>
             )}
+            <Button
+              variant='outline'
+              onClick={handleReadDailyBrief}
+              className='h-10 px-3.5 text-xs font-semibold rounded-xl border-primary/20 hover:bg-primary/10 flex items-center gap-1.5'
+              title='Read Daily Health Brief Aloud'
+            >
+              <Volume2 className='w-3.5 h-3.5 text-primary' />
+              <span>Voice Brief</span>
+            </Button>
             <Button
               variant='outline'
               onClick={onSwitchToSeniorMode}
