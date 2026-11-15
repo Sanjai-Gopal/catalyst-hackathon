@@ -1,9 +1,13 @@
-import type { AdherenceRecord, Medication, PatientProfile } from '../types/carenest';
+import type {
+  AdherenceRecord,
+  Medication,
+  PatientProfile,
+} from '../types/carenest'
 
-const SLOTS = ['morning', 'afternoon', 'evening', 'night'];
+const SLOTS = ['morning', 'afternoon', 'evening', 'night']
 
 function isObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
 export function isMedicationArray(v: unknown): v is Medication[] {
@@ -19,7 +23,7 @@ export function isMedicationArray(v: unknown): v is Medication[] {
         typeof m.remainingPills === 'number' &&
         typeof m.totalPills === 'number'
     )
-  );
+  )
 }
 
 export function isAdherenceArray(v: unknown): v is AdherenceRecord[] {
@@ -32,7 +36,7 @@ export function isAdherenceArray(v: unknown): v is AdherenceRecord[] {
         typeof a.date === 'string' &&
         typeof a.status === 'string'
     )
-  );
+  )
 }
 
 export function isPatientProfile(v: unknown): v is PatientProfile {
@@ -44,7 +48,7 @@ export function isPatientProfile(v: unknown): v is PatientProfile {
     isObject(v.emergencyContact) &&
     Array.isArray(v.medicalConditions) &&
     Array.isArray(v.allergies)
-  );
+  )
 }
 
 /**
@@ -59,12 +63,12 @@ export function loadValidated<T>(
   fallback: T
 ): T {
   try {
-    if (typeof window === 'undefined') return fallback;
-    const raw = window.localStorage.getItem(key);
-    if (!raw) return fallback;
-    const parsed: unknown = JSON.parse(raw);
-    return validate(parsed) ? parsed : fallback;
+    if (typeof window === 'undefined') return fallback
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return fallback
+    const parsed: unknown = JSON.parse(raw)
+    return validate(parsed) ? parsed : fallback
   } catch {
-    return fallback;
+    return fallback
   }
 }

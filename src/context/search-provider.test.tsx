@@ -123,7 +123,9 @@ describe('SearchProvider and CommandMenu', () => {
 
     await openCommandPalette(screen)
 
-    await userEvent.click(getByRole('option', { name: 'Settings Care Circle Contacts' }))
+    await userEvent.click(
+      getByRole('option', { name: 'Settings Care Circle Contacts' })
+    )
 
     expect(mocks.navigate).toHaveBeenCalledWith({ to: '/' })
     await expect

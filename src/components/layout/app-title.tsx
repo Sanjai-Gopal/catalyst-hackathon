@@ -25,8 +25,12 @@ export function AppTitle() {
               onClick={() => setOpenMobile(false)}
               className='grid flex-1 text-start text-sm leading-tight'
             >
-              <span className='truncate font-bold text-foreground'>CareNest AI</span>
-              <span className='truncate text-xs text-muted-foreground'>Elderly Care Ecosystem</span>
+              <span className='truncate font-bold text-foreground'>
+                CareNest AI
+              </span>
+              <span className='truncate text-xs text-muted-foreground'>
+                Elderly Care Ecosystem
+              </span>
             </Link>
             <ToggleSidebar />
           </div>

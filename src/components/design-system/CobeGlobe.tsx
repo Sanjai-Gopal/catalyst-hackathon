@@ -1,20 +1,20 @@
-import { useEffect, useRef } from 'react';
-import createGlobe, { type Globe } from 'cobe';
+import { useEffect, useRef } from 'react'
+import createGlobe, { type Globe } from 'cobe'
 
 interface CobeGlobeProps {
-  className?: string;
-  size?: number;
+  className?: string
+  size?: number
 }
 
 export function CobeGlobe({ className = '', size = 300 }: CobeGlobeProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    let phi = 0;
-    let animId: number;
-    let globe: Globe | null = null;
+    let phi = 0
+    let animId: number
+    let globe: Globe | null = null
 
-    if (!canvasRef.current) return;
+    if (!canvasRef.current) return
 
     try {
       globe = createGlobe(canvasRef.current, {
@@ -35,29 +35,29 @@ export function CobeGlobe({ className = '', size = 300 }: CobeGlobeProps) {
           { location: [12.9716, 77.5946], size: 0.05 }, // Bangalore Partner
           { location: [37.7749, -122.4194], size: 0.06 }, // San Francisco (Family)
         ],
-      });
+      })
 
       const animate = () => {
-        phi += 0.004;
+        phi += 0.004
         if (globe) {
-          globe.update({ phi });
+          globe.update({ phi })
         }
-        animId = requestAnimationFrame(animate);
-      };
-      animId = requestAnimationFrame(animate);
+        animId = requestAnimationFrame(animate)
+      }
+      animId = requestAnimationFrame(animate)
     } catch (err) {
-      console.warn('[CobeGlobe] WebGL init skipped:', err);
+      console.warn('[CobeGlobe] WebGL init skipped:', err)
     }
 
     return () => {
       if (globe && typeof globe.destroy === 'function') {
-        globe.destroy();
+        globe.destroy()
       }
       if (animId) {
-        cancelAnimationFrame(animId);
+        cancelAnimationFrame(animId)
       }
-    };
-  }, [size]);
+    }
+  }, [size])
 
   return (
     <div
@@ -66,8 +66,13 @@ export function CobeGlobe({ className = '', size = 300 }: CobeGlobeProps) {
     >
       <canvas
         ref={canvasRef}
-        style={{ width: size, height: size, maxWidth: '100%', aspectRatio: '1' }}
+        style={{
+          width: size,
+          height: size,
+          maxWidth: '100%',
+          aspectRatio: '1',
+        }}
       />
     </div>
-  );
+  )
 }

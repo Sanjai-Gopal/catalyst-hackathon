@@ -14,7 +14,9 @@ export function SignIn2() {
             <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
               <Heart className='h-5 w-5' />
             </div>
-            <h1 className='text-2xl font-serif font-bold text-foreground'>CareNest AI</h1>
+            <h1 className='font-serif text-2xl font-bold text-foreground'>
+              CareNest AI
+            </h1>
           </div>
         </div>
         <div className='mx-auto flex w-full max-w-sm flex-col justify-center space-y-2'>

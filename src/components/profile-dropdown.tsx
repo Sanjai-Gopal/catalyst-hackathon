@@ -23,7 +23,10 @@ export function ProfileDropdown() {
         <DropdownMenuTrigger asChild>
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <Avatar className='h-8 w-8'>
-              <AvatarImage src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=128&q=80' alt='Family Caregiver' />
+              <AvatarImage
+                src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=128&q=80'
+                alt='Family Caregiver'
+              />
               <AvatarFallback>SG</AvatarFallback>
             </Avatar>
           </Button>
@@ -31,7 +34,9 @@ export function ProfileDropdown() {
         <DropdownMenuContent className='w-56' align='end' forceMount>
           <DropdownMenuLabel className='font-normal'>
             <div className='flex flex-col gap-1.5'>
-              <p className='text-sm leading-none font-medium'>Family Caregiver</p>
+              <p className='text-sm leading-none font-medium'>
+                Family Caregiver
+              </p>
               <p className='text-xs leading-none text-muted-foreground'>
                 caregiver@example.com
               </p>

@@ -8,6 +8,8 @@ Everything below was run on branch `feat/production-hardening`. Nothing is claim
 |---|---|
 | `npm ci` | passes, 0 vulnerabilities |
 | `npm run lint` | passes, 0 errors |
+| `npm run format:check` (prettier) | passes |
+| `npm run knip` (unused files, exports, deps) | passes, 0 findings |
 | `npx tsc -b` (app, node and `api/` projects) | passes |
 | `npm run test:coverage` | **16 files, 128 tests, all pass** |
 | `npm run build` | passes; main bundle `index` 465.87 kB (144.69 kB gzip) |
@@ -35,7 +37,7 @@ Lighthouse, axe and Playwright end-to-end tests were not run or added. The GitHu
 | Area | Score | Evidence |
 |---|---|---|
 | Security | 55 | Gemini/Resend moved behind authenticated, validated, rate-limited `/api` functions; no client keys; CSP added; raw-HTML injection removed; personal data replaced with placeholders. **Not done:** hardcoded passcodes still gate the app, no server-side roles or lockout, patient data still in localStorage, email endpoint can send to any address. |
-| Code quality | 50 | Lint and typecheck clean; unused SDKs, Clerk, netlify and template features removed. **Not done:** the three 700-1250 line components are not split. |
+| Code quality | 60 | Lint and typecheck clean; unused SDKs, Clerk, netlify and template features removed. Dead template code, unused dependencies (recharts, faker) and unused exports removed; prettier and knip clean and enforced in CI. **Not done:** the three 700-1250 line components are not split. |
 | Testing | 35 | 128 passing tests, but coverage is 69% overall and 38% for services; no e2e, no CI. |
 | Accessibility | 30 | Not measured. No Lighthouse or axe run. |
 | Efficiency | 35 | Build passes; bundle sizes measured; no Lighthouse run, no lazy-loading work. |

@@ -18,7 +18,8 @@ export const sidebarData: SidebarData = {
   user: {
     name: 'Family Caregiver',
     email: 'caregiver@example.com',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=128&q=80',
+    avatar:
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=128&q=80',
   },
   teams: [
     {
