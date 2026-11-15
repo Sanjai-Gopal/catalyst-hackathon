@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Logo } from '@/assets/logo'
+import { Heart } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import dashboardDark from './assets/dashboard-dark.png'
 import dashboardLight from './assets/dashboard-light.png'
@@ -10,9 +10,11 @@ export function SignIn2() {
     <div className='relative container grid h-svh flex-col items-center justify-center lg:max-w-none lg:grid-cols-2 lg:px-0'>
       <div className='lg:p-8'>
         <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-120 sm:p-8'>
-          <div className='mb-4 flex items-center justify-center'>
-            <Logo className='me-2' />
-            <h1 className='text-xl font-medium'>Shadcn Admin</h1>
+          <div className='mb-4 flex items-center justify-center gap-2'>
+            <div className='flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm'>
+              <Heart className='h-5 w-5' />
+            </div>
+            <h1 className='text-2xl font-serif font-bold text-foreground'>CareNest AI</h1>
           </div>
         </div>
         <div className='mx-auto flex w-full max-w-sm flex-col justify-center space-y-2'>

@@ -21,6 +21,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  optimizeDeps: {
+    include: ['appwrite', '@google/genai', 'cobe', 'canvas-confetti'],
+  },
   test: {
     silent: 'passed-only',
     unstubEnvs: true,

@@ -1,4 +1,4 @@
-import { Logo } from '@/assets/logo'
+import { Heart } from 'lucide-react'
 
 type AuthLayoutProps = {
   children: React.ReactNode
@@ -6,11 +6,18 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className='container grid h-svh max-w-none items-center justify-center'>
-      <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:p-8'>
-        <div className='mb-4 flex items-center justify-center'>
-          <Logo className='me-2' />
-          <h1 className='text-xl font-medium'>Shadcn Admin</h1>
+    <div className='container grid min-h-svh max-w-none items-center justify-center bg-[#FBF9F5] dark:bg-background'>
+      <div className='mx-auto flex w-full flex-col justify-center space-y-3 py-8 sm:p-8'>
+        <div className='mb-2 flex flex-col items-center justify-center text-center'>
+          <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md mb-2'>
+            <Heart className='h-6 w-6' />
+          </div>
+          <h1 className='text-2xl font-serif font-bold tracking-tight text-foreground'>
+            CareNest AI
+          </h1>
+          <p className='text-xs text-muted-foreground mt-0.5'>
+            Intelligent Elderly Care & Medication Management Platform
+          </p>
         </div>
         {children}
       </div>
