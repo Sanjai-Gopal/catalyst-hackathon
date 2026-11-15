@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import {
   INITIAL_MEDICATIONS,
   INITIAL_PATIENT,
@@ -9,6 +9,10 @@ import {
   filterMedicationsBySlot,
 } from '../lib/carenest-logic'
 import { buildEmailTemplate } from '../services/emailService'
+
+vi.mock('../lib/auth', () => ({
+  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
+}))
 
 describe('CareNest AI — Healthcare Management Ecosystem Unit Tests', () => {
   describe('1. Passcode Security & Access Control', () => {

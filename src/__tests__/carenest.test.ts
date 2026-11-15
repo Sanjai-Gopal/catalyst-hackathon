@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { type Medication, type TimeSlot } from '../types/carenest';
 import { buildEmailTemplate } from '../services/emailService';
 import { INITIAL_MEDICATIONS, INITIAL_PATIENT } from '../data/carenestInitialData';
+
+vi.mock('../lib/auth', () => ({
+  getApiAuthHeaders: async () => ({ Authorization: 'Bearer test-jwt' }),
+}));
 
 // Core Business Logic Helpers
 export function verifyPasscode(enteredCode: string): boolean {
