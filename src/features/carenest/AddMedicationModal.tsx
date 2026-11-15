@@ -108,12 +108,16 @@ export function AddMedicationModal({
         if (item.criticality) setCriticality(item.criticality as 'high' | 'medium' | 'low');
 
         setMode('manual');
-        toast.success('Successfully extracted prescription details with Gemini AI! Review and save.');
+        toast.success(
+          'AI draft filled in from the first medicine found. Check every field against the original prescription before saving.'
+        );
       } else {
         toast.info('No medication structured data found. Please enter manually.');
       }
-    } catch {
-      toast.error('AI extraction timed out. Switched to manual input.');
+    } catch (err) {
+      // Nothing is pre-filled on failure: never save medicines the AI did not read.
+      const reason = err instanceof Error ? err.message : 'unknown error';
+      toast.error(`AI extraction failed (${reason}). Please enter the medicine manually.`);
       setMode('manual');
     } finally {
       setIsParsing(false);

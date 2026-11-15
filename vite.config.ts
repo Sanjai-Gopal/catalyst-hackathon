@@ -25,14 +25,18 @@ export default defineConfig({
     chunkSizeWarningLimit: 1200,
   },
   optimizeDeps: {
-    include: ['appwrite', '@google/genai', 'cobe', 'canvas-confetti'],
+    include: ['appwrite', 'cobe', 'canvas-confetti'],
   },
   test: {
     silent: 'passed-only',
     unstubEnvs: true,
     browser: {
       enabled: true,
-      provider: playwright(),
+      provider: playwright(
+        process.env.CHROMIUM_PATH
+          ? { launchOptions: { executablePath: process.env.CHROMIUM_PATH } }
+          : undefined
+      ),
       instances: [{ browser: 'chromium' }],
     },
     coverage: {

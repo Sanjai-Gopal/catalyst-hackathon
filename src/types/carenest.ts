@@ -75,7 +75,8 @@ export interface PatientProfile {
 }
 
 export interface DrugInteractionAlert {
-  severity: 'danger' | 'warning' | 'safe';
+  /** 'unknown' = the check could not be completed; it is NOT a safety clearance. */
+  severity: 'danger' | 'warning' | 'safe' | 'unknown';
   medicationsInvolved: string[];
   description: string;
   recommendation: string;

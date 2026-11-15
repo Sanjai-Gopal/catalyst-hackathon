@@ -38,6 +38,7 @@ import {
 } from '@/services/voiceService';
 import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare';
 import { sendEmailNotification } from '@/services/emailService';
+import { getLocalDateString } from '@/lib/date';
 import { useLanguage } from '@/context/language-context';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { VoiceAssistantWidget } from './VoiceAssistantWidget';
@@ -111,10 +112,10 @@ export function SeniorModeView({
       : '👴';
 
   const activeChildContact = patient?.childrenContact || {
-    name: 'Sanjai Gopal',
+    name: 'Family Caregiver',
     relationship: 'Son & Primary Caregiver',
-    email: 'sanjai23062008g@gmail.com',
-    phone: '+91 98401 23456',
+    email: 'caregiver@example.com',
+    phone: '+91 90000 00000',
   };
 
   const cleanChildPhone = activeChildContact.phone.replace(/[^0-9+]/g, '');
@@ -123,7 +124,7 @@ export function SeniorModeView({
     patient?.doctorContact?.phone || '+91 44 2829 0200'
   ).replace(/[^0-9+]/g, '');
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getLocalDateString();
 
   // Filter meds for current slot
   const slotMeds = medications.filter((m) => m.slot === selectedSlot);
@@ -216,7 +217,7 @@ export function SeniorModeView({
     speakText(sosAudio, undefined, currentLanguage);
 
     // 3. Dispatch high-priority emergency email to children
-    await sendEmailNotification({
+    const childResult = await sendEmailNotification({
       recipientEmail: activeChildContact.email,
       recipientName: activeChildContact.name,
       elderName: `${activeHonorific} (${patient?.name || patientName})`,
@@ -224,6 +225,12 @@ export function SeniorModeView({
       medicationOrDetails: `Immediate Emergency Call & Care Assistance Requested by ${activeHonorific} to ${activeChildContact.name} (${activeChildContact.phone})`,
       scheduledTime: new Date().toLocaleTimeString(),
     });
+    if (!childResult.success) {
+      // Be honest: the phone call is the reliable channel when the email did not go out.
+      toast.error(
+        `SOS email to ${activeChildContact.name} was NOT sent. Please use the call or WhatsApp buttons.`
+      );
+    }
 
     // 4. Send email to doctor if available
     if (patient?.doctorContact?.email) {

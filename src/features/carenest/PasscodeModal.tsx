@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Lock, ShieldCheck, KeyRound, AlertCircle, ShieldAlert } from 'lucide-react';
+import { verifyPasscode } from '@/lib/passcode';
 
 interface PasscodeModalProps {
   isOpen: boolean;
@@ -18,8 +19,10 @@ interface PasscodeModalProps {
   patientPasscode?: string;
 }
 
-const DEFAULT_PASSCODES = ['CARE-8492', '8492', 'CARE-2026', '2026'];
 const MAX_ATTEMPTS = 5;
+// The one-tap demo passcode is only shown when the deployment opts in
+// (VITE_DEMO_MODE=true). The code itself is still listed in the README for judges.
+const SHOW_DEMO_PASSCODE = false; // removed with real auth in a later commit
 
 export function PasscodeModal({
   isOpen,
@@ -55,10 +58,7 @@ export function PasscodeModal({
     const cleanCode = passcode.trim().toUpperCase();
     const dynamicCode = patientPasscode?.trim().toUpperCase();
 
-    if (
-      (dynamicCode && cleanCode === dynamicCode) ||
-      DEFAULT_PASSCODES.includes(cleanCode)
-    ) {
+    if (verifyPasscode(passcode) || (dynamicCode && cleanCode === dynamicCode)) {
       setError('');
       setPasscode('');
       setFailedAttempts(0);
@@ -71,9 +71,8 @@ export function PasscodeModal({
         setLockoutSeconds(30);
         setError('Security lockout active: 5 failed attempts. Please wait 30 seconds.');
       } else {
-        setError(
-          `Invalid passcode (${nextFailures}/${MAX_ATTEMPTS} attempts). Use family code: CARE-8492 or 8492.`
-        );
+        // Never reveal the valid code(s) in the error message.
+        setError(`Invalid passcode (${nextFailures}/${MAX_ATTEMPTS} attempts).`);
       }
     }
   };
@@ -105,7 +104,7 @@ export function PasscodeModal({
               <KeyRound className='absolute left-3 top-3 h-4 w-4 text-muted-foreground' />
               <Input
                 type='password'
-                placeholder={lockoutSeconds > 0 ? `Locked for ${lockoutSeconds}s` : 'Enter passcode (e.g. CARE-8492)'}
+                placeholder={lockoutSeconds > 0 ? `Locked for ${lockoutSeconds}s` : 'Enter family passcode'}
                 value={passcode}
                 disabled={lockoutSeconds > 0}
                 onChange={(e) => {
@@ -129,20 +128,22 @@ export function PasscodeModal({
             ) : null}
           </div>
 
-          <div className='flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50 text-xs'>
-            <div className='flex items-center gap-2 text-muted-foreground'>
-              <ShieldCheck className='h-4 w-4 text-emerald-600' />
-              <span>Demo Family Passcode:</span>
+          {SHOW_DEMO_PASSCODE && (
+            <div className='flex items-center justify-between p-3 rounded-lg bg-muted/50 border border-border/50 text-xs'>
+              <div className='flex items-center gap-2 text-muted-foreground'>
+                <ShieldCheck className='h-4 w-4 text-emerald-600' />
+                <span>Demo Family Passcode:</span>
+              </div>
+              <button
+                type='button'
+                disabled={lockoutSeconds > 0}
+                onClick={() => handleQuickFill('CARE-8492')}
+                className='font-mono font-bold text-primary hover:underline disabled:opacity-50'
+              >
+                CARE-8492
+              </button>
             </div>
-            <button
-              type='button'
-              disabled={lockoutSeconds > 0}
-              onClick={() => handleQuickFill('CARE-8492')}
-              className='font-mono font-bold text-primary hover:underline disabled:opacity-50'
-            >
-              CARE-8492
-            </button>
-          </div>
+          )}
 
           <div className='flex gap-2 pt-2'>
             <Button

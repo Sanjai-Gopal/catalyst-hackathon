@@ -29,9 +29,9 @@ CareNest AI was developed in direct response to the **PromptWars × Catalyst Sol
 | **3. Shared ecosystem (Elders, Caregivers, Doctors)** | Tri-party portal architecture: Senior View (affectionate "Amma"/"Appa" UX), Children Caregiver Portal (remote adherence audit), Doctor Portal (clinical safety). | `src/features/carenest/CareNestApp.tsx` |
 | **4. Secure, passcode-based access** | Protected caregiver barrier requiring family passcode (`CARE-8492` or `CARE-2026`) with brute-force lockout safeguards. | `src/features/carenest/PasscodeModal.tsx` |
 | **5. View, add, edit, and manage schedules** | Interactive schedule manager allowing caretakers to add custom medications, adjust dosage frequencies, and configure time slots. | `src/features/carenest/AddMedicationModal.tsx` |
-| **6. Track adherence in real time** | Persistent live adherence telemetry (localStorage + Appwrite Cloud) calculating exact adherence rates (% taken vs scheduled). | `src/features/carenest/CaretakerDashboard.tsx` |
-| **7. Proactive email reminders** | Transactional HTML email engine powered by Resend API dispatching automated alerts for missed doses, upcoming reminders, and appointments. | `src/services/emailService.ts` |
-| **8. Beyond basic reminder apps: Innovation & Accessibility** | Zero-latency multilingual voice assistant (<10ms), 7 language translations, WebMCP agentic AI browsing, and Google Gemini clinical contraindication analyzer. | `src/services/voiceService.ts`, `src/services/geminiHealthcare.ts` |
+| **6. Track adherence in real time** | Live adherence tracking stored on the device (localStorage) that calculates today's adherence rate (% taken vs scheduled). Appwrite is currently used for sign-in only; cross-device sync of adherence data is on the roadmap. | `src/features/carenest/CaretakerDashboard.tsx` |
+| **7. Proactive email reminders** | Transactional HTML email engine powered by the Resend API. Caregivers send missed-dose, upcoming-dose and appointment emails from the dashboard, and an SOS email is sent when the elder presses SOS. Scheduled/automatic reminders are on the roadmap. The UI reports when an email was NOT sent. | `src/services/emailService.ts` |
+| **8. Beyond basic reminder apps: Innovation & Accessibility** | Multilingual voice assistant with on-device command matching, 7 language translations, `llms.txt` for AI agents, and a Google Gemini medication-interaction check (shows "check not completed" instead of "safe" when the AI is unavailable). | `src/services/voiceService.ts`, `src/services/geminiHealthcare.ts` |
 
 ---
 
@@ -51,9 +51,9 @@ CareNest AI deeply integrates Google developer technologies across its entire st
 4. **Google Fonts & Typography:**
    - Pre-connected typography (`Inter`, `Instrument Serif`, `JetBrains Mono`, `Plus Jakarta Sans`) optimized for high legibility and low cognitive load.
 5. **Google PageSpeed Insights & Chrome DevTools Protocol:**
-   - Evaluated at **98/100 Performance** on Google PageSpeed Insights with 0 layout shift and sub-second FCP.
+   - Run Google PageSpeed Insights / Lighthouse against the live URL for current performance numbers.
 6. **Google Agentic AI Browsing & Schema.org:**
-   - Native integration with `/llms.txt`, XML sitemaps, JSON-LD `MedicalWebPage` & `WebApplication`, and the **Web Model Context Protocol (WebMCP)**.
+   - `/llms.txt`, XML sitemap and structured-data metadata for AI agents and search. (Full WebMCP tool registration is not implemented yet; only `data-webmcp-tool` hints exist on the page.)
 
 ---
 
@@ -163,8 +163,7 @@ CareNest automatically formats and dispatches responsive HTML emails for:
 ## 🧪 Testing & Verification
 
 CareNest AI includes automated unit tests covering all core healthcare algorithms:
-- **Test Files:** 22 passed (22)
-- **Tests:** 145 passed (145) (100% pass rate)
+- Run `npm test` for current results (Vitest browser mode; first run `npm run test:browser:install`). Most test files come from the admin-dashboard template; CareNest-specific tests are in `src/__tests__/`.
 - Passcode access validation (`CARE-8492`, `8492`, rejection of invalid tokens)
 - Medication adherence calculation formulas
 - Time slot filtering and schedule grouping
@@ -185,7 +184,26 @@ npm run build
 
 ## 🔒 Security & Performance
 
-- **Zero Committed Secrets:** All sensitive credentials managed server-side and via `.env.local`.
-- **Zero Console Errors:** Clean production runtime.
-- **Accessibility:** Senior-friendly touch targets (min 48px), high contrast text (WCAG AAA), high-legibility fonts, and multilingual audio guidance.
-- **Sub-Second Response Times:** Client-side speech synthesis and cache layer eliminate latency.
+- **No secrets committed:** keys are read from `.env.local` (see `.env.example`).
+- **Known limitation (demo build):** `VITE_` variables are bundled into public JavaScript, so the Gemini and Resend keys are visible to anyone who opens the site. Use restricted/throwaway keys, and move these calls behind a serverless function before real use.
+- **Known limitation (demo build):** the caregiver passcode is a client-side gate, not real authentication. It is not suitable for protecting real patient data.
+- **Accessibility:** senior-friendly touch targets, high-contrast colours, large type and multilingual audio guidance. Run an accessibility audit (axe / Lighthouse) before claiming a WCAG level.
+
+## Status and Known limitations
+
+See `VERIFICATION.md` for exact commands, measured results and an honest self-score.
+
+Gemini and Resend are called only from server functions in `/api` (set `GEMINI_API_KEY`, `RESEND_API_KEY`,
+`EMAIL_FROM` in Vercel; see `.env.example`). Still **not** done:
+
+- The family passcode is still a client-side gate; there are no server-enforced roles or lockout.
+- Patient data is stored in localStorage, not per-user Appwrite documents; no realtime sync.
+- No scheduled missed-dose or appointment reminders (no cron), and no appointment edit/cancel.
+- Voice emergency phrases are not extended to all 7 languages and there is no undo confirmation.
+- `/api/email/send` can email any address for a signed-in user (10 per hour); restrict to stored contacts.
+- Rate limiting is in-memory per serverless instance, not a global quota.
+- Resend's default sender only delivers to the account owner; a verified domain is needed for real alerts.
+- Test coverage is 69% overall (target was 90%); no Playwright e2e tests yet. The CI workflow is added but not yet seen running.
+- No Lighthouse or axe results; accessibility and performance are unmeasured.
+- The social preview image is a placeholder screenshot, not a CareNest-specific image.
+- Three large components (`CaretakerDashboard`, `SeniorModeView`, `CareCircleOnboardingModal`) are not split.

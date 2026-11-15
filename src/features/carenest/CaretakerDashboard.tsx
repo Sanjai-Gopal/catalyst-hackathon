@@ -44,6 +44,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
+import { getLocalDateString } from '@/lib/date';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
 import { speakText } from '@/services/voiceService';
 import { AddMedicationModal } from './AddMedicationModal';
@@ -75,7 +76,7 @@ interface EmailLogItem {
   recipient: string;
   subject: string;
   time: string;
-  status: 'delivered' | 'simulated';
+  status: 'delivered' | 'simulated' | 'failed';
 }
 
 export function CaretakerDashboard({
@@ -115,7 +116,7 @@ export function CaretakerDashboard({
       recipient: patient.emergencyContact.email,
       subject: '⏰ Upcoming Medication Reminder: Amlodipine for Amma',
       time: '07:45 AM',
-      status: 'delivered',
+      status: 'simulated', // sample row for the demo; no email was actually sent
     },
   ]);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
@@ -164,23 +165,16 @@ export function CaretakerDashboard({
     }
 
     try {
-      await sendEmailNotification({
+      const payload = {
         recipientEmail: patient.emergencyContact.email,
         recipientName: patient.emergencyContact.name,
         elderName: patient.name,
         type,
         medicationOrDetails: medOrDetails,
         scheduledTime: new Date().toLocaleTimeString(),
-      });
-
-      const { subject } = buildEmailTemplate({
-        recipientEmail: patient.emergencyContact.email,
-        recipientName: patient.emergencyContact.name,
-        elderName: patient.name,
-        type,
-        medicationOrDetails: medOrDetails,
-        scheduledTime: new Date().toLocaleTimeString(),
-      });
+      };
+      const result = await sendEmailNotification(payload);
+      const { subject } = buildEmailTemplate(payload);
 
       setEmailLogs((prev) => [
         {
@@ -189,12 +183,16 @@ export function CaretakerDashboard({
           recipient: patient.emergencyContact.email,
           subject,
           time: new Date().toLocaleTimeString(),
-          status: 'delivered',
+          status: result.success ? 'delivered' : 'failed',
         },
         ...prev,
       ]);
 
-      toast.success(`Dispatched ${type.replace('_', ' ')} email via Resend API to ${patient.emergencyContact.email}!`);
+      if (result.success) {
+        toast.success(`Sent ${type.replace('_', ' ')} email to ${patient.emergencyContact.email}.`);
+      } else {
+        toast.error(`Email NOT sent: ${result.error ?? 'unknown error'}`);
+      }
     } catch {
       toast.error('Error dispatching email');
     } finally {
@@ -203,7 +201,10 @@ export function CaretakerDashboard({
   };
 
   // Calculate adherence stats
-  const takenCount = adherence.filter((a) => a.status === 'taken').length;
+  // Only today's records: adherence is stored across days, so counting all of it
+  // produced "5 of 4 doses taken today" after the first day.
+  const todayStr = getLocalDateString();
+  const takenCount = adherence.filter((a) => a.status === 'taken' && a.date === todayStr).length;
   const adherenceRate = Math.min(100, Math.round((takenCount / Math.max(1, medications.length)) * 100));
 
   const handleReadDailyBrief = () => {
@@ -579,7 +580,7 @@ export function CaretakerDashboard({
                     Children & Family Care Portal for {honorificLabel}
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Primary Family Caregiver: <strong>{patient.childrenContact?.name || 'Sanjai Gopal'}</strong> • Automated Alert Recipient: <strong>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</strong>
+                    Primary Family Caregiver: <strong>{patient.childrenContact?.name || 'Family Caregiver'}</strong> • Automated Alert Recipient: <strong>{patient.childrenContact?.email || 'caregiver@example.com'}</strong>
                   </p>
                 </div>
               </div>
@@ -606,7 +607,7 @@ export function CaretakerDashboard({
                 <CardContent className='space-y-3 text-xs'>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Name:</span>
-                    <span className='font-bold text-foreground'>{patient.childrenContact?.name || 'Sanjai Gopal'}</span>
+                    <span className='font-bold text-foreground'>{patient.childrenContact?.name || 'Family Caregiver'}</span>
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Relationship:</span>
@@ -614,11 +615,11 @@ export function CaretakerDashboard({
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Email for Alerts:</span>
-                    <span className='font-mono font-medium text-primary'>{patient.childrenContact?.email || 'sanjai23062008g@gmail.com'}</span>
+                    <span className='font-mono font-medium text-primary'>{patient.childrenContact?.email || 'caregiver@example.com'}</span>
                   </div>
                   <div className='flex justify-between border-b pb-2'>
                     <span className='text-muted-foreground'>Phone / WhatsApp:</span>
-                    <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 98401 23456'}</span>
+                    <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 90000 00000'}</span>
                   </div>
                   <div className='pt-2 flex items-center justify-between text-[11px] text-emerald-700 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20'>
                     <span className='font-semibold'>✓ Real-time Email & SOS active</span>
@@ -691,11 +692,11 @@ export function CaretakerDashboard({
                       🚨 Broadcast Emergency SOS to Care Circle
                     </Button>
                     <a
-                      href={`tel:${(patient.childrenContact?.phone || '+91 98401 23456').replace(/[^0-9+]/g, '')}`}
+                      href={`tel:${(patient.childrenContact?.phone || '+91 90000 00000').replace(/[^0-9+]/g, '')}`}
                       className='w-full h-9 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs shadow-sm flex items-center justify-center gap-1.5'
                     >
                       <Phone className='w-3.5 h-3.5' />
-                      <span>📞 Call Child: {patient.childrenContact?.name || 'Sanjai Gopal'} ({patient.childrenContact?.phone || '+91 98401 23456'})</span>
+                      <span>📞 Call Child: {patient.childrenContact?.name || 'Family Caregiver'} ({patient.childrenContact?.phone || '+91 90000 00000'})</span>
                     </a>
                   </div>
                   <div className='text-[11px] text-muted-foreground text-center'>
@@ -718,7 +719,7 @@ export function CaretakerDashboard({
                     Doctor Clinical Portal for {honorificLabel} ({patient.name})
                   </h3>
                   <p className='text-xs text-muted-foreground'>
-                    Treating Physician: <strong>{patient.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}</strong> • Clinical Email: <strong>{patient.doctorContact?.email || 'dr.ramanathan@apollohospitals.com'}</strong>
+                    Treating Physician: <strong>{patient.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}</strong> • Clinical Email: <strong>{patient.doctorContact?.email || 'doctor@example.com'}</strong>
                   </p>
                 </div>
               </div>
@@ -817,9 +818,9 @@ export function CaretakerDashboard({
                 </CardHeader>
                 <CardContent className='space-y-3 text-xs'>
                   {interactionAlerts.length === 0 ? (
-                    <div className='p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center gap-2'>
-                      <CheckCircle2 className='w-4 h-4 text-emerald-700 flex-shrink-0' />
-                      <span>All current {medications.length} medications are clinically safe with zero major contraindications.</span>
+                    <div className='p-4 rounded-xl bg-muted/50 border border-border text-muted-foreground flex items-center gap-2'>
+                      <AlertCircle className='w-4 h-4 flex-shrink-0' />
+                      <span>Safety check has not completed yet for the current {medications.length} medications.</span>
                     </div>
                   ) : (
                     interactionAlerts.map((alert, i) => (
@@ -828,6 +829,8 @@ export function CaretakerDashboard({
                         className={`p-3.5 rounded-xl border space-y-1.5 ${
                           alert.severity === 'danger'
                             ? 'bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-200'
+                            : alert.severity === 'unknown'
+                            ? 'bg-muted/60 border-border text-foreground'
                             : 'bg-amber-500/10 border-amber-500/30 text-amber-950 dark:text-amber-200'
                         }`}
                       >
@@ -1043,6 +1046,8 @@ export function CaretakerDashboard({
                           ? 'bg-rose-500/10 border-rose-500/30'
                           : alert.severity === 'warning'
                           ? 'bg-amber-500/10 border-amber-500/30'
+                          : alert.severity === 'unknown'
+                          ? 'bg-muted/60 border-border'
                           : 'bg-emerald-500/10 border-emerald-500/30'
                       }`}
                     >
@@ -1051,6 +1056,8 @@ export function CaretakerDashboard({
                           <AlertTriangle className='w-4 h-4 text-rose-600' />
                         ) : alert.severity === 'warning' ? (
                           <AlertTriangle className='w-4 h-4 text-amber-600' />
+                        ) : alert.severity === 'unknown' ? (
+                          <AlertCircle className='w-4 h-4 text-muted-foreground' />
                         ) : (
                           <CheckCircle2 className='w-4 h-4 text-emerald-700' />
                         )}
@@ -1059,6 +1066,8 @@ export function CaretakerDashboard({
                             ? 'High Contraindication Risk'
                             : alert.severity === 'warning'
                             ? 'Precaution Advisory'
+                            : alert.severity === 'unknown'
+                            ? 'Check Not Completed'
                             : 'Verified Compatible'}
                         </span>
                         {alert.medicationsInvolved && alert.medicationsInvolved.length > 0 && (
@@ -1174,8 +1183,20 @@ export function CaretakerDashboard({
                               To: {log.recipient} • {log.time}
                             </div>
                           </div>
-                          <Badge className='bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]'>
-                            Delivered
+                          <Badge
+                            className={
+                              log.status === 'failed'
+                                ? 'bg-rose-500/10 text-rose-700 border-rose-500/20 text-[10px]'
+                                : log.status === 'simulated'
+                                ? 'bg-muted text-muted-foreground border-border text-[10px]'
+                                : 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]'
+                            }
+                          >
+                            {log.status === 'failed'
+                              ? 'Not sent'
+                              : log.status === 'simulated'
+                              ? 'Sample'
+                              : 'Delivered'}
                           </Badge>
                         </div>
                       ))}
@@ -1196,9 +1217,11 @@ export function CaretakerDashboard({
                 </CardHeader>
                 <CardContent>
                   <div className='border border-border rounded-xl overflow-hidden shadow-inner bg-slate-50 p-4 max-h-[460px] overflow-y-auto'>
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: buildEmailTemplate({
+                    <iframe
+                      title='Email preview'
+                      sandbox=''
+                      className='h-[420px] w-full border-0 bg-white'
+                      srcDoc={buildEmailTemplate({
                           recipientEmail: patient.emergencyContact.email,
                           recipientName: patient.emergencyContact.name,
                           elderName: patient.name,
@@ -1208,8 +1231,7 @@ export function CaretakerDashboard({
                               ? 'Dr. R. Ramanathan, MD (Cardiologist) • Tomorrow 10:30 AM'
                               : 'Amlodipine (Norvasc) 5mg - 1 Tablet',
                           scheduledTime: new Date().toLocaleTimeString(),
-                        }).html,
-                      }}
+                        }).html}
                     />
                   </div>
                 </CardContent>

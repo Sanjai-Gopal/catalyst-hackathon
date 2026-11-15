@@ -181,7 +181,7 @@ export function UserAuthForm({
             onClick={() => {
               auth.setUser({
                 accountNo: 'CARE-8492',
-                email: 'sanjai23062008g@gmail.com',
+                email: 'caregiver@example.com',
                 role: ['caretaker'],
                 exp: Date.now() + 24 * 60 * 60 * 1000,
               })
