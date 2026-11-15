@@ -2,10 +2,9 @@ import {
   type PatientProfile,
   type Medication,
   type DoctorAppointment,
-  type AdherenceRecord,
   type HealthVitalRecord,
   type LabReportRecord,
-} from '../types/carenest';
+} from '../types/carenest'
 
 export const INITIAL_PATIENT: PatientProfile = {
   id: 'pt_lakshmi_01',
@@ -36,7 +35,7 @@ export const INITIAL_PATIENT: PatientProfile = {
   },
   allergies: ['Penicillin', 'Sulfa drugs'],
   medicalConditions: ['Hypertension', 'Type 2 Diabetes', 'Mild Osteoarthritis'],
-};
+}
 
 export const INITIAL_MEDICATIONS: Medication[] = [
   {
@@ -71,7 +70,8 @@ export const INITIAL_MEDICATIONS: Medication[] = [
     dosage: '500mg / 400IU - 1 Capsule',
     slot: 'afternoon',
     time: '01:30 PM',
-    instructions: 'Take 30 mins after lunch. Avoid taking at same time as tea or coffee',
+    instructions:
+      'Take 30 mins after lunch. Avoid taking at same time as tea or coffee',
     purpose: 'Bone Density & Joint Support',
     criticality: 'medium',
     prescribedBy: 'Dr. V. Anand (Orthopedic)',
@@ -91,7 +91,7 @@ export const INITIAL_MEDICATIONS: Medication[] = [
     remainingPills: 14,
     totalPills: 30,
   },
-];
+]
 
 export const INITIAL_APPOINTMENTS: DoctorAppointment[] = [
   {
@@ -101,7 +101,8 @@ export const INITIAL_APPOINTMENTS: DoctorAppointment[] = [
     clinic: 'Apollo Speciality Hospitals',
     address: 'Greams Road, Thousand Lights, Chennai',
     dateTime: 'Tomorrow, Nov 16 • 10:30 AM',
-    notes: 'Routine 3-month BP review & ECG follow-up. Bring morning BP log sheet.',
+    notes:
+      'Routine 3-month BP review & ECG follow-up. Bring morning BP log sheet.',
     status: 'upcoming',
     contactPhone: '+91 44 2829 0200',
   },
@@ -109,16 +110,15 @@ export const INITIAL_APPOINTMENTS: DoctorAppointment[] = [
     id: 'apt_02',
     doctorName: 'Dr. Priya Sundaram',
     specialty: 'Consultant Endocrinologist',
-    clinic: 'Dr. Mohan\'s Diabetes Specialities Centre',
+    clinic: "Dr. Mohan's Diabetes Specialities Centre",
     address: 'Gopalapuram, Chennai',
     dateTime: 'Friday, Nov 20 • 04:00 PM',
-    notes: 'HbA1c quarterly check. Fasting blood glucose test already completed.',
+    notes:
+      'HbA1c quarterly check. Fasting blood glucose test already completed.',
     status: 'upcoming',
     contactPhone: '+91 44 4396 8888',
   },
-];
-
-export const INITIAL_ADHERENCE: AdherenceRecord[] = [];
+]
 
 export const INITIAL_VITALS: HealthVitalRecord[] = [
   {
@@ -157,7 +157,7 @@ export const INITIAL_VITALS: HealthVitalRecord[] = [
     loggedAt: 'Today, 08:15 AM',
     notes: 'Pulse oximetry reading on room air.',
   },
-];
+]
 
 export const INITIAL_LAB_REPORTS: LabReportRecord[] = [
   {
@@ -167,7 +167,8 @@ export const INITIAL_LAB_REPORTS: LabReportRecord[] = [
     date: 'Nov 10, 2026',
     diagnosticCenter: 'Apollo Diagnostics Centre',
     status: 'normal',
-    keyFinding: 'Total Cholesterol 178 mg/dL (Normal <200), LDL 94 mg/dL. Statins functioning well.',
+    keyFinding:
+      'Total Cholesterol 178 mg/dL (Normal <200), LDL 94 mg/dL. Statins functioning well.',
     doctorReviewed: true,
   },
   {
@@ -177,7 +178,8 @@ export const INITIAL_LAB_REPORTS: LabReportRecord[] = [
     date: 'Nov 02, 2026',
     diagnosticCenter: 'Dr. Mohan’s Diabetes Centre',
     status: 'normal',
-    keyFinding: 'HbA1c 6.7% (Good control for geriatric diabetes; target <7.5%).',
+    keyFinding:
+      'HbA1c 6.7% (Good control for geriatric diabetes; target <7.5%).',
     doctorReviewed: true,
   },
   {
@@ -187,7 +189,8 @@ export const INITIAL_LAB_REPORTS: LabReportRecord[] = [
     date: 'Oct 24, 2026',
     diagnosticCenter: 'Apollo Speciality Hospitals',
     status: 'normal',
-    keyFinding: 'Normal sinus rhythm, no acute ischemic ST-T changes. Baseline healthy.',
+    keyFinding:
+      'Normal sinus rhythm, no acute ischemic ST-T changes. Baseline healthy.',
     doctorReviewed: true,
   },
-];
+]

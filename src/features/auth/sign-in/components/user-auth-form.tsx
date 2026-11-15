@@ -148,7 +148,7 @@ export function UserAuthForm({
         <div className='flex flex-col gap-2'>
           <Button
             variant='outline'
-            className='w-full flex items-center justify-center gap-2'
+            className='flex w-full items-center justify-center gap-2'
             type='button'
             onClick={handleGoogleSignIn}
             disabled={isLoading}

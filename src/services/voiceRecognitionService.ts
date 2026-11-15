@@ -4,22 +4,22 @@
  * Zero-latency local command matching with instant audio response
  */
 
-export type VoiceIntentType =
+type VoiceIntentType =
   | 'MARK_TAKEN'
   | 'READ_SCHEDULE'
   | 'CALL_CHILD'
   | 'CALL_DOCTOR'
   | 'HELP_QUERY'
-  | 'UNKNOWN';
+  | 'UNKNOWN'
 
 export interface ParsedVoiceCommand {
-  intent: VoiceIntentType;
-  transcript: string;
-  confidence: number;
-  medicationMentioned?: string;
-  slotMentioned?: 'morning' | 'afternoon' | 'evening' | 'night';
+  intent: VoiceIntentType
+  transcript: string
+  confidence: number
+  medicationMentioned?: string
+  slotMentioned?: 'morning' | 'afternoon' | 'evening' | 'night'
   /** True when the speaker said they have NOT taken their medicine (e.g. "not yet"). */
-  negated?: boolean;
+  negated?: boolean
 }
 
 const LANGUAGE_BCP_MAP: Record<string, string> = {
@@ -30,7 +30,7 @@ const LANGUAGE_BCP_MAP: Record<string, string> = {
   kn: 'kn-IN',
   ml: 'ml-IN',
   es: 'es-ES',
-};
+}
 
 /**
  * Whole-word matcher for Latin-script words. Plain /took/ also matches "mistook",
@@ -39,7 +39,7 @@ const LANGUAGE_BCP_MAP: Record<string, string> = {
  * \b does not work for them.
  */
 const w = (word: string): RegExp =>
-  new RegExp(`(?<![\\p{L}\\p{N}])${word}(?![\\p{L}\\p{N}])`, 'iu');
+  new RegExp(`(?<![\\p{L}\\p{N}])${word}(?![\\p{L}\\p{N}])`, 'iu')
 
 // Words that turn "I took my medicine" into "I did NOT take it". Checked only
 // together with a MARK_TAKEN match so a negation never logs a dose.
@@ -71,7 +71,7 @@ const NEGATION_PATTERNS: RegExp[] = [
   // Malayalam
   /ഇല്ല/,
   /ഇതുവരെ/,
-];
+]
 
 // Distress words. A SHORT utterance containing one of these is treated as an
 // emergency; in a longer sentence ("can you help me find my glasses") it is not.
@@ -85,7 +85,7 @@ const HELP_WORDS: RegExp[] = [
   /సహాయం/,
   /ಸಹಾಯ/,
   /സഹായം/,
-];
+]
 
 const EMERGENCY_PATTERNS: RegExp[] = [
   w('emergency'),
@@ -112,7 +112,7 @@ const EMERGENCY_PATTERNS: RegExp[] = [
   /മകനെ.*വിളിക്കൂ/,
   // Spanish
   /llamar.{0,15}hijo/i,
-];
+]
 
 const DOCTOR_PATTERNS: RegExp[] = [
   w('doctor'),
@@ -128,7 +128,7 @@ const DOCTOR_PATTERNS: RegExp[] = [
   /డాక్టర్/,
   /ವೈದ್ಯ/,
   /ഡോക്ടർ/,
-];
+]
 
 const MARK_TAKEN_PATTERNS: RegExp[] = [
   w('took'),
@@ -165,7 +165,7 @@ const MARK_TAKEN_PATTERNS: RegExp[] = [
   w('tomé'),
   w('tomada'),
   w('listo'),
-];
+]
 
 const READ_SCHEDULE_PATTERNS: RegExp[] = [
   /\bwhat\s+(medicine|pill|tablet|routine|schedule)/i,
@@ -185,17 +185,18 @@ const READ_SCHEDULE_PATTERNS: RegExp[] = [
   /ഏതൊക്കെ.*മരുന്ന്/,
   /qué.*medicina/i,
   /leer.*medicamentos/i,
-];
+]
 
 const matchesAny = (patterns: RegExp[], text: string): boolean =>
-  patterns.some((p) => p.test(text));
+  patterns.some((p) => p.test(text))
 
 function detectSlot(lower: string): ParsedVoiceCommand['slotMentioned'] {
-  if (/morning|காலை|सुबह|ఉదయం|ಬೆಳಗ್ಗೆ|രാവിലെ|mañana/i.test(lower)) return 'morning';
-  if (/afternoon|noon|மதியம்|दोपहर|మధ్యాహ్నం|ಮಧ್ಯಾಹ್ನ|ഉച്ചയ്ക്ക്|tarde/i.test(lower)) return 'afternoon';
-  if (/evening|மாலை|शाम|సాయంత్రం|ಸಂಜೆ|വൈകുന്നേരം/i.test(lower)) return 'evening';
-  if (/night|இரவு|रात|రాత్రి|ರಾತ್ರಿ|രാത്രി|noche/i.test(lower)) return 'night';
-  return undefined;
+  if (/morning|காலை|सुबह|ఉదయం|ಬೆಳಗ್ಗೆ|രാവിലെ|mañana/i.test(lower)) return 'morning'
+  if (/afternoon|noon|மதியம்|दोपहर|మధ్యాహ్నం|ಮಧ್ಯಾಹ್ನ|ഉച്ചയ്ക്ക്|tarde/i.test(lower))
+    return 'afternoon'
+  if (/evening|மாலை|शाम|సాయంత్రం|ಸಂಜೆ|വൈകുന്നേരം/i.test(lower)) return 'evening'
+  if (/night|இரவு|रात|రాత్రి|ರಾತ್ರಿ|രാത്രി|noche/i.test(lower)) return 'night'
+  return undefined
 }
 
 /**
@@ -209,37 +210,44 @@ function detectSlot(lower: string): ParsedVoiceCommand['slotMentioned'] {
  * logged a dose as taken.
  */
 export function parseVoiceTranscript(transcript: string): ParsedVoiceCommand {
-  const clean = (transcript ?? '').trim();
-  const lower = clean.toLowerCase();
-  const slotMentioned = detectSlot(lower);
-  const wordCount = clean.split(/\s+/).filter(Boolean).length;
+  const clean = (transcript ?? '').trim()
+  const lower = clean.toLowerCase()
+  const slotMentioned = detectSlot(lower)
+  const wordCount = clean.split(/\s+/).filter(Boolean).length
   const make = (
     intent: VoiceIntentType,
     confidence: number,
     extra: Partial<ParsedVoiceCommand> = {}
-  ): ParsedVoiceCommand => ({ intent, transcript: clean, confidence, slotMentioned, ...extra });
+  ): ParsedVoiceCommand => ({
+    intent,
+    transcript: clean,
+    confidence,
+    slotMentioned,
+    ...extra,
+  })
 
-  if (!clean) return make('UNKNOWN', 0.6);
+  if (!clean) return make('UNKNOWN', 0.6)
 
-  const isShortHelp = wordCount <= 3 && matchesAny(HELP_WORDS, lower);
+  const isShortHelp = wordCount <= 3 && matchesAny(HELP_WORDS, lower)
   if (matchesAny(EMERGENCY_PATTERNS, lower) || isShortHelp) {
-    return make('CALL_CHILD', 0.95);
+    return make('CALL_CHILD', 0.95)
   }
 
-  if (matchesAny(DOCTOR_PATTERNS, lower)) return make('CALL_DOCTOR', 0.95);
+  if (matchesAny(DOCTOR_PATTERNS, lower)) return make('CALL_DOCTOR', 0.95)
 
   if (matchesAny(MARK_TAKEN_PATTERNS, lower)) {
     if (matchesAny(NEGATION_PATTERNS, lower)) {
       // "I have not taken it" / "not yet": never log a dose.
-      return make('UNKNOWN', 0.6, { negated: true });
+      return make('UNKNOWN', 0.6, { negated: true })
     }
-    return make('MARK_TAKEN', 0.95);
+    return make('MARK_TAKEN', 0.95)
   }
 
-  if (matchesAny(READ_SCHEDULE_PATTERNS, lower)) return make('READ_SCHEDULE', 0.95);
-  if (matchesAny(HELP_WORDS, lower)) return make('HELP_QUERY', 0.9);
+  if (matchesAny(READ_SCHEDULE_PATTERNS, lower))
+    return make('READ_SCHEDULE', 0.95)
+  if (matchesAny(HELP_WORDS, lower)) return make('HELP_QUERY', 0.9)
 
-  return make('UNKNOWN', 0.6);
+  return make('UNKNOWN', 0.6)
 }
 
 // Browser SpeechRecognition Type Declarations
@@ -247,47 +255,47 @@ interface SpeechRecognitionEventLike {
   results: {
     [index: number]: {
       [index: number]: {
-        transcript: string;
-        confidence: number;
-      };
-      isFinal: boolean;
-    };
-    length: number;
-  };
-}
-
-interface SpeechRecognitionErrorEventLike {
-  error: string;
-  message?: string;
-}
-
-interface SpeechRecognitionInstance {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-  onstart: (() => void) | null;
-  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
-  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null;
-  onend: (() => void) | null;
-}
-
-type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
-
-declare global {
-  interface Window {
-    SpeechRecognition?: SpeechRecognitionConstructor;
-    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+        transcript: string
+        confidence: number
+      }
+      isFinal: boolean
+    }
+    length: number
   }
 }
 
-let activeRecognition: SpeechRecognitionInstance | null = null;
+interface SpeechRecognitionErrorEventLike {
+  error: string
+  message?: string
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean
+  interimResults: boolean
+  lang: string
+  start: () => void
+  stop: () => void
+  abort: () => void
+  onstart: (() => void) | null
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null
+  onerror: ((event: SpeechRecognitionErrorEventLike) => void) | null
+  onend: (() => void) | null
+}
+
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor
+    webkitSpeechRecognition?: SpeechRecognitionConstructor
+  }
+}
+
+let activeRecognition: SpeechRecognitionInstance | null = null
 
 export function isSpeechRecognitionSupported(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+  if (typeof window === 'undefined') return false
+  return !!(window.SpeechRecognition || window.webkitSpeechRecognition)
 }
 
 export function startListening({
@@ -298,92 +306,92 @@ export function startListening({
   onStart,
   onEnd,
 }: {
-  lang?: string;
-  onInterimResult?: (text: string) => void;
-  onFinalCommand: (cmd: ParsedVoiceCommand) => void;
-  onError?: (error: string) => void;
-  onStart?: () => void;
-  onEnd?: () => void;
+  lang?: string
+  onInterimResult?: (text: string) => void
+  onFinalCommand: (cmd: ParsedVoiceCommand) => void
+  onError?: (error: string) => void
+  onStart?: () => void
+  onEnd?: () => void
 }): () => void {
-  stopListening();
+  stopListening()
 
   if (!isSpeechRecognitionSupported()) {
-    if (onError) onError('Speech recognition is not supported in this browser.');
-    return () => {};
+    if (onError) onError('Speech recognition is not supported in this browser.')
+    return () => {}
   }
 
-  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRec) return () => {};
+  const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRec) return () => {}
 
   try {
-    const recognition = new SpeechRec();
-    activeRecognition = recognition;
+    const recognition = new SpeechRec()
+    activeRecognition = recognition
 
-    const bcpLang = LANGUAGE_BCP_MAP[lang] || lang || 'en-US';
-    recognition.lang = bcpLang;
-    recognition.continuous = false;
-    recognition.interimResults = true;
+    const bcpLang = LANGUAGE_BCP_MAP[lang] || lang || 'en-US'
+    recognition.lang = bcpLang
+    recognition.continuous = false
+    recognition.interimResults = true
 
     recognition.onstart = () => {
-      if (onStart) onStart();
-    };
+      if (onStart) onStart()
+    }
 
     recognition.onresult = (event: SpeechRecognitionEventLike) => {
-      let interimTranscript = '';
-      let finalTranscript = '';
+      let interimTranscript = ''
+      let finalTranscript = ''
 
       for (let i = 0; i < event.results.length; ++i) {
-        const item = event.results[i];
+        const item = event.results[i]
         if (item.isFinal) {
-          finalTranscript += item[0].transcript;
+          finalTranscript += item[0].transcript
         } else {
-          interimTranscript += item[0].transcript;
+          interimTranscript += item[0].transcript
         }
       }
 
       if (interimTranscript && onInterimResult) {
-        onInterimResult(interimTranscript);
+        onInterimResult(interimTranscript)
       }
 
       if (finalTranscript) {
-        const parsed = parseVoiceTranscript(finalTranscript);
-        onFinalCommand(parsed);
+        const parsed = parseVoiceTranscript(finalTranscript)
+        onFinalCommand(parsed)
       }
-    };
+    }
 
     recognition.onerror = (event: SpeechRecognitionErrorEventLike) => {
       if (event.error === 'no-speech') {
         // User didn't speak within timeout, clean exit
-        if (onEnd) onEnd();
-        return;
+        if (onEnd) onEnd()
+        return
       }
-      if (onError) onError(event.error);
-      if (onEnd) onEnd();
-    };
+      if (onError) onError(event.error)
+      if (onEnd) onEnd()
+    }
 
     recognition.onend = () => {
-      activeRecognition = null;
-      if (onEnd) onEnd();
-    };
+      activeRecognition = null
+      if (onEnd) onEnd()
+    }
 
-    recognition.start();
+    recognition.start()
 
     return () => {
-      stopListening();
-    };
+      stopListening()
+    }
   } catch (err) {
-    if (onError) onError(String(err));
-    return () => {};
+    if (onError) onError(String(err))
+    return () => {}
   }
 }
 
 export function stopListening(): void {
   if (activeRecognition) {
     try {
-      activeRecognition.stop();
+      activeRecognition.stop()
     } catch {
       // Ignore
     }
-    activeRecognition = null;
+    activeRecognition = null
   }
 }

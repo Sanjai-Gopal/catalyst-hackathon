@@ -1,4 +1,4 @@
-import type { EmailNotificationPayload } from '../types/carenest';
+import type { EmailNotificationPayload } from '../types/carenest'
 
 // Pure email helpers shared by the browser and the /api functions (no network, no env).
 
@@ -9,18 +9,18 @@ export function escapeHtml(value: unknown): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/'/g, '&#39;')
 }
 
 /** Collapses CR/LF so user data can never add headers or break a subject line. */
 function sanitizeSubject(value: string): string {
-  return value.replace(/[\r\n]+/g, ' ').trim();
+  return value.replace(/[\r\n]+/g, ' ').trim()
 }
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function isValidEmail(email: string): boolean {
-  return EMAIL_RE.test((email ?? '').trim());
+  return EMAIL_RE.test((email ?? '').trim())
 }
 
 /**
@@ -28,77 +28,78 @@ export function isValidEmail(email: string): boolean {
  * Every user-supplied value is HTML-escaped.
  */
 export function buildEmailTemplate(payload: EmailNotificationPayload): {
-  subject: string;
-  html: string;
+  subject: string
+  html: string
 } {
-  const elderName = escapeHtml(payload.elderName);
-  const details = escapeHtml(payload.medicationOrDetails);
-  const scheduledTime = escapeHtml(payload.scheduledTime);
-  const { type } = payload;
+  const elderName = escapeHtml(payload.elderName)
+  const details = escapeHtml(payload.medicationOrDetails)
+  const scheduledTime = escapeHtml(payload.scheduledTime)
+  const { type } = payload
   // Plain-text variants (for the subject line, which is not HTML).
-  const rawElder = payload.elderName ?? '';
-  const rawDetails = payload.medicationOrDetails ?? '';
+  const rawElder = payload.elderName ?? ''
+  const rawDetails = payload.medicationOrDetails ?? ''
 
   // Every switch branch (including `default`) assigns these, so no initial value.
-  let subject: string;
-  let badgeColor = '#0284c7';
-  let badgeText: string;
-  let mainHeadline: string;
-  let detailLabel: string;
-  let actionAdvice: string;
+  let subject: string
+  let badgeColor = '#0284c7'
+  let badgeText: string
+  let mainHeadline: string
+  let detailLabel: string
+  let actionAdvice: string
 
   switch (type) {
     case 'missed_medication':
-      subject = `⚠️ URGENT: Missed Medication Alert for ${rawElder}`;
-      badgeColor = '#dc2626';
-      badgeText = 'MISSED MEDICATION ALERT';
-      mainHeadline = `${elderName} has not confirmed taking their scheduled medication.`;
-      detailLabel = 'Missed Dose';
+      subject = `⚠️ URGENT: Missed Medication Alert for ${rawElder}`
+      badgeColor = '#dc2626'
+      badgeText = 'MISSED MEDICATION ALERT'
+      mainHeadline = `${elderName} has not confirmed taking their scheduled medication.`
+      detailLabel = 'Missed Dose'
       actionAdvice =
-        'Please check in with them immediately or verify if they took it without logging.';
-      break;
+        'Please check in with them immediately or verify if they took it without logging.'
+      break
 
     case 'upcoming_dose':
-      subject = `⏰ Upcoming Medication Reminder: ${rawDetails} for ${rawElder}`;
-      badgeColor = '#0284c7';
-      badgeText = 'UPCOMING MEDICATION';
-      mainHeadline = `A scheduled dose is due soon for ${elderName}.`;
-      detailLabel = 'Prescribed Medication';
+      subject = `⏰ Upcoming Medication Reminder: ${rawDetails} for ${rawElder}`
+      badgeColor = '#0284c7'
+      badgeText = 'UPCOMING MEDICATION'
+      mainHeadline = `A scheduled dose is due soon for ${elderName}.`
+      detailLabel = 'Prescribed Medication'
       actionAdvice =
-        'Ensure water and prescribed meals are prepared for smooth adherence.';
-      break;
+        'Ensure water and prescribed meals are prepared for smooth adherence.'
+      break
 
     case 'appointment_reminder':
-      subject = `📅 Doctor Appointment Reminder: ${rawElder}`;
-      badgeColor = '#7c3aed';
-      badgeText = 'CLINICAL APPOINTMENT';
-      mainHeadline = `Upcoming clinical consultation scheduled for ${elderName}.`;
-      detailLabel = 'Appointment & Doctor';
+      subject = `📅 Doctor Appointment Reminder: ${rawElder}`
+      badgeColor = '#7c3aed'
+      badgeText = 'CLINICAL APPOINTMENT'
+      mainHeadline = `Upcoming clinical consultation scheduled for ${elderName}.`
+      detailLabel = 'Appointment & Doctor'
       actionAdvice =
-        'Please prepare previous medical records, current medication list, and arrive 15 minutes early.';
-      break;
+        'Please prepare previous medical records, current medication list, and arrive 15 minutes early.'
+      break
 
     case 'emergency_sos':
-      subject = `🚨 EMERGENCY SOS BROADCAST: Immediate Attention Needed for ${rawElder}`;
-      badgeColor = '#b91c1c';
-      badgeText = 'EMERGENCY SOS ALERT';
-      mainHeadline = `EMERGENCY ALERT: ${elderName} triggered the 1-Tap SOS Assistance Button!`;
-      detailLabel = 'Emergency Signal';
+      subject = `🚨 EMERGENCY SOS BROADCAST: Immediate Attention Needed for ${rawElder}`
+      badgeColor = '#b91c1c'
+      badgeText = 'EMERGENCY SOS ALERT'
+      mainHeadline = `EMERGENCY ALERT: ${elderName} triggered the 1-Tap SOS Assistance Button!`
+      detailLabel = 'Emergency Signal'
       actionAdvice =
-        'Call the elder immediately or dispatch local emergency contact / primary physician.';
-      break;
+        'Call the elder immediately or dispatch local emergency contact / primary physician.'
+      break
 
     default:
       // 'doctor_update' (declared in the payload type) and any unexpected value.
-      subject = `CareNest AI Update for ${rawElder}`;
-      badgeText = 'CARE UPDATE';
-      mainHeadline = `A care update is available for ${elderName}.`;
-      detailLabel = 'Update';
-      actionAdvice = 'Please review the details below and follow up with the care team if needed.';
-      break;
+      subject = `CareNest AI Update for ${rawElder}`
+      badgeText = 'CARE UPDATE'
+      mainHeadline = `A care update is available for ${elderName}.`
+      detailLabel = 'Update'
+      actionAdvice =
+        'Please review the details below and follow up with the care team if needed.'
+      break
   }
 
-  subject = sanitizeSubject(subject);
+  subject = sanitizeSubject(subject)
 
   const html = `
 <!DOCTYPE html>
@@ -137,7 +138,7 @@ export function buildEmailTemplate(payload: EmailNotificationPayload): {
     </div>
   </div>
 </body>
-</html>`;
+</html>`
 
-  return { subject, html };
+  return { subject, html }
 }

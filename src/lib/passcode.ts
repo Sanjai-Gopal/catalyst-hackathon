@@ -6,9 +6,14 @@
  * read these values from the shipped JavaScript. Replace with server-verified
  * auth (e.g. an Appwrite session + role check) before real patient use.
  */
-export const VALID_PASSCODES: readonly string[] = ['CARE-8492', '8492', 'CARE-2026', '2026'];
+const VALID_PASSCODES: readonly string[] = [
+  'CARE-8492',
+  '8492',
+  'CARE-2026',
+  '2026',
+]
 
 export function verifyPasscode(entered: string): boolean {
-  const clean = (entered ?? '').trim().toUpperCase();
-  return VALID_PASSCODES.includes(clean);
+  const clean = (entered ?? '').trim().toUpperCase()
+  return VALID_PASSCODES.includes(clean)
 }

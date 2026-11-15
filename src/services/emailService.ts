@@ -1,15 +1,15 @@
-import type { EmailNotificationPayload } from '../types/carenest';
-import { ApiError, apiPost } from '../lib/api';
-import { buildEmailTemplate, isValidEmail } from '../shared/email';
+import { ApiError, apiPost } from '../lib/api'
+import { buildEmailTemplate, isValidEmail } from '../shared/email'
+import type { EmailNotificationPayload } from '../types/carenest'
 
-export { buildEmailTemplate, escapeHtml, isValidEmail } from '../shared/email';
+export { buildEmailTemplate, escapeHtml, isValidEmail } from '../shared/email'
 
 export interface EmailDispatchResult {
-  success: boolean;
-  messageId?: string;
-  error?: string;
-  previewHtml: string;
-  sentAt: string;
+  success: boolean
+  messageId?: string
+  error?: string
+  previewHtml: string
+  sentAt: string
 }
 
 /**
@@ -24,24 +24,35 @@ export interface EmailDispatchResult {
 export async function sendEmailNotification(
   payload: EmailNotificationPayload
 ): Promise<EmailDispatchResult> {
-  const { html } = buildEmailTemplate(payload);
-  const sentAt = new Date().toLocaleTimeString();
+  const { html } = buildEmailTemplate(payload)
+  const sentAt = new Date().toLocaleTimeString()
   const fail = (error: string): EmailDispatchResult => ({
     success: false,
     error,
     previewHtml: html,
     sentAt,
-  });
+  })
 
   if (!isValidEmail(payload.recipientEmail)) {
-    return fail('Recipient email is missing or invalid.');
+    return fail('Recipient email is missing or invalid.')
   }
 
   try {
-    const data = await apiPost<{ success: boolean; messageId?: string }>('/api/email/send', payload);
-    if (!data.success) return fail('The email provider did not confirm delivery.');
-    return { success: true, messageId: data.messageId, previewHtml: html, sentAt };
+    const data = await apiPost<{ success: boolean; messageId?: string }>(
+      '/api/email/send',
+      payload
+    )
+    if (!data.success)
+      return fail('The email provider did not confirm delivery.')
+    return {
+      success: true,
+      messageId: data.messageId,
+      previewHtml: html,
+      sentAt,
+    }
   } catch (err) {
-    return fail(err instanceof ApiError ? err.message : 'Could not send the email.');
+    return fail(
+      err instanceof ApiError ? err.message : 'Could not send the email.'
+    )
   }
 }

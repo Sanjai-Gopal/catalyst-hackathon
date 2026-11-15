@@ -1,24 +1,66 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react'
 
-export type LanguageCode = 'en' | 'ta' | 'hi' | 'te' | 'kn' | 'ml' | 'es';
+export type LanguageCode = 'en' | 'ta' | 'hi' | 'te' | 'kn' | 'ml' | 'es'
 
-export interface LanguageOption {
-  code: LanguageCode;
-  label: string;
-  nativeLabel: string;
-  flag: string;
-  bcp47: string;
+interface LanguageOption {
+  code: LanguageCode
+  label: string
+  nativeLabel: string
+  flag: string
+  bcp47: string
 }
 
-export const SUPPORTED_LANGUAGES: LanguageOption[] = [
-  { code: 'en', label: 'English', nativeLabel: 'English', flag: '🇬🇧', bcp47: 'en-US' },
-  { code: 'ta', label: 'Tamil', nativeLabel: 'தமிழ்', flag: '🇮🇳', bcp47: 'ta-IN' },
-  { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी', flag: '🇮🇳', bcp47: 'hi-IN' },
-  { code: 'te', label: 'Telugu', nativeLabel: 'తెలుగు', flag: '🇮🇳', bcp47: 'te-IN' },
-  { code: 'kn', label: 'Kannada', nativeLabel: 'ಕನ್ನಡ', flag: '🇮🇳', bcp47: 'kn-IN' },
-  { code: 'ml', label: 'Malayalam', nativeLabel: 'മലയാളം', flag: '🇮🇳', bcp47: 'ml-IN' },
-  { code: 'es', label: 'Spanish', nativeLabel: 'Español', flag: '🇪🇸', bcp47: 'es-ES' },
-];
+const SUPPORTED_LANGUAGES: LanguageOption[] = [
+  {
+    code: 'en',
+    label: 'English',
+    nativeLabel: 'English',
+    flag: '🇬🇧',
+    bcp47: 'en-US',
+  },
+  {
+    code: 'ta',
+    label: 'Tamil',
+    nativeLabel: 'தமிழ்',
+    flag: '🇮🇳',
+    bcp47: 'ta-IN',
+  },
+  {
+    code: 'hi',
+    label: 'Hindi',
+    nativeLabel: 'हिन्दी',
+    flag: '🇮🇳',
+    bcp47: 'hi-IN',
+  },
+  {
+    code: 'te',
+    label: 'Telugu',
+    nativeLabel: 'తెలుగు',
+    flag: '🇮🇳',
+    bcp47: 'te-IN',
+  },
+  {
+    code: 'kn',
+    label: 'Kannada',
+    nativeLabel: 'ಕನ್ನಡ',
+    flag: '🇮🇳',
+    bcp47: 'kn-IN',
+  },
+  {
+    code: 'ml',
+    label: 'Malayalam',
+    nativeLabel: 'മലയാളം',
+    flag: '🇮🇳',
+    bcp47: 'ml-IN',
+  },
+  {
+    code: 'es',
+    label: 'Spanish',
+    nativeLabel: 'Español',
+    flag: '🇪🇸',
+    bcp47: 'es-ES',
+  },
+]
 
 export const TRANSLATIONS = {
   en: {
@@ -49,11 +91,13 @@ export const TRANSLATIONS = {
     dose: 'Dose',
     takenToday: 'Taken Today',
     wonderfulJob: 'Wonderful job, {honorific}! All {slot} medicines completed.',
-    familyNotified: '{childName} and your doctor have been updated on your positive adherence.',
+    familyNotified:
+      '{childName} and your doctor have been updated on your positive adherence.',
     noMedsScheduled: 'No medications scheduled for {slot}',
     takeRest: 'Take a walk, rest, or enjoy a cup of warm herbal tea!',
     emergencyTitle: 'Emergency Assistance for {honorific}',
-    emergencySubtext: 'Feeling dizzy, unwell, or need immediate help? Pressing this will immediately call {childName} ({childPhone}) and send urgent alerts to your doctor.',
+    emergencySubtext:
+      'Feeling dizzy, unwell, or need immediate help? Pressing this will immediately call {childName} ({childPhone}) and send urgent alerts to your doctor.',
     callChildNow: 'Call {childName} (SOS)',
     callChildSos: 'Call {childName} Now',
     callingChild: 'Calling {childName} Now...',
@@ -64,7 +108,8 @@ export const TRANSLATIONS = {
     callDoctor: 'Call Doctor: {doctorName}',
     callAmbulance: 'Call Medical Emergency Ambulance (108 / 911)',
     closeSafe: 'Close / I am safe now',
-    emailsDispatched: 'Automated high-priority emails have been dispatched to {childEmail}.',
+    emailsDispatched:
+      'Automated high-priority emails have been dispatched to {childEmail}.',
     overview: 'Overview',
     medications: 'Medications',
     appointments: 'Appointments',
@@ -106,11 +151,13 @@ export const TRANSLATIONS = {
     dose: 'அளவு',
     takenToday: 'இன்று உட்கொண்டது',
     wonderfulJob: 'அற்புதம், {honorific}! அனைத்து {slot} மருந்துகளையும் முடித்தீர்கள்.',
-    familyNotified: 'உங்கள் பிள்ளை {childName} மற்றும் மருத்துவருக்கு தகவல் அனுப்பப்பட்டது.',
+    familyNotified:
+      'உங்கள் பிள்ளை {childName} மற்றும் மருத்துவருக்கு தகவல் அனுப்பப்பட்டது.',
     noMedsScheduled: '{slot} நேரத்தில் மருந்துகள் ஏதுமில்லை',
     takeRest: 'நன்றாக ஓய்வெடுங்கள் அல்லது வெதுவெதுப்பான நீர் அருந்துங்கள்!',
     emergencyTitle: '{honorific} விற்கான அவசர உதவி',
-    emergencySubtext: 'மயக்கம், உடல்நலக் குறைவு அல்லது அவசர உதவி தேவையா? இதனை அழுத்தினால் உடனடியாக உங்கள் பிள்ளை {childName} ({childPhone}) க்கு நேரடி தொலைபேசி அழைப்பு செல்லும்.',
+    emergencySubtext:
+      'மயக்கம், உடல்நலக் குறைவு அல்லது அவசர உதவி தேவையா? இதனை அழுத்தினால் உடனடியாக உங்கள் பிள்ளை {childName} ({childPhone}) க்கு நேரடி தொலைபேசி அழைப்பு செல்லும்.',
     callChildNow: '{childName} ஐ அழையுங்கள் (SOS)',
     callChildSos: '{childName} க்கு உடனே அழையுங்கள்',
     callingChild: '{childName} க்கு அழைப்பு போகிறது...',
@@ -121,7 +168,8 @@ export const TRANSLATIONS = {
     callDoctor: 'மருத்துவரை அழையுங்கள்: {doctorName}',
     callAmbulance: 'ஆம்புலன்ஸ் அவசர அழைப்பு (108)',
     closeSafe: 'மூடு / நான் பாதுகாப்பாக உள்ளேன்',
-    emailsDispatched: 'தானியங்கி அவசர மின்னஞ்சல் {childEmail} முகவரிக்கு அனுப்பப்பட்டுள்ளது.',
+    emailsDispatched:
+      'தானியங்கி அவசர மின்னஞ்சல் {childEmail} முகவரிக்கு அனுப்பப்பட்டுள்ளது.',
     overview: 'கண்ணோட்டம்',
     medications: 'மருந்துகள்',
     appointments: 'சந்திப்புகள்',
@@ -167,7 +215,8 @@ export const TRANSLATIONS = {
     noMedsScheduled: '{slot} के लिए कोई दवा निर्धारित नहीं है',
     takeRest: 'आराम करें, टहलें या गर्म पानी/हर्बल चाय पिएं!',
     emergencyTitle: '{honorific} के लिए आपातकालीन सहायता',
-    emergencySubtext: 'चक्कर आ रहे हैं, अस्वस्थ महसूस हो रहा है या तुरंत मदद चाहिए? इसे दबाने पर तुरंत {childName} ({childPhone}) को सीधा फोन लगेगा।',
+    emergencySubtext:
+      'चक्कर आ रहे हैं, अस्वस्थ महसूस हो रहा है या तुरंत मदद चाहिए? इसे दबाने पर तुरंत {childName} ({childPhone}) को सीधा फोन लगेगा।',
     callChildNow: '{childName} को कॉल करें (SOS)',
     callChildSos: '{childName} को अभी कॉल करें',
     callingChild: '{childName} को कॉल जा रहा है...',
@@ -224,7 +273,8 @@ export const TRANSLATIONS = {
     noMedsScheduled: '{slot} సమయంలో మందులు ఏవీ లేవు',
     takeRest: 'విశ్రాంతి తీసుకోండి లేదా వేడి నీరు త్రాగండి!',
     emergencyTitle: '{honorific} అత్యవసర సహాయం',
-    emergencySubtext: 'సహాయం కావాలన్నా లేదా కళ్లు తిరుగుతున్నా? ఇది నొక్కితే వెంటనే {childName} ({childPhone}) కి కాల్ వెళ్తుంది.',
+    emergencySubtext:
+      'సహాయం కావాలన్నా లేదా కళ్లు తిరుగుతున్నా? ఇది నొక్కితే వెంటనే {childName} ({childPhone}) కి కాల్ వెళ్తుంది.',
     callChildNow: '{childName} కి కాల్ చేయండి (SOS)',
     callChildSos: '{childName} కి వెంటనే కాల్ చేయండి',
     callingChild: '{childName} కి కాల్ వెళ్తోంది...',
@@ -281,7 +331,8 @@ export const TRANSLATIONS = {
     noMedsScheduled: '{slot} ಸಮಯದಲ್ಲಿ ಯಾವುದೇ ಔಷಧಿಗಳಿಲ್ಲ',
     takeRest: 'ಆರಾಮವಾಗಿ ವಿಶ್ರಾಂತಿ ಪಡೆಯಿರಿ ಅಥವಾ ಬಿಸಿ ನೀರು ಕುಡಿಯಿರಿ!',
     emergencyTitle: '{honorific} ಅವರಿಗೆ ತುರ್ತು ಸಹಾಯ',
-    emergencySubtext: 'ಅಸ್ವಸ್ಥತೆ ಅಥವಾ ತುರ್ತು ಸಹಾಯ ಬೇಕೇ? ಇದನ್ನು ಒತ್ತಿದರೆ ತಕ್ಷಣ {childName} ({childPhone}) ಅವರಿಗೆ ಕರೆ ಹೋಗುತ್ತದೆ.',
+    emergencySubtext:
+      'ಅಸ್ವಸ್ಥತೆ ಅಥವಾ ತುರ್ತು ಸಹಾಯ ಬೇಕೇ? ಇದನ್ನು ಒತ್ತಿದರೆ ತಕ್ಷಣ {childName} ({childPhone}) ಅವರಿಗೆ ಕರೆ ಹೋಗುತ್ತದೆ.',
     callChildNow: '{childName} ಕರೆ ಮಾಡಿ (SOS)',
     callChildSos: '{childName} ಅವರಿಗೆ ತಕ್ಷಣ ಕರೆ ಮಾಡಿ',
     callingChild: '{childName} ಅವರಿಗೆ ಕರೆ ಮಾಡಲಾಗುತ್ತಿದೆ...',
@@ -338,7 +389,8 @@ export const TRANSLATIONS = {
     noMedsScheduled: '{slot} സമയത്ത് മരുന്നുകൾ ഒന്നുമില്ല',
     takeRest: 'നന്നായി വിശ്രമിക്കൂ അല്ലെങ്കിൽ ചൂടുവെള്ളം കുടിക്കൂ!',
     emergencyTitle: '{honorific} നുള്ള അടിയന്തര സഹായം',
-    emergencySubtext: 'തലകറക്കമോ അടിയന്തര സഹായമോ ആവശ്യമുണ്ടോ? ഇത് അമർത്തിയാൽ ഉടൻ തന്നെ {childName} ({childPhone}) ലേക്ക് കോൾ പോകുന്നതാണ്.',
+    emergencySubtext:
+      'തലകറക്കമോ അടിയന്തര സഹായമോ ആവശ്യമുണ്ടോ? ഇത് അമർത്തിയാൽ ഉടൻ തന്നെ {childName} ({childPhone}) ലേക്ക് കോൾ പോകുന്നതാണ്.',
     callChildNow: '{childName} വിളിക്കുക (SOS)',
     callChildSos: '{childName} നെ ഉടൻ വിളിക്കുക',
     callingChild: '{childName} ലേക്ക് കോൾ പോകുന്നു...',
@@ -390,12 +442,14 @@ export const TRANSLATIONS = {
     doctorsAdvice: 'Consejo del médico',
     dose: 'Dosis',
     takenToday: 'Tomado hoy',
-    wonderfulJob: '¡Excelente trabajo, {honorific}! Todos los medicamentos de la {slot} completados.',
+    wonderfulJob:
+      '¡Excelente trabajo, {honorific}! Todos los medicamentos de la {slot} completados.',
     familyNotified: 'Su hijo/a {childName} y su médico han sido informados.',
     noMedsScheduled: 'No hay medicamentos programados para la {slot}',
     takeRest: '¡Descanse o disfrute de una infusión caliente!',
     emergencyTitle: 'Asistencia de Emergencia para {honorific}',
-    emergencySubtext: '¿Se siente mareado o necesita ayuda urgente? Al presionar esto llamará inmediatamente a {childName} ({childPhone}) y enviará alertas médicas.',
+    emergencySubtext:
+      '¿Se siente mareado o necesita ayuda urgente? Al presionar esto llamará inmediatamente a {childName} ({childPhone}) y enviará alertas médicas.',
     callChildNow: 'Llamar a {childName} (SOS)',
     callChildSos: 'Llamar a {childName} ahora',
     callingChild: 'Llamando a {childName}...',
@@ -420,51 +474,56 @@ export const TRANSLATIONS = {
     passcode: 'Código de acceso',
     switchSeniorMode: 'Cambiar a Modo para Mayores',
   },
-};
-
-export type TranslationKey = keyof typeof TRANSLATIONS.en;
-
-interface LanguageContextType {
-  currentLanguage: LanguageCode;
-  setLanguage: (lang: LanguageCode) => void;
-  t: (key: TranslationKey, params?: Record<string, string>) => string;
-  currentOption: LanguageOption;
-  availableLanguages: LanguageOption[];
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+export type TranslationKey = keyof typeof TRANSLATIONS.en
+
+interface LanguageContextType {
+  currentLanguage: LanguageCode
+  setLanguage: (lang: LanguageCode) => void
+  t: (key: TranslationKey, params?: Record<string, string>) => string
+  currentOption: LanguageOption
+  availableLanguages: LanguageOption[]
+}
+
+const LanguageContext = createContext<LanguageContextType | undefined>(
+  undefined
+)
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [currentLanguage, setCurrentLanguageState] = useState<LanguageCode>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('carenest_language') as LanguageCode;
-      if (stored && TRANSLATIONS[stored]) return stored;
+  const [currentLanguage, setCurrentLanguageState] = useState<LanguageCode>(
+    () => {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('carenest_language') as LanguageCode
+        if (stored && TRANSLATIONS[stored]) return stored
+      }
+      return 'en'
     }
-    return 'en';
-  });
+  )
 
   const setLanguage = (lang: LanguageCode) => {
-    setCurrentLanguageState(lang);
+    setCurrentLanguageState(lang)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('carenest_language', lang);
+      localStorage.setItem('carenest_language', lang)
     }
-  };
+  }
 
   const t = (key: TranslationKey, params?: Record<string, string>): string => {
-    const dict = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
-    let text = dict[key] || TRANSLATIONS.en[key] || String(key);
+    const dict = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en
+    let text = dict[key] || TRANSLATIONS.en[key] || String(key)
 
     if (params) {
       Object.entries(params).forEach(([paramKey, val]) => {
-        text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), val);
-      });
+        text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), val)
+      })
     }
 
-    return text;
-  };
+    return text
+  }
 
   const currentOption =
-    SUPPORTED_LANGUAGES.find((l) => l.code === currentLanguage) || SUPPORTED_LANGUAGES[0];
+    SUPPORTED_LANGUAGES.find((l) => l.code === currentLanguage) ||
+    SUPPORTED_LANGUAGES[0]
 
   return (
     <LanguageContext.Provider
@@ -478,28 +537,28 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     >
       {children}
     </LanguageContext.Provider>
-  );
+  )
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
+  const context = useContext(LanguageContext)
   if (!context) {
     // Graceful fallback for components outside provider
     return {
       currentLanguage: 'en' as LanguageCode,
       setLanguage: () => {},
       t: (key: TranslationKey, params?: Record<string, string>) => {
-        let text = TRANSLATIONS.en[key] || String(key);
+        let text = TRANSLATIONS.en[key] || String(key)
         if (params) {
           Object.entries(params).forEach(([paramKey, val]) => {
-            text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), val);
-          });
+            text = text.replace(new RegExp(`\\{${paramKey}\\}`, 'g'), val)
+          })
         }
-        return text;
+        return text
       },
       currentOption: SUPPORTED_LANGUAGES[0],
       availableLanguages: SUPPORTED_LANGUAGES,
-    };
+    }
   }
-  return context;
+  return context
 }

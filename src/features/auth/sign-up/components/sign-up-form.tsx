@@ -61,7 +61,8 @@ export function SignUpForm({
           localStorage.setItem('carenest_user_email', data.email)
           if (
             !window.location.pathname.includes('__vitest__') &&
-            !(window as unknown as { __vitest_browser__?: boolean }).__vitest_browser__
+            !(window as unknown as { __vitest_browser__?: boolean })
+              .__vitest_browser__
           ) {
             window.location.href = '/'
           }
@@ -152,7 +153,7 @@ export function SignUpForm({
         <div className='flex flex-col gap-2'>
           <Button
             variant='outline'
-            className='w-full flex items-center justify-center gap-2'
+            className='flex w-full items-center justify-center gap-2'
             type='button'
             onClick={handleGoogleSignIn}
             disabled={isLoading}
@@ -189,7 +190,7 @@ export function SignUpForm({
 
           <Button
             variant='outline'
-            className='w-full text-xs font-semibold border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'
+            className='w-full border-primary/30 bg-primary/5 text-xs font-semibold text-primary hover:bg-primary/10'
             type='button'
             onClick={() => {
               if (typeof window !== 'undefined') {

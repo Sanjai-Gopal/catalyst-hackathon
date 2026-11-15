@@ -1,15 +1,18 @@
-import { useState } from 'react';
-import { type Medication, type AdherenceRecord, type TimeSlot, type PatientProfile } from '@/types/carenest';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useState } from 'react'
+import { sendEmailNotification } from '@/services/emailService'
+import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
+  speakText,
+  stopSpeaking,
+  getInstantElderVoiceTemplate,
+  cacheVoiceExplanation,
+} from '@/services/voiceService'
+import {
+  type Medication,
+  type AdherenceRecord,
+  type TimeSlot,
+  type PatientProfile,
+} from '@/types/carenest'
 import {
   Sun,
   CloudSun,
@@ -29,54 +32,56 @@ import {
   Stethoscope,
   Video,
   RotateCcw,
-} from 'lucide-react';
+} from 'lucide-react'
+import { toast } from 'sonner'
+import { getLocalDateString } from '@/lib/date'
+import { useLanguage } from '@/context/language-context'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
-  speakText,
-  stopSpeaking,
-  getInstantElderVoiceTemplate,
-  cacheVoiceExplanation,
-} from '@/services/voiceService';
-import { generateElderFriendlyExplanation } from '@/services/geminiHealthcare';
-import { sendEmailNotification } from '@/services/emailService';
-import { getLocalDateString } from '@/lib/date';
-import { useLanguage } from '@/context/language-context';
-import { LanguageSwitcher } from '@/components/language-switcher';
-import { VoiceAssistantWidget } from './VoiceAssistantWidget';
-import { TelehealthConsultationModal } from './TelehealthConsultationModal';
-import { toast } from 'sonner';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import { TelehealthConsultationModal } from './TelehealthConsultationModal'
+import { VoiceAssistantWidget } from './VoiceAssistantWidget'
 
 function triggerPhoneCall(phoneNumber: string) {
-  const cleanPhone = phoneNumber.replace(/[^0-9+]/g, '');
-  if (!cleanPhone) return;
+  const cleanPhone = phoneNumber.replace(/[^0-9+]/g, '')
+  if (!cleanPhone) return
 
   if (typeof window !== 'undefined') {
     const isTest =
-      (window as unknown as { __vitest_browser__?: boolean }).__vitest_browser__ ||
-      window.location.pathname.includes('__vitest__');
+      (window as unknown as { __vitest_browser__?: boolean })
+        .__vitest_browser__ || window.location.pathname.includes('__vitest__')
     if (!isTest) {
       try {
-        const link = document.createElement('a');
-        link.href = `tel:${cleanPhone}`;
-        link.setAttribute('rel', 'noopener noreferrer');
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const link = document.createElement('a')
+        link.href = `tel:${cleanPhone}`
+        link.setAttribute('rel', 'noopener noreferrer')
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
       } catch {
-        window.location.href = `tel:${cleanPhone}`;
+        window.location.href = `tel:${cleanPhone}`
       }
     }
   }
 }
 
 interface SeniorModeViewProps {
-  patient?: PatientProfile;
-  patientName?: string;
-  medications: Medication[];
-  adherence: AdherenceRecord[];
-  onMarkTaken: (medicationId: string, slot: TimeSlot) => void;
-  onOpenPasscodeModal: () => void;
-  onOpenOnboarding?: () => void;
-  onResetRoutine?: () => void;
+  patient?: PatientProfile
+  patientName?: string
+  medications: Medication[]
+  adherence: AdherenceRecord[]
+  onMarkTaken: (medicationId: string, slot: TimeSlot) => void
+  onOpenPasscodeModal: () => void
+  onOpenOnboarding?: () => void
+  onResetRoutine?: () => void
 }
 
 export function SeniorModeView({
@@ -89,74 +94,75 @@ export function SeniorModeView({
   onOpenOnboarding,
   onResetRoutine,
 }: SeniorModeViewProps) {
-  const [selectedSlot, setSelectedSlot] = useState<TimeSlot>('morning');
-  const [speakingMedId, setSpeakingMedId] = useState<string | null>(null);
-  const [isEmergencyTriggered, setIsEmergencyTriggered] = useState(false);
-  const [isCallingDialogOpen, setIsCallingDialogOpen] = useState(false);
-  const [isDoctorVideoOpen, setIsDoctorVideoOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot>('morning')
+  const [speakingMedId, setSpeakingMedId] = useState<string | null>(null)
+  const [isEmergencyTriggered, setIsEmergencyTriggered] = useState(false)
+  const [isCallingDialogOpen, setIsCallingDialogOpen] = useState(false)
+  const [isDoctorVideoOpen, setIsDoctorVideoOpen] = useState(false)
 
-  const { t, currentLanguage } = useLanguage();
+  const { t, currentLanguage } = useLanguage()
 
   const activeHonorific =
     patient?.honorific === 'Custom'
       ? patient.customHonorific || 'Elder'
-      : patient?.honorific || 'Amma';
+      : patient?.honorific || 'Amma'
 
   const honorificEmoji =
     activeHonorific === 'Amma'
       ? '🌸'
       : activeHonorific === 'Appa'
-      ? '🌿'
-      : activeHonorific === 'Grandma'
-      ? '👵'
-      : '👴';
+        ? '🌿'
+        : activeHonorific === 'Grandma'
+          ? '👵'
+          : '👴'
 
   const activeChildContact = patient?.childrenContact || {
     name: 'Family Caregiver',
     relationship: 'Son & Primary Caregiver',
     email: 'caregiver@example.com',
     phone: '+91 90000 00000',
-  };
+  }
 
-  const cleanChildPhone = activeChildContact.phone.replace(/[^0-9+]/g, '');
-  const waChildPhone = activeChildContact.phone.replace(/[^0-9]/g, '');
+  const cleanChildPhone = activeChildContact.phone.replace(/[^0-9+]/g, '')
+  const waChildPhone = activeChildContact.phone.replace(/[^0-9]/g, '')
   const cleanDoctorPhone = (
     patient?.doctorContact?.phone || '+91 44 2829 0200'
-  ).replace(/[^0-9+]/g, '');
+  ).replace(/[^0-9+]/g, '')
 
-  const todayStr = getLocalDateString();
+  const todayStr = getLocalDateString()
 
   // Filter meds for current slot
-  const slotMeds = medications.filter((m) => m.slot === selectedSlot);
+  const slotMeds = medications.filter((m) => m.slot === selectedSlot)
 
   // Check taken status
   const isMedTaken = (medId: string) => {
     return adherence.some(
-      (a) => a.medicationId === medId && a.date === todayStr && a.status === 'taken'
-    );
-  };
+      (a) =>
+        a.medicationId === medId && a.date === todayStr && a.status === 'taken'
+    )
+  }
 
-  const totalSlotMeds = slotMeds.length;
-  const takenSlotMeds = slotMeds.filter((m) => isMedTaken(m.id)).length;
-  const isSlotComplete = totalSlotMeds > 0 && takenSlotMeds === totalSlotMeds;
+  const totalSlotMeds = slotMeds.length
+  const takenSlotMeds = slotMeds.filter((m) => isMedTaken(m.id)).length
+  const isSlotComplete = totalSlotMeds > 0 && takenSlotMeds === totalSlotMeds
 
   const handleMarkSlotTaken = (slot: TimeSlot) => {
-    const medsToMark = medications.filter((m) => m.slot === slot);
+    const medsToMark = medications.filter((m) => m.slot === slot)
     medsToMark.forEach((m) => {
       if (!isMedTaken(m.id)) {
-        onMarkTaken(m.id, slot);
+        onMarkTaken(m.id, slot)
       }
-    });
-  };
+    })
+  }
 
   const handleSpeak = (med: Medication) => {
     if (speakingMedId === med.id) {
-      stopSpeaking();
-      setSpeakingMedId(null);
-      return;
+      stopSpeaking()
+      setSpeakingMedId(null)
+      return
     }
 
-    setSpeakingMedId(med.id);
+    setSpeakingMedId(med.id)
 
     // 1. Instant speech synthesis using local template (0ms latency!)
     const instantText = getInstantElderVoiceTemplate(
@@ -164,14 +170,14 @@ export function SeniorModeView({
       med.instructions,
       activeHonorific,
       currentLanguage
-    );
+    )
     speakText(
       instantText,
       () => {
-        setSpeakingMedId(null);
+        setSpeakingMedId(null)
       },
       currentLanguage
-    );
+    )
 
     // 2. Asynchronously fetch rich Gemini explanation and update cache for next replay
     generateElderFriendlyExplanation(
@@ -181,40 +187,45 @@ export function SeniorModeView({
       currentLanguage
     )
       .then((richExplanation) => {
-        cacheVoiceExplanation(med.name, activeHonorific, currentLanguage, richExplanation);
+        cacheVoiceExplanation(
+          med.name,
+          activeHonorific,
+          currentLanguage,
+          richExplanation
+        )
       })
-      .catch(() => {});
-  };
+      .catch(() => {})
+  }
 
   const handleTriggerSOS = async () => {
-    setIsEmergencyTriggered(true);
-    setIsCallingDialogOpen(true);
+    setIsEmergencyTriggered(true)
+    setIsCallingDialogOpen(true)
 
     // 1. Immediately initiate native phone call to children
-    triggerPhoneCall(activeChildContact.phone);
+    triggerPhoneCall(activeChildContact.phone)
 
     toast.error(
       `${t('callingChild', { childName: activeChildContact.name })} (${activeChildContact.phone})`,
       { duration: 6000 }
-    );
+    )
 
     // 2. Clear, reassuring voice audio in the user's selected language
-    let sosAudio = `Calling your child ${activeChildContact.name} now at ${activeChildContact.phone}. Emergency alerts sent to family and doctor. Help is on the way, ${activeHonorific}.`;
+    let sosAudio = `Calling your child ${activeChildContact.name} now at ${activeChildContact.phone}. Emergency alerts sent to family and doctor. Help is on the way, ${activeHonorific}.`
     if (currentLanguage === 'ta') {
-      sosAudio = `அவசர எச்சரிக்கை! உங்கள் பிள்ளை ${activeChildContact.name} க்கு உடனே அழைப்பு போகிறது. மருத்துவர் மற்றும் குடும்பத்தினருக்கு தகவல் அனுப்பப்பட்டது. பயப்பட வேண்டாம், ${activeHonorific}.`;
+      sosAudio = `அவசர எச்சரிக்கை! உங்கள் பிள்ளை ${activeChildContact.name} க்கு உடனே அழைப்பு போகிறது. மருத்துவர் மற்றும் குடும்பத்தினருக்கு தகவல் அனுப்பப்பட்டது. பயப்பட வேண்டாம், ${activeHonorific}.`
     } else if (currentLanguage === 'hi') {
-      sosAudio = `आपातकालीन सूचना! आपके बच्चे ${activeChildContact.name} को फोन लग रहा है। परिवार और डॉक्टर को संदेश भेज दिया गया है। धैर्य रखें, ${activeHonorific}।`;
+      sosAudio = `आपातकालीन सूचना! आपके बच्चे ${activeChildContact.name} को फोन लग रहा है। परिवार और डॉक्टर को संदेश भेज दिया गया है। धैर्य रखें, ${activeHonorific}।`
     } else if (currentLanguage === 'te') {
-      sosAudio = `అత్యవసర సమాచారం! మీ పిల్లలు ${activeChildContact.name} కి కాల్ వెళ్తోంది. కుటుంబానికి మరియు డాక్టర్‌కు మెసేజ్ అందింది. ధైర్యంగా ఉండండి, ${activeHonorific}.`;
+      sosAudio = `అత్యవసర సమాచారం! మీ పిల్లలు ${activeChildContact.name} కి కాల్ వెళ్తోంది. కుటుంబానికి మరియు డాక్టర్‌కు మెసేజ్ అందింది. ధైర్యంగా ఉండండి, ${activeHonorific}.`
     } else if (currentLanguage === 'kn') {
-      sosAudio = `ತುರ್ತು ಸಂದೇಶ! ನಿಮ್ಮ ಮಕ್ಕಳು ${activeChildContact.name} ಅವರಿಗೆ ಕರೆ ಮಾಡಲಾಗುತ್ತಿದೆ. ವೈದ್ಯರಿಗೆ ಮತ್ತು ಕುಟುಂಬಕ್ಕೆ ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಿದೆ. ಧೈರ್ಯವಾಗಿರಿ, ${activeHonorific}.`;
+      sosAudio = `ತುರ್ತು ಸಂದೇಶ! ನಿಮ್ಮ ಮಕ್ಕಳು ${activeChildContact.name} ಅವರಿಗೆ ಕರೆ ಮಾಡಲಾಗುತ್ತಿದೆ. ವೈದ್ಯರಿಗೆ ಮತ್ತು ಕುಟುಂಬಕ್ಕೆ ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಿದೆ. ಧೈರ್ಯವಾಗಿರಿ, ${activeHonorific}.`
     } else if (currentLanguage === 'ml') {
-      sosAudio = `അടിയന്തര മുന്നറിയിപ്പ്! നിങ്ങളുടെ മക്കൾ ${activeChildContact.name} ലേക്ക് കോൾ പോകുന്നു. കുടുംബത്തിനും ഡോക്ടർക്കും സന്ദേശം അയച്ചിട്ടുണ്ട്. വിഷമിക്കേണ്ട, ${activeHonorific}.`;
+      sosAudio = `അടിയന്തര മുന്നറിയിപ്പ്! നിങ്ങളുടെ മക്കൾ ${activeChildContact.name} ലേക്ക് കോൾ പോകുന്നു. കുടുംബത്തിനും ഡോക്ടർക്കും സന്ദേശം അയച്ചിട്ടുണ്ട്. വിഷമിക്കേണ്ട, ${activeHonorific}.`
     } else if (currentLanguage === 'es') {
-      sosAudio = `¡Alerta de emergencia! Llamando a su hijo ${activeChildContact.name} ahora. Se han enviado alertas a su familia y médico. Ya llega ayuda, ${activeHonorific}.`;
+      sosAudio = `¡Alerta de emergencia! Llamando a su hijo ${activeChildContact.name} ahora. Se han enviado alertas a su familia y médico. Ya llega ayuda, ${activeHonorific}.`
     }
 
-    speakText(sosAudio, undefined, currentLanguage);
+    speakText(sosAudio, undefined, currentLanguage)
 
     // 3. Dispatch high-priority emergency email to children
     const childResult = await sendEmailNotification({
@@ -224,12 +235,12 @@ export function SeniorModeView({
       type: 'emergency_sos',
       medicationOrDetails: `Immediate Emergency Call & Care Assistance Requested by ${activeHonorific} to ${activeChildContact.name} (${activeChildContact.phone})`,
       scheduledTime: new Date().toLocaleTimeString(),
-    });
+    })
     if (!childResult.success) {
       // Be honest: the phone call is the reliable channel when the email did not go out.
       toast.error(
         `SOS email to ${activeChildContact.name} was NOT sent. Please use the call or WhatsApp buttons.`
-      );
+      )
     }
 
     // 4. Send email to doctor if available
@@ -241,32 +252,32 @@ export function SeniorModeView({
         type: 'emergency_sos',
         medicationOrDetails: `Clinical SOS Notification: ${activeHonorific} triggered emergency call to ${activeChildContact.name}.`,
         scheduledTime: new Date().toLocaleTimeString(),
-      });
+      })
     }
-  };
+  }
 
   return (
     <main
       id='content'
       tabIndex={-1}
       aria-label='Senior Care Dashboard'
-      className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto focus:outline-none'
+      className='mx-auto min-h-screen max-w-5xl bg-[#FBF9F5] px-4 py-6 text-[#2C2825] focus:outline-none md:px-8'
     >
       {/* Top Header */}
-      <div className='flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#E8E2D9]'>
+      <div className='flex flex-wrap items-center justify-between gap-4 border-b border-[#E8E2D9] pb-6'>
         <div className='space-y-1'>
           <div className='flex items-center gap-2'>
-            <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#E87A5D]/15 text-[#E87A5D]'>
-              <Heart className='w-5 h-5 fill-current' />
+            <span className='inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#E87A5D]/15 text-[#E87A5D]'>
+              <Heart className='h-5 w-5 fill-current' />
             </span>
-            <span className='text-sm font-semibold tracking-wider uppercase text-[#4A433D]'>
+            <span className='text-sm font-semibold tracking-wider text-[#4A433D] uppercase'>
               CareNest • {t('seniorMode')}
             </span>
           </div>
-          <h1 className='text-3xl md:text-4xl font-serif font-bold text-[#1E1B18]'>
+          <h1 className='font-serif text-3xl font-bold text-[#1E1B18] md:text-4xl'>
             {t('goodDay')}, {activeHonorific}! {honorificEmoji}
           </h1>
-          <p className='text-base text-[#4A433D] font-medium'>
+          <p className='text-base font-medium text-[#4A433D]'>
             {t('caringWithLove', { honorific: activeHonorific })} •{' '}
             {new Date().toLocaleDateString(
               currentLanguage === 'en' ? 'en-US' : currentLanguage,
@@ -279,7 +290,7 @@ export function SeniorModeView({
           </p>
         </div>
 
-        <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+        <div className='flex flex-wrap items-center gap-2 sm:gap-3'>
           {/* Language Switcher */}
           <LanguageSwitcher />
 
@@ -287,11 +298,17 @@ export function SeniorModeView({
           <Button
             size='sm'
             onClick={handleTriggerSOS}
-            aria-label={t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}
-            className='h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 motion-safe:animate-pulse'
+            aria-label={t('callChildNow', {
+              childName: activeChildContact.name.split(' ')[0],
+            })}
+            className='flex h-11 items-center gap-1.5 rounded-xl bg-rose-600 px-4 text-xs font-bold text-white shadow-md hover:bg-rose-700 motion-safe:animate-pulse'
           >
-            <PhoneCall className='w-4 h-4' />
-            <span>{t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}</span>
+            <PhoneCall className='h-4 w-4' />
+            <span>
+              {t('callChildNow', {
+                childName: activeChildContact.name.split(' ')[0],
+              })}
+            </span>
           </Button>
 
           {/* Quick Doctor Video Teleconsultation */}
@@ -299,10 +316,16 @@ export function SeniorModeView({
             size='sm'
             onClick={() => setIsDoctorVideoOpen(true)}
             aria-label='Open Doctor Video Teleconsultation'
-            className='h-11 px-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5'
+            className='flex h-11 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-bold text-white shadow-md hover:bg-indigo-700'
           >
-            <Video className='w-4 h-4' />
-            <span>{currentLanguage === 'ta' ? 'டாக்டர் வீடியோ' : currentLanguage === 'hi' ? 'डॉक्टर वीडियो' : 'Doctor Video'}</span>
+            <Video className='h-4 w-4' />
+            <span>
+              {currentLanguage === 'ta'
+                ? 'டாக்டர் வீடியோ'
+                : currentLanguage === 'hi'
+                  ? 'डॉक्टर वीडियो'
+                  : 'Doctor Video'}
+            </span>
           </Button>
 
           {onResetRoutine && (
@@ -310,10 +333,10 @@ export function SeniorModeView({
               variant='outline'
               onClick={onResetRoutine}
               aria-label='Reset routine to all pending'
-              className='h-11 px-3.5 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#2C2825] rounded-xl text-xs font-semibold shadow-xs flex items-center gap-1.5'
+              className='flex h-11 items-center gap-1.5 rounded-xl border-[#D8D0C5] bg-white px-3.5 text-xs font-semibold text-[#2C2825] shadow-xs hover:bg-[#F2ECE4]'
               title='Reset routine to all pending'
             >
-              <RotateCcw className='w-4 h-4 text-emerald-600' />
+              <RotateCcw className='h-4 w-4 text-emerald-600' />
               <span>Reset Routine</span>
             </Button>
           )}
@@ -323,9 +346,9 @@ export function SeniorModeView({
               variant='outline'
               onClick={onOpenOnboarding}
               aria-label='Configure Care Circle Setup'
-              className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
+              className='flex h-11 items-center gap-1.5 rounded-xl border-[#D8D0C5] bg-white px-4 text-xs font-semibold text-[#4A433D] shadow-sm hover:bg-[#F2ECE4]'
             >
-              <Users className='w-4 h-4 text-primary' />
+              <Users className='h-4 w-4 text-primary' />
               <span>{t('careCircleSetup')}</span>
             </Button>
           )}
@@ -334,36 +357,36 @@ export function SeniorModeView({
             variant='outline'
             onClick={onOpenPasscodeModal}
             aria-label='Unlock Caregiver Portal with Security Passcode'
-            className='h-11 px-4 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5'
+            className='flex h-11 items-center gap-1.5 rounded-xl border-[#D8D0C5] bg-white px-4 text-xs font-semibold text-[#4A433D] shadow-sm hover:bg-[#F2ECE4]'
           >
-            <Shield className='w-4 h-4 text-[#4A433D]' />
+            <Shield className='h-4 w-4 text-[#4A433D]' />
             <span>{t('caregiverPortal')}</span>
           </Button>
         </div>
       </div>
 
       {/* Bedside Clinical Vitals Bar */}
-      <div className='my-4 px-4 py-3 rounded-2xl bg-white border border-[#E0D8CD] shadow-xs flex flex-wrap items-center justify-between text-xs text-[#2C2825] gap-3'>
-        <div className='flex items-center gap-4 flex-wrap font-medium'>
+      <div className='my-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E0D8CD] bg-white px-4 py-3 text-xs text-[#2C2825] shadow-xs'>
+        <div className='flex flex-wrap items-center gap-4 font-medium'>
           <span className='flex items-center gap-1.5'>
-            <span className='h-2.5 w-2.5 rounded-full bg-emerald-600 inline-block'></span>
+            <span className='inline-block h-2.5 w-2.5 rounded-full bg-emerald-600'></span>
             <strong className='text-[#1E1B18]'>BP:</strong> 122/78 mmHg
           </span>
           <span className='flex items-center gap-1.5'>
-            <span className='h-2.5 w-2.5 rounded-full bg-amber-600 inline-block'></span>
+            <span className='inline-block h-2.5 w-2.5 rounded-full bg-amber-600'></span>
             <strong className='text-[#1E1B18]'>Blood Sugar:</strong> 108 mg/dL
           </span>
           <span className='flex items-center gap-1.5'>
-            <span className='h-2.5 w-2.5 rounded-full bg-rose-600 inline-block'></span>
+            <span className='inline-block h-2.5 w-2.5 rounded-full bg-rose-600'></span>
             <strong className='text-[#1E1B18]'>Heart Rate:</strong> 72 bpm
           </span>
           <span className='flex items-center gap-1.5'>
-            <span className='h-2.5 w-2.5 rounded-full bg-blue-600 inline-block'></span>
+            <span className='inline-block h-2.5 w-2.5 rounded-full bg-blue-600'></span>
             <strong className='text-[#1E1B18]'>SpO2:</strong> 98%
           </span>
         </div>
         <div className='flex items-center gap-2'>
-          <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-semibold'>
+          <span className='inline-flex items-center gap-1.5 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-800'>
             <span className='h-2 w-2 rounded-full bg-emerald-500 motion-safe:animate-ping'></span>
             ● Live Real-Time Adherence (Zero Mock Data)
           </span>
@@ -383,29 +406,39 @@ export function SeniorModeView({
           onMarkSlotTaken={handleMarkSlotTaken}
           onTriggerCallChild={handleTriggerSOS}
           onTriggerCallDoctor={() => {
-            triggerPhoneCall(cleanDoctorPhone);
-            toast.info(`🩺 Calling ${patient?.doctorContact?.doctorName || 'Doctor'}...`);
+            triggerPhoneCall(cleanDoctorPhone)
+            toast.info(
+              `🩺 Calling ${patient?.doctorContact?.doctorName || 'Doctor'}...`
+            )
           }}
         />
       </div>
 
       {/* Time Slot Switcher - Large, accessible touch targets */}
-      <div role='tablist' aria-label='Medication schedule time slots' className='my-6 grid grid-cols-2 sm:grid-cols-4 gap-3'>
+      <div
+        role='tablist'
+        aria-label='Medication schedule time slots'
+        className='my-6 grid grid-cols-2 gap-3 sm:grid-cols-4'
+      >
         <button
           type='button'
           role='tab'
           aria-selected={selectedSlot === 'morning'}
           aria-label={`${t('morning')} schedule, ${t('morningTime')}`}
           onClick={() => setSelectedSlot('morning')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 p-4 transition-all ${
             selectedSlot === 'morning'
-              ? 'bg-amber-50 border-amber-500 shadow-md scale-[1.02]'
-              : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
+              ? 'scale-[1.02] border-amber-500 bg-amber-50 shadow-md'
+              : 'border-[#E6E0D6] bg-white hover:bg-[#FAF7F2]'
           }`}
         >
-          <Sun className='w-8 h-8 text-amber-500 mb-1' />
-          <span className='text-lg font-bold text-[#2C2825]'>{t('morning')}</span>
-          <span className='text-xs text-[#4A433D] font-medium'>{t('morningTime')}</span>
+          <Sun className='mb-1 h-8 w-8 text-amber-500' />
+          <span className='text-lg font-bold text-[#2C2825]'>
+            {t('morning')}
+          </span>
+          <span className='text-xs font-medium text-[#4A433D]'>
+            {t('morningTime')}
+          </span>
         </button>
 
         <button
@@ -414,15 +447,19 @@ export function SeniorModeView({
           aria-selected={selectedSlot === 'afternoon'}
           aria-label={`${t('afternoon')} schedule, ${t('afternoonTime')}`}
           onClick={() => setSelectedSlot('afternoon')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 p-4 transition-all ${
             selectedSlot === 'afternoon'
-              ? 'bg-orange-50 border-orange-500 shadow-md scale-[1.02]'
-              : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
+              ? 'scale-[1.02] border-orange-500 bg-orange-50 shadow-md'
+              : 'border-[#E6E0D6] bg-white hover:bg-[#FAF7F2]'
           }`}
         >
-          <CloudSun className='w-8 h-8 text-orange-500 mb-1' />
-          <span className='text-lg font-bold text-[#2C2825]'>{t('afternoon')}</span>
-          <span className='text-xs text-[#4A433D] font-medium'>{t('afternoonTime')}</span>
+          <CloudSun className='mb-1 h-8 w-8 text-orange-500' />
+          <span className='text-lg font-bold text-[#2C2825]'>
+            {t('afternoon')}
+          </span>
+          <span className='text-xs font-medium text-[#4A433D]'>
+            {t('afternoonTime')}
+          </span>
         </button>
 
         <button
@@ -431,15 +468,19 @@ export function SeniorModeView({
           aria-selected={selectedSlot === 'evening'}
           aria-label={`${t('evening')} schedule, ${t('eveningTime')}`}
           onClick={() => setSelectedSlot('evening')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 p-4 transition-all ${
             selectedSlot === 'evening'
-              ? 'bg-indigo-50 border-indigo-500 shadow-md scale-[1.02]'
-              : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
+              ? 'scale-[1.02] border-indigo-500 bg-indigo-50 shadow-md'
+              : 'border-[#E6E0D6] bg-white hover:bg-[#FAF7F2]'
           }`}
         >
-          <Sunset className='w-8 h-8 text-indigo-500 mb-1' />
-          <span className='text-lg font-bold text-[#2C2825]'>{t('evening')}</span>
-          <span className='text-xs text-[#4A433D] font-medium'>{t('eveningTime')}</span>
+          <Sunset className='mb-1 h-8 w-8 text-indigo-500' />
+          <span className='text-lg font-bold text-[#2C2825]'>
+            {t('evening')}
+          </span>
+          <span className='text-xs font-medium text-[#4A433D]'>
+            {t('eveningTime')}
+          </span>
         </button>
 
         <button
@@ -448,28 +489,33 @@ export function SeniorModeView({
           aria-selected={selectedSlot === 'night'}
           aria-label={`${t('night')} schedule, ${t('nightTime')}`}
           onClick={() => setSelectedSlot('night')}
-          className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all cursor-pointer ${
+          className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 p-4 transition-all ${
             selectedSlot === 'night'
-              ? 'bg-purple-50 border-purple-500 shadow-md scale-[1.02]'
-              : 'bg-white border-[#E6E0D6] hover:bg-[#FAF7F2]'
+              ? 'scale-[1.02] border-purple-500 bg-purple-50 shadow-md'
+              : 'border-[#E6E0D6] bg-white hover:bg-[#FAF7F2]'
           }`}
         >
-          <Moon className='w-8 h-8 text-purple-600 mb-1' />
+          <Moon className='mb-1 h-8 w-8 text-purple-600' />
           <span className='text-lg font-bold text-[#2C2825]'>{t('night')}</span>
-          <span className='text-xs text-[#4A433D] font-medium'>{t('nightTime')}</span>
+          <span className='text-xs font-medium text-[#4A433D]'>
+            {t('nightTime')}
+          </span>
         </button>
       </div>
 
       {/* Routine Status Banner */}
       {isSlotComplete ? (
-        <div className='mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 flex flex-wrap items-center justify-between gap-3 shadow-xs'>
+        <div className='mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900 shadow-xs'>
           <div className='flex items-center gap-3'>
-            <Sparkles className='w-6 h-6 text-emerald-600 flex-shrink-0' />
+            <Sparkles className='h-6 w-6 flex-shrink-0 text-emerald-600' />
             <div>
-              <h4 className='font-bold text-base text-emerald-950'>
-                {t('wonderfulJob', { honorific: activeHonorific, slot: t(selectedSlot) })}
+              <h4 className='text-base font-bold text-emerald-950'>
+                {t('wonderfulJob', {
+                  honorific: activeHonorific,
+                  slot: t(selectedSlot),
+                })}
               </h4>
-              <p className='text-xs text-emerald-800 font-medium'>
+              <p className='text-xs font-medium text-emerald-800'>
                 {t('familyNotified', { childName: activeChildContact.name })}
               </p>
             </div>
@@ -479,23 +525,26 @@ export function SeniorModeView({
               variant='outline'
               size='sm'
               onClick={onResetRoutine}
-              className='h-8 text-xs border-emerald-300 text-emerald-900 bg-white hover:bg-emerald-100 font-semibold rounded-lg'
+              className='h-8 rounded-lg border-emerald-300 bg-white text-xs font-semibold text-emerald-900 hover:bg-emerald-100'
             >
-              <RotateCcw className='w-3.5 h-3.5 mr-1 text-emerald-700' />
+              <RotateCcw className='mr-1 h-3.5 w-3.5 text-emerald-700' />
               Reset Routine
             </Button>
           )}
         </div>
       ) : slotMeds.length > 0 ? (
-        <div className='mb-6 p-3.5 rounded-2xl bg-[#FFFBF0] border border-[#E8DEC8] text-[#2C2825] flex flex-wrap items-center justify-between gap-3 shadow-xs'>
+        <div className='mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E8DEC8] bg-[#FFFBF0] p-3.5 text-[#2C2825] shadow-xs'>
           <div className='flex items-center gap-2.5'>
-            <Clock className='w-5 h-5 text-amber-600 flex-shrink-0' />
+            <Clock className='h-5 w-5 flex-shrink-0 text-amber-600' />
             <div>
-              <p className='font-bold text-sm text-[#1E1B18]'>
-                {t(selectedSlot)} Routine: {slotMeds.filter((m) => !isMedTaken(m.id)).length} of {slotMeds.length} pending for {activeHonorific}
+              <p className='text-sm font-bold text-[#1E1B18]'>
+                {t(selectedSlot)} Routine:{' '}
+                {slotMeds.filter((m) => !isMedTaken(m.id)).length} of{' '}
+                {slotMeds.length} pending for {activeHonorific}
               </p>
-              <p className='text-xs text-[#5C554E] font-medium'>
-                Tap "Mark as Taken" below or speak "I took my medicine" to record real-time adherence.
+              <p className='text-xs font-medium text-[#5C554E]'>
+                Tap "Mark as Taken" below or speak "I took my medicine" to
+                record real-time adherence.
               </p>
             </div>
           </div>
@@ -504,10 +553,10 @@ export function SeniorModeView({
               variant='outline'
               size='sm'
               onClick={onResetRoutine}
-              className='h-8 text-xs border-[#D8CEBA] text-[#2C2825] bg-white hover:bg-[#F2ECE4] font-semibold rounded-lg'
+              className='h-8 rounded-lg border-[#D8CEBA] bg-white text-xs font-semibold text-[#2C2825] hover:bg-[#F2ECE4]'
               title='Reset routine to all pending'
             >
-              <RotateCcw className='w-3.5 h-3.5 mr-1 text-emerald-600' />
+              <RotateCcw className='mr-1 h-3.5 w-3.5 text-emerald-600' />
               Reset to Pending
             </Button>
           )}
@@ -517,44 +566,42 @@ export function SeniorModeView({
       {/* Medication Cards List */}
       <div className='space-y-4'>
         {slotMeds.length === 0 ? (
-          <div className='bg-white rounded-2xl p-8 text-center border border-[#E6E0D6] shadow-sm'>
-            <CheckCircle2 className='w-12 h-12 text-emerald-500 mx-auto mb-3' />
+          <div className='rounded-2xl border border-[#E6E0D6] bg-white p-8 text-center shadow-sm'>
+            <CheckCircle2 className='mx-auto mb-3 h-12 w-12 text-emerald-500' />
             <h3 className='text-xl font-bold text-[#2C2825]'>
               {t('noMedsScheduled', { slot: t(selectedSlot) })}
             </h3>
-            <p className='text-sm text-[#5C554E] mt-1'>
-              {t('takeRest')}
-            </p>
+            <p className='mt-1 text-sm text-[#5C554E]'>{t('takeRest')}</p>
           </div>
         ) : (
           slotMeds.map((med) => {
-            const taken = isMedTaken(med.id);
+            const taken = isMedTaken(med.id)
             return (
               <Card
                 key={med.id}
                 className={`overflow-hidden rounded-2xl border-2 transition-all ${
                   taken
-                    ? 'bg-[#F2F8F4] border-emerald-300 opacity-90'
-                    : 'bg-white border-[#E6E0D6] shadow-sm hover:border-[#D1C7BA]'
+                    ? 'border-emerald-300 bg-[#F2F8F4] opacity-90'
+                    : 'border-[#E6E0D6] bg-white shadow-sm hover:border-[#D1C7BA]'
                 }`}
               >
                 <CardContent className='p-5 md:p-6'>
-                  <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
+                  <div className='flex flex-col justify-between gap-4 md:flex-row md:items-center'>
                     {/* Left: Med Details */}
-                    <div className='space-y-2 flex-1'>
+                    <div className='flex-1 space-y-2'>
                       <div className='flex flex-wrap items-center gap-2'>
-                        <span className='font-mono font-bold text-sm px-2.5 py-1 rounded-md bg-[#F4EFEA] text-[#5C544E] flex items-center gap-1.5'>
-                          <Clock className='w-3.5 h-3.5' />
+                        <span className='flex items-center gap-1.5 rounded-md bg-[#F4EFEA] px-2.5 py-1 font-mono text-sm font-bold text-[#5C544E]'>
+                          <Clock className='h-3.5 w-3.5' />
                           {med.time}
                         </span>
                         <Badge
                           variant='secondary'
-                          className='bg-[#EFE8DD] text-[#4A423B] font-semibold text-xs'
+                          className='bg-[#EFE8DD] text-xs font-semibold text-[#4A423B]'
                         >
                           {med.purpose}
                         </Badge>
                         {taken && (
-                          <Badge className='bg-emerald-600 text-white font-bold text-xs'>
+                          <Badge className='bg-emerald-600 text-xs font-bold text-white'>
                             ✓ {t('takenToday')}
                           </Badge>
                         )}
@@ -568,26 +615,31 @@ export function SeniorModeView({
                         {t('dose')}: {med.dosage}
                       </p>
 
-                      <div className='text-base text-[#4E4741] bg-[#FAF8F5] p-3 rounded-xl border border-[#EDE7DE]'>
-                        <strong>{t('doctorsAdvice')}:</strong> {med.instructions}
+                      <div className='rounded-xl border border-[#EDE7DE] bg-[#FAF8F5] p-3 text-base text-[#4E4741]'>
+                        <strong>{t('doctorsAdvice')}:</strong>{' '}
+                        {med.instructions}
                       </div>
                     </div>
 
                     {/* Right: Actions */}
-                    <div className='flex flex-col sm:flex-row md:flex-col gap-3 min-w-[200px]'>
+                    <div className='flex min-w-[200px] flex-col gap-3 sm:flex-row md:flex-col'>
                       <Button
                         size='lg'
                         onClick={() => onMarkTaken(med.id, selectedSlot)}
                         disabled={taken}
-                        aria-label={taken ? `${med.name} taken today` : `Mark ${med.name} as taken`}
-                        data-webmcp-tool='log_medication_adherence'
-                        className={`h-14 text-base font-bold rounded-xl transition-all shadow-md ${
+                        aria-label={
                           taken
-                            ? 'bg-emerald-100 text-emerald-800 cursor-default'
-                            : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                            ? `${med.name} taken today`
+                            : `Mark ${med.name} as taken`
+                        }
+                        data-webmcp-tool='log_medication_adherence'
+                        className={`h-14 rounded-xl text-base font-bold shadow-md transition-all ${
+                          taken
+                            ? 'cursor-default bg-emerald-100 text-emerald-800'
+                            : 'bg-emerald-600 text-white hover:bg-emerald-700'
                         }`}
                       >
-                        <CheckCircle2 className='w-6 h-6 mr-2' />
+                        <CheckCircle2 className='mr-2 h-6 w-6' />
                         {taken ? t('completed') : t('iHaveTakenThis')}
                       </Button>
 
@@ -595,17 +647,21 @@ export function SeniorModeView({
                         variant='outline'
                         size='lg'
                         onClick={() => handleSpeak(med)}
-                        aria-label={speakingMedId === med.id ? `Stop audio guidance for ${med.name}` : `Listen to audio guidance for ${med.name}`}
-                        className='h-12 border-[#D8D0C5] bg-white hover:bg-[#F2ECE4] text-[#4A433D] rounded-xl font-medium'
+                        aria-label={
+                          speakingMedId === med.id
+                            ? `Stop audio guidance for ${med.name}`
+                            : `Listen to audio guidance for ${med.name}`
+                        }
+                        className='h-12 rounded-xl border-[#D8D0C5] bg-white font-medium text-[#4A433D] hover:bg-[#F2ECE4]'
                       >
                         {speakingMedId === med.id ? (
                           <>
-                            <VolumeX className='w-5 h-5 mr-2 text-rose-500' />
+                            <VolumeX className='mr-2 h-5 w-5 text-rose-500' />
                             <span>{t('stopAudio')}</span>
                           </>
                         ) : (
                           <>
-                            <Volume2 className='w-5 h-5 mr-2 text-primary' />
+                            <Volume2 className='mr-2 h-5 w-5 text-primary' />
                             <span>{t('listenGuidance')}</span>
                           </>
                         )}
@@ -614,24 +670,24 @@ export function SeniorModeView({
                   </div>
                 </CardContent>
               </Card>
-            );
+            )
           })
         )}
       </div>
 
       {/* Emergency Assistance Footer */}
-      <div className='mt-10 p-6 rounded-3xl bg-rose-50 border-2 border-rose-300 shadow-md'>
-        <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
+      <div className='mt-10 rounded-3xl border-2 border-rose-300 bg-rose-50 p-6 shadow-md'>
+        <div className='flex flex-col items-center justify-between gap-4 md:flex-row'>
           <div className='space-y-1 text-center md:text-left'>
-            <div className='flex items-center justify-center md:justify-start gap-2 text-xs font-bold text-rose-700 uppercase tracking-wider'>
-              <span className='inline-block w-2.5 h-2.5 rounded-full bg-rose-600 motion-safe:animate-ping' />
+            <div className='flex items-center justify-center gap-2 text-xs font-bold tracking-wider text-rose-700 uppercase md:justify-start'>
+              <span className='inline-block h-2.5 w-2.5 rounded-full bg-rose-600 motion-safe:animate-ping' />
               <span>{t('emergencyTriggeredBanner')}</span>
             </div>
-            <h3 className='text-2xl font-bold text-rose-950 flex items-center justify-center md:justify-start gap-2'>
-              <PhoneCall className='w-6 h-6 text-rose-600' />
+            <h3 className='flex items-center justify-center gap-2 text-2xl font-bold text-rose-950 md:justify-start'>
+              <PhoneCall className='h-6 w-6 text-rose-600' />
               {t('emergencyTitle', { honorific: activeHonorific })}
             </h3>
-            <p className='text-sm text-rose-800 max-w-xl'>
+            <p className='max-w-xl text-sm text-rose-800'>
               {t('emergencySubtext', {
                 childName: activeChildContact.name,
                 childPhone: activeChildContact.phone,
@@ -642,13 +698,13 @@ export function SeniorModeView({
           <Button
             size='lg'
             onClick={handleTriggerSOS}
-            className={`h-16 px-8 font-extrabold text-lg rounded-2xl shadow-xl transition-all flex items-center gap-3 ${
+            className={`flex h-16 items-center gap-3 rounded-2xl px-8 text-lg font-extrabold shadow-xl transition-all ${
               isEmergencyTriggered
-                ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95 motion-safe:animate-pulse'
+                ? 'bg-emerald-600 text-white hover:bg-emerald-700'
+                : 'bg-rose-600 text-white hover:bg-rose-700 active:scale-95 motion-safe:animate-pulse'
             }`}
           >
-            <PhoneCall className='w-6 h-6' />
+            <PhoneCall className='h-6 w-6' />
             <span>
               {isEmergencyTriggered
                 ? `✓ ${t('callingChild', { childName: activeChildContact.name.split(' ')[0] })}`
@@ -662,39 +718,41 @@ export function SeniorModeView({
       <Dialog
         open={isCallingDialogOpen}
         onOpenChange={(open) => {
-          setIsCallingDialogOpen(open);
+          setIsCallingDialogOpen(open)
           if (!open) {
-            stopSpeaking();
+            stopSpeaking()
           }
         }}
       >
-        <DialogContent className='sm:max-w-md bg-white border-2 border-rose-300 text-slate-900 rounded-3xl p-6 shadow-2xl'>
+        <DialogContent className='rounded-3xl border-2 border-rose-300 bg-white p-6 text-slate-900 shadow-2xl sm:max-w-md'>
           <DialogHeader>
             <div className='flex items-center gap-3'>
-              <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-white motion-safe:animate-pulse shadow-md'>
+              <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-white shadow-md motion-safe:animate-pulse'>
                 <PhoneCall className='h-6 w-6' />
               </div>
               <div>
-                <DialogTitle className='text-xl font-bold text-rose-950 flex items-center gap-2'>
-                  <span>{t('callingChild', { childName: activeChildContact.name })}</span>
+                <DialogTitle className='flex items-center gap-2 text-xl font-bold text-rose-950'>
+                  <span>
+                    {t('callingChild', { childName: activeChildContact.name })}
+                  </span>
                 </DialogTitle>
-                <DialogDescription className='text-xs text-rose-700 font-medium'>
+                <DialogDescription className='text-xs font-medium text-rose-700'>
                   {t('emergencyTriggeredBanner')}
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className='py-4 space-y-4 text-center'>
+          <div className='space-y-4 py-4 text-center'>
             {/* Phone display */}
-            <div className='p-4 rounded-2xl bg-rose-50 border border-rose-200'>
-              <div className='text-xs font-semibold text-rose-800 uppercase tracking-wider mb-1'>
+            <div className='rounded-2xl border border-rose-200 bg-rose-50 p-4'>
+              <div className='mb-1 text-xs font-semibold tracking-wider text-rose-800 uppercase'>
                 {t('dialingChildrenNumber')}
               </div>
-              <div className='text-2xl sm:text-3xl font-extrabold font-mono text-rose-950'>
+              <div className='font-mono text-2xl font-extrabold text-rose-950 sm:text-3xl'>
                 {activeChildContact.phone}
               </div>
-              <div className='text-xs text-rose-700 mt-1 font-medium'>
+              <div className='mt-1 text-xs font-medium text-rose-700'>
                 {activeChildContact.relationship || 'Son & Primary Caregiver'}
               </div>
             </div>
@@ -703,10 +761,13 @@ export function SeniorModeView({
             <div className='space-y-2.5'>
               <a
                 href={`tel:${cleanChildPhone}`}
-                className='w-full h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95'
+                className='flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 text-base font-bold text-white shadow-lg transition-all hover:bg-emerald-700 active:scale-95'
               >
-                <PhoneCall className='w-5 h-5' />
-                <span>📞 {t('directCall', { childName: activeChildContact.name })} ({activeChildContact.phone})</span>
+                <PhoneCall className='h-5 w-5' />
+                <span>
+                  📞 {t('directCall', { childName: activeChildContact.name })} (
+                  {activeChildContact.phone})
+                </span>
               </a>
 
               <a
@@ -715,44 +776,49 @@ export function SeniorModeView({
                 )}`}
                 target='_blank'
                 rel='noopener noreferrer'
-                className='w-full h-12 bg-green-700 hover:bg-green-800 text-white rounded-xl font-bold text-xs shadow-md flex items-center justify-center gap-2'
+                className='flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-green-700 text-xs font-bold text-white shadow-md hover:bg-green-800'
               >
-                <MessageSquare className='w-4 h-4' />
+                <MessageSquare className='h-4 w-4' />
                 <span>💬 {t('whatsappSos')}</span>
               </a>
 
               {patient?.doctorContact?.phone && (
                 <a
                   href={`tel:${cleanDoctorPhone}`}
-                  className='w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs shadow-sm flex items-center justify-center gap-2'
+                  className='flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700'
                 >
-                  <Stethoscope className='w-4 h-4' />
-                  <span>{t('callDoctor', { doctorName: patient.doctorContact.doctorName })} ({patient.doctorContact.phone})</span>
+                  <Stethoscope className='h-4 w-4' />
+                  <span>
+                    {t('callDoctor', {
+                      doctorName: patient.doctorContact.doctorName,
+                    })}{' '}
+                    ({patient.doctorContact.phone})
+                  </span>
                 </a>
               )}
 
               <a
                 href='tel:108'
-                className='w-full h-11 bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-300 rounded-xl font-semibold text-xs flex items-center justify-center gap-2'
+                className='flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-rose-300 bg-rose-100 text-xs font-semibold text-rose-900 hover:bg-rose-200'
               >
-                <ShieldAlert className='w-4 h-4 text-rose-600' />
+                <ShieldAlert className='h-4 w-4 text-rose-600' />
                 <span>{t('callAmbulance')}</span>
               </a>
             </div>
 
-            <p className='text-xs text-muted-foreground pt-1'>
+            <p className='pt-1 text-xs text-muted-foreground'>
               {t('emailsDispatched', { childEmail: activeChildContact.email })}
             </p>
           </div>
 
-          <div className='flex justify-center pt-2 border-t'>
+          <div className='flex justify-center border-t pt-2'>
             <Button
               variant='outline'
               onClick={() => {
-                setIsCallingDialogOpen(false);
-                stopSpeaking();
+                setIsCallingDialogOpen(false)
+                stopSpeaking()
               }}
-              className='h-10 px-6 rounded-xl text-xs font-semibold'
+              className='h-10 rounded-xl px-6 text-xs font-semibold'
             >
               {t('closeSafe')}
             </Button>
@@ -764,12 +830,14 @@ export function SeniorModeView({
       <TelehealthConsultationModal
         isOpen={isDoctorVideoOpen}
         onClose={() => setIsDoctorVideoOpen(false)}
-        doctorName={patient?.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'}
+        doctorName={
+          patient?.doctorContact?.doctorName || 'Dr. R. Ramanathan, MD'
+        }
         specialty={`${patient?.doctorContact?.specialty || 'Senior Cardiologist'} • ${patient?.doctorContact?.clinic || 'Apollo Speciality Hospitals'}`}
         honorific={activeHonorific}
         patientName={patientName}
         language={currentLanguage}
       />
     </main>
-  );
+  )
 }

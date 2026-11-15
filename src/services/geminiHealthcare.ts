@@ -1,10 +1,10 @@
-import { type DrugInteractionAlert, type Medication } from '../types/carenest';
-import { ApiError, apiPost } from '../lib/api';
+import { ApiError, apiPost } from '../lib/api'
 import {
   normalizeAlerts,
   normalizePrescriptionItems,
   unknownAlert,
-} from '../shared/gemini';
+} from '../shared/gemini'
+import { type DrugInteractionAlert, type Medication } from '../types/carenest'
 
 /**
  * Browser-side client for the server AI endpoints under /api/ai. The Gemini key
@@ -16,7 +16,7 @@ import {
 export async function analyzeDrugInteractionsWithGemini(
   medications: Medication[]
 ): Promise<DrugInteractionAlert[]> {
-  const names = medications.map((m) => m.name);
+  const names = medications.map((m) => m.name)
   if (medications.length < 2) {
     return [
       {
@@ -24,9 +24,10 @@ export async function analyzeDrugInteractionsWithGemini(
         medicationsInvolved: names,
         description:
           'Fewer than two medicines are scheduled, so there are no drug-to-drug interactions to check.',
-        recommendation: 'Take as prescribed. Tell your doctor about any new medicine or supplement.',
+        recommendation:
+          'Take as prescribed. Tell your doctor about any new medicine or supplement.',
       },
-    ];
+    ]
   }
 
   try {
@@ -37,15 +38,15 @@ export async function analyzeDrugInteractionsWithGemini(
         slot: m.slot,
         instructions: m.instructions,
       })),
-    });
-    return normalizeAlerts(data.alerts, names);
+    })
+    return normalizeAlerts(data.alerts, names)
   } catch (err) {
     // A failed check must never read as "all clear".
     const reason =
       err instanceof ApiError
         ? `The AI interaction check could not be completed (${err.message}).`
-        : 'The AI interaction check could not be completed.';
-    return [unknownAlert(names, reason)];
+        : 'The AI interaction check could not be completed.'
+    return [unknownAlert(names, reason)]
   }
 }
 
@@ -61,26 +62,34 @@ export async function parsePrescriptionWithGemini(
 ): Promise<Partial<Medication>[]> {
   const data = await apiPost<{ medications: unknown }>('/api/ai/prescription', {
     text: prescriptionText,
-  });
-  return normalizePrescriptionItems(data.medications);
+  })
+  return normalizePrescriptionItems(data.medications)
 }
 
-const FALLBACK_EXPLANATIONS: Record<string, (honorific: string, med: string) => string> = {
-  ta: (h, m) => `${h}, மருத்துவர் கூறியபடி ${m} மருந்தை வெதுவெதுப்பான நீருடன் எடுத்துக் கொள்ளுங்கள்.`,
+const FALLBACK_EXPLANATIONS: Record<
+  string,
+  (honorific: string, med: string) => string
+> = {
+  ta: (h, m) =>
+    `${h}, மருத்துவர் கூறியபடி ${m} மருந்தை வெதுவெதுப்பான நீருடன் எடுத்துக் கொள்ளுங்கள்.`,
   hi: (h, m) => `${h}, डॉक्टर के बताए अनुसार ${m} दवा पानी के साथ ले लीजिए।`,
   te: (h, m) => `${h}, డాక్టర్ చెప్పినట్లుగా ${m} మందును నీటితో తీసుకోండి.`,
   kn: (h, m) => `${h}, ವೈದ್ಯರು ತಿಳಿಸಿದಂತೆ ${m} ಔಷಧಿಯನ್ನು ನೀರಿನೊಂದಿಗೆ ಸೇವಿಸಿ.`,
   ml: (h, m) => `${h}, ഡോക്ടർ പറഞ്ഞതുപോലെ ${m} മരുന്ന് വെള്ളത്തോടൊപ്പം കഴിക്കൂ.`,
   es: (h, m) =>
     `${h}, por favor tome su medicamento ${m} con agua según las indicaciones de su médico.`,
-};
+}
 
 /** Plain, non-AI reminder used when the AI explanation is unavailable. */
-export function fallbackExplanation(medicationName: string, honorific: string, language: string): string {
-  const localized = FALLBACK_EXPLANATIONS[language];
+function fallbackExplanation(
+  medicationName: string,
+  honorific: string,
+  language: string
+): string {
+  const localized = FALLBACK_EXPLANATIONS[language]
   return localized
     ? localized(honorific, medicationName)
-    : `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`;
+    : `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`
 }
 
 /** AI elder-friendly explanation in the chosen language, with a plain fallback. */
@@ -96,9 +105,9 @@ export async function generateElderFriendlyExplanation(
       instructions,
       honorific,
       language,
-    });
-    return data.text || fallbackExplanation(medicationName, honorific, language);
+    })
+    return data.text || fallbackExplanation(medicationName, honorific, language)
   } catch {
-    return fallbackExplanation(medicationName, honorific, language);
+    return fallbackExplanation(medicationName, honorific, language)
   }
 }

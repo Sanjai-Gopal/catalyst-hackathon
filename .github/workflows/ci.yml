@@ -24,6 +24,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Format check
+        run: npm run format:check
+
+      - name: Unused code check
+        run: npm run knip
+
       - name: Typecheck (app, node and api projects)
         run: npx tsc -b
 

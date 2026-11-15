@@ -1,15 +1,17 @@
-import { useState } from 'react';
+import { useState } from 'react'
+import { INITIAL_VITALS } from '@/data/carenestInitialData'
+import { type HealthVitalRecord } from '@/types/carenest'
+import { Activity, Heart, Droplet, Wind, Plus, TrendingUp } from 'lucide-react'
+import { toast } from 'sonner'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
-  Activity,
-  Heart,
-  Droplet,
-  Wind,
-  Plus,
-  TrendingUp,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -17,29 +19,27 @@ import {
   DialogTitle,
   DialogDescription,
   DialogFooter,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { toast } from 'sonner';
-import { type HealthVitalRecord } from '@/types/carenest';
-import { INITIAL_VITALS } from '@/data/carenestInitialData';
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface VitalsTrackerWidgetProps {
-  patientName?: string;
-  honorific?: string;
+  patientName?: string
+  honorific?: string
 }
 
 export function VitalsTrackerWidget({
   patientName = 'Lakshmi Narayanan',
   honorific = 'Amma',
 }: VitalsTrackerWidgetProps) {
-  const [vitals, setVitals] = useState<HealthVitalRecord[]>(INITIAL_VITALS);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [vitals, setVitals] = useState<HealthVitalRecord[]>(INITIAL_VITALS)
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
 
   // Form state
-  const [vitalType, setVitalType] = useState<HealthVitalRecord['vitalType']>('blood_pressure');
-  const [value, setValue] = useState('');
-  const [notes, setNotes] = useState('');
+  const [vitalType, setVitalType] =
+    useState<HealthVitalRecord['vitalType']>('blood_pressure')
+  const [value, setValue] = useState('')
+  const [notes, setNotes] = useState('')
 
   const getVitalMeta = (type: HealthVitalRecord['vitalType']) => {
     switch (type) {
@@ -51,7 +51,7 @@ export function VitalsTrackerWidget({
           color: 'text-rose-500',
           bgColor: 'bg-rose-500/10',
           normalRange: '110/70 - 130/85',
-        };
+        }
       case 'blood_glucose':
         return {
           label: 'Fasting Glucose',
@@ -60,7 +60,7 @@ export function VitalsTrackerWidget({
           color: 'text-amber-500',
           bgColor: 'bg-amber-500/10',
           normalRange: '70 - 120 mg/dL',
-        };
+        }
       case 'heart_rate':
         return {
           label: 'Heart Rate',
@@ -69,7 +69,7 @@ export function VitalsTrackerWidget({
           color: 'text-emerald-500',
           bgColor: 'bg-emerald-500/10',
           normalRange: '60 - 100 bpm',
-        };
+        }
       case 'spo2':
         return {
           label: 'Blood Oxygen (SpO2)',
@@ -78,7 +78,7 @@ export function VitalsTrackerWidget({
           color: 'text-blue-500',
           bgColor: 'bg-blue-500/10',
           normalRange: '95 - 100%',
-        };
+        }
       default:
         return {
           label: 'Temperature',
@@ -87,17 +87,17 @@ export function VitalsTrackerWidget({
           color: 'text-purple-500',
           bgColor: 'bg-purple-500/10',
           normalRange: '97.0 - 99.0 °F',
-        };
+        }
     }
-  };
+  }
 
   const handleAddVital = () => {
     if (!value.trim()) {
-      toast.error('Please enter a measurement value.');
-      return;
+      toast.error('Please enter a measurement value.')
+      return
     }
 
-    const meta = getVitalMeta(vitalType);
+    const meta = getVitalMeta(vitalType)
     const newRecord: HealthVitalRecord = {
       id: `vit_${Date.now()}`,
       vitalType,
@@ -106,14 +106,19 @@ export function VitalsTrackerWidget({
       status: 'normal',
       loggedAt: 'Just now',
       notes: notes.trim() || `Manual entry for ${honorific}`,
-    };
+    }
 
-    setVitals((prev) => [newRecord, ...prev.filter((v) => v.vitalType !== vitalType)]);
-    setIsAddModalOpen(false);
-    setValue('');
-    setNotes('');
-    toast.success(`Logged ${meta.label} for ${honorific}: ${value} ${meta.unit}`);
-  };
+    setVitals((prev) => [
+      newRecord,
+      ...prev.filter((v) => v.vitalType !== vitalType),
+    ])
+    setIsAddModalOpen(false)
+    setValue('')
+    setNotes('')
+    toast.success(
+      `Logged ${meta.label} for ${honorific}: ${value} ${meta.unit}`
+    )
+  }
 
   return (
     <Card className='border-border/60 shadow-sm'>
@@ -121,15 +126,18 @@ export function VitalsTrackerWidget({
         <div className='flex flex-wrap items-center justify-between gap-3'>
           <div>
             <div className='flex items-center gap-2'>
-              <CardTitle className='text-base font-bold flex items-center gap-2'>
-                <Activity className='w-4 h-4 text-primary' />
+              <CardTitle className='flex items-center gap-2 text-base font-bold'>
+                <Activity className='h-4 w-4 text-primary' />
                 Clinical Vitals &amp; Biometric Trend
               </CardTitle>
-              <Badge variant='outline' className='text-[10px] bg-emerald-500/10 text-emerald-600 border-emerald-500/20'>
+              <Badge
+                variant='outline'
+                className='border-emerald-500/20 bg-emerald-500/10 text-[10px] text-emerald-600'
+              >
                 Optimal Vitals
               </Badge>
             </div>
-            <CardDescription className='text-xs mt-0.5'>
+            <CardDescription className='mt-0.5 text-xs'>
               Continuous telemetry monitoring for {honorific} ({patientName}).
             </CardDescription>
           </div>
@@ -137,54 +145,56 @@ export function VitalsTrackerWidget({
           <Button
             size='sm'
             onClick={() => setIsAddModalOpen(true)}
-            className='h-8 text-xs font-semibold gap-1.5'
+            className='h-8 gap-1.5 text-xs font-semibold'
           >
-            <Plus className='w-3.5 h-3.5' />
+            <Plus className='h-3.5 w-3.5' />
             Log Reading
           </Button>
         </div>
       </CardHeader>
 
       <CardContent>
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4'>
           {vitals.map((item) => {
-            const meta = getVitalMeta(item.vitalType);
-            const Icon = meta.icon;
+            const meta = getVitalMeta(item.vitalType)
+            const Icon = meta.icon
 
             return (
               <div
                 key={item.id}
-                className='p-3.5 rounded-xl border border-border/60 bg-muted/20 hover:bg-muted/40 transition-all flex flex-col justify-between'
+                className='flex flex-col justify-between rounded-xl border border-border/60 bg-muted/20 p-3.5 transition-all hover:bg-muted/40'
               >
-                <div className='flex items-center justify-between mb-2'>
+                <div className='mb-2 flex items-center justify-between'>
                   <div className='flex items-center gap-2'>
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${meta.bgColor} ${meta.color}`}>
-                      <Icon className='w-4 h-4' />
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg ${meta.bgColor} ${meta.color}`}
+                    >
+                      <Icon className='h-4 w-4' />
                     </div>
                     <span className='text-xs font-semibold text-muted-foreground'>
                       {meta.label}
                     </span>
                   </div>
-                  <Badge variant='secondary' className='text-[10px] font-mono'>
+                  <Badge variant='secondary' className='font-mono text-[10px]'>
                     {item.status}
                   </Badge>
                 </div>
 
-                <div className='flex items-baseline gap-1 my-1'>
+                <div className='my-1 flex items-baseline gap-1'>
                   <span className='text-2xl font-bold tracking-tight text-foreground'>
                     {item.value}
                   </span>
-                  <span className='text-xs text-muted-foreground font-medium'>
+                  <span className='text-xs font-medium text-muted-foreground'>
                     {item.unit}
                   </span>
                 </div>
 
-                <div className='flex items-center justify-between text-[11px] text-muted-foreground pt-2 border-t border-border/40 mt-2'>
+                <div className='mt-2 flex items-center justify-between border-t border-border/40 pt-2 text-[11px] text-muted-foreground'>
                   <span>Range: {meta.normalRange}</span>
                   <span className='font-mono'>{item.loggedAt}</span>
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       </CardContent>
@@ -194,36 +204,51 @@ export function VitalsTrackerWidget({
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2'>
-              <TrendingUp className='w-5 h-5 text-primary' />
+              <TrendingUp className='h-5 w-5 text-primary' />
               Log Clinical Vitals for {honorific}
             </DialogTitle>
             <DialogDescription className='text-xs'>
-              Record blood pressure, fasting glucose, or pulse for doctor review.
+              Record blood pressure, fasting glucose, or pulse for doctor
+              review.
             </DialogDescription>
           </DialogHeader>
 
           <div className='space-y-4 py-2'>
             <div className='space-y-1.5'>
-              <Label className='text-xs font-semibold'>Select Measurement</Label>
+              <Label className='text-xs font-semibold'>
+                Select Measurement
+              </Label>
               <div className='grid grid-cols-2 gap-2'>
                 {[
-                  { type: 'blood_pressure', label: 'Blood Pressure', unit: 'mmHg' },
-                  { type: 'blood_glucose', label: 'Blood Glucose', unit: 'mg/dL' },
+                  {
+                    type: 'blood_pressure',
+                    label: 'Blood Pressure',
+                    unit: 'mmHg',
+                  },
+                  {
+                    type: 'blood_glucose',
+                    label: 'Blood Glucose',
+                    unit: 'mg/dL',
+                  },
                   { type: 'heart_rate', label: 'Heart Rate', unit: 'bpm' },
                   { type: 'spo2', label: 'Blood Oxygen', unit: '%' },
                 ].map((opt) => (
                   <button
                     key={opt.type}
                     type='button'
-                    onClick={() => setVitalType(opt.type as HealthVitalRecord['vitalType'])}
-                    className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all ${
+                    onClick={() =>
+                      setVitalType(opt.type as HealthVitalRecord['vitalType'])
+                    }
+                    className={`rounded-xl border p-2.5 text-left text-xs font-medium transition-all ${
                       vitalType === opt.type
-                        ? 'border-primary bg-primary/10 text-primary font-bold shadow-sm'
+                        ? 'border-primary bg-primary/10 font-bold text-primary shadow-sm'
                         : 'border-border/60 hover:bg-muted/40'
                     }`}
                   >
                     <div>{opt.label}</div>
-                    <div className='text-[10px] text-muted-foreground'>{opt.unit}</div>
+                    <div className='text-[10px] text-muted-foreground'>
+                      {opt.unit}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -239,8 +264,8 @@ export function VitalsTrackerWidget({
                   vitalType === 'blood_pressure'
                     ? 'e.g. 120/80'
                     : vitalType === 'blood_glucose'
-                    ? 'e.g. 110'
-                    : 'e.g. 72'
+                      ? 'e.g. 110'
+                      : 'e.g. 72'
                 }
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
@@ -264,12 +289,10 @@ export function VitalsTrackerWidget({
             <Button variant='outline' onClick={() => setIsAddModalOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddVital}>
-              Save to Health Vault
-            </Button>
+            <Button onClick={handleAddVital}>Save to Health Vault</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
-  );
+  )
 }
