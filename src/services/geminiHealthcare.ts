@@ -131,19 +131,51 @@ Return a strict JSON array of medications:
   }
 }
 
+const LANGUAGE_NAMES: Record<string, string> = {
+  en: 'English',
+  ta: 'Tamil (தமிழ்)',
+  hi: 'Hindi (हिन्दी)',
+  te: 'Telugu (తెలుగు)',
+  kn: 'Kannada (ಕನ್ನಡ)',
+  ml: 'Malayalam (മലയാളം)',
+  es: 'Spanish (Español)',
+};
+
 /**
- * 3. AI Elder Companion / Voice Explainer
+ * 3. AI Elder Companion / Voice Explainer with Multi-Language Support
  */
 export async function generateElderFriendlyExplanation(
   medicationName: string,
   instructions: string,
-  honorific: string = 'Amma'
+  honorific: string = 'Amma',
+  language: string = 'en'
 ): Promise<string> {
+  const targetLanguageName = LANGUAGE_NAMES[language] || 'English';
+
   if (!aiInstance) {
+    if (language === 'ta') {
+      return `${honorific}, மருத்துவர் கூறியபடி ${medicationName} மருந்தை வெதுவெதுப்பான நீருடன் எடுத்துக் கொள்ளுங்கள்.`;
+    }
+    if (language === 'hi') {
+      return `${honorific}, डॉक्टर के बताए अनुसार ${medicationName} दवा पानी के साथ ले लीजिए।`;
+    }
+    if (language === 'te') {
+      return `${honorific}, డాక్టర్ చెప్పినట్లుగా ${medicationName} మందును నీటితో తీసుకోండి.`;
+    }
+    if (language === 'kn') {
+      return `${honorific}, ವೈದ್ಯರು ತಿಳಿಸಿದಂತೆ ${medicationName} ಔಷಧಿಯನ್ನು ನೀರಿನೊಂದಿಗೆ ಸೇವಿಸಿ.`;
+    }
+    if (language === 'ml') {
+      return `${honorific}, ഡോക്ടർ പറഞ്ഞതുപോലെ ${medicationName} മരുന്ന് വെള്ളത്തോടൊപ്പം കഴിക്കൂ.`;
+    }
+    if (language === 'es') {
+      return `${honorific}, por favor tome su medicamento ${medicationName} con agua según las indicaciones de su médico.`;
+    }
     return `${honorific}, please take your ${medicationName} with a glass of water as advised by your doctor.`;
   }
 
-  const prompt = `Convert the following medical instruction into an empathetic, warm, easy-to-understand 2-sentence audio reminder for an elderly elder affectionately addressed as "${honorific}". Keep it affectionate, crystal clear, respectful, and reassuring:
+  const prompt = `Convert the following medical instruction into an empathetic, warm, easy-to-understand 2-sentence audio reminder for an elderly elder affectionately addressed as "${honorific}".
+Target Language: Write the entire response strictly in ${targetLanguageName}. Keep it culturally affectionate, respectful, reassuring, and crystal clear so that an elder listening to voice audio understands immediately:
 Medication: ${medicationName}
 Medical Instructions: ${instructions}`;
 

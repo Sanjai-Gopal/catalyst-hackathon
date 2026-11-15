@@ -16,6 +16,7 @@ import { SeniorModeView } from './SeniorModeView';
 import { CaretakerDashboard } from './CaretakerDashboard';
 import { PasscodeModal } from './PasscodeModal';
 import { CareCircleOnboardingModal } from './CareCircleOnboardingModal';
+import { LanguageProvider } from '@/context/language-context';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
 
@@ -146,55 +147,57 @@ export function CareNestApp() {
   };
 
   return (
-    <div className='min-h-screen bg-background'>
-      {mode === 'senior' ? (
-        <SeniorModeView
-          patient={patient}
-          patientName={patient.name}
-          medications={medications}
-          adherence={adherence}
-          onMarkTaken={handleMarkTaken}
-          onOpenPasscodeModal={() => setIsPasscodeModalOpen(true)}
-          onOpenOnboarding={() => setIsOnboardingOpen(true)}
-        />
-      ) : (
-        <CaretakerDashboard
-          patient={patient}
-          medications={medications}
-          appointments={appointments}
-          adherence={adherence}
-          onAddMedication={handleAddMedication}
-          onDeleteMedication={handleDeleteMedication}
-          onMarkTaken={handleMarkTaken}
-          onSwitchToSeniorMode={() => setMode('senior')}
-          onOpenOnboarding={() => setIsOnboardingOpen(true)}
-        />
-      )}
+    <LanguageProvider>
+      <div className='min-h-screen bg-background'>
+        {mode === 'senior' ? (
+          <SeniorModeView
+            patient={patient}
+            patientName={patient.name}
+            medications={medications}
+            adherence={adherence}
+            onMarkTaken={handleMarkTaken}
+            onOpenPasscodeModal={() => setIsPasscodeModalOpen(true)}
+            onOpenOnboarding={() => setIsOnboardingOpen(true)}
+          />
+        ) : (
+          <CaretakerDashboard
+            patient={patient}
+            medications={medications}
+            appointments={appointments}
+            adherence={adherence}
+            onAddMedication={handleAddMedication}
+            onDeleteMedication={handleDeleteMedication}
+            onMarkTaken={handleMarkTaken}
+            onSwitchToSeniorMode={() => setMode('senior')}
+            onOpenOnboarding={() => setIsOnboardingOpen(true)}
+          />
+        )}
 
-      {/* Passcode Modal for Caregiver Barrier */}
-      <PasscodeModal
-        isOpen={isPasscodeModalOpen}
-        onClose={() => setIsPasscodeModalOpen(false)}
-        onSuccess={() => {
-          setIsPasscodeModalOpen(false);
-          setMode('caretaker');
-          toast.success('Passcode verified! Caregiver Portal unlocked.');
-        }}
-      />
+        {/* Passcode Modal for Caregiver Barrier */}
+        <PasscodeModal
+          isOpen={isPasscodeModalOpen}
+          onClose={() => setIsPasscodeModalOpen(false)}
+          onSuccess={() => {
+            setIsPasscodeModalOpen(false);
+            setMode('caretaker');
+            toast.success('Passcode verified! Caregiver Portal unlocked.');
+          }}
+        />
 
-      {/* Care Circle Onboarding Wizard */}
-      <CareCircleOnboardingModal
-        isOpen={isOnboardingOpen}
-        onClose={() => {
-          setIsOnboardingOpen(false);
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem('carenest_start_onboarding');
-          }
-        }}
-        onComplete={handleOnboardingComplete}
-        initialProfile={patient}
-        initialMeds={medications}
-      />
-    </div>
+        {/* Care Circle Onboarding Wizard */}
+        <CareCircleOnboardingModal
+          isOpen={isOnboardingOpen}
+          onClose={() => {
+            setIsOnboardingOpen(false);
+            if (typeof window !== 'undefined') {
+              localStorage.removeItem('carenest_start_onboarding');
+            }
+          }}
+          onComplete={handleOnboardingComplete}
+          initialProfile={patient}
+          initialMeds={medications}
+        />
+      </div>
+    </LanguageProvider>
   );
 }

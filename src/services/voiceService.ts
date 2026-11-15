@@ -1,8 +1,22 @@
 /**
- * Web Speech API Voice Synthesizer for Senior Accessibility
+ * Web Speech API Voice Synthesizer for Senior Accessibility with Multi-Language Support
  */
 
-export function speakText(text: string, onEnd?: () => void): boolean {
+const LANGUAGE_BCP_MAP: Record<string, string> = {
+  en: 'en-US',
+  ta: 'ta-IN',
+  hi: 'hi-IN',
+  te: 'te-IN',
+  kn: 'kn-IN',
+  ml: 'ml-IN',
+  es: 'es-ES',
+};
+
+export function speakText(
+  text: string,
+  onEnd?: () => void,
+  lang: string = 'en'
+): boolean {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
     console.warn('[VoiceService] Web Speech API not supported in this browser.');
     return false;
@@ -11,19 +25,27 @@ export function speakText(text: string, onEnd?: () => void): boolean {
   // Cancel any ongoing speech
   window.speechSynthesis.cancel();
 
+  const targetBcp = LANGUAGE_BCP_MAP[lang] || lang || 'en-US';
+  const langPrefix = lang.split('-')[0].toLowerCase();
+
   const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = targetBcp;
   utterance.rate = 0.88; // Slightly slower, clear cadence for elderly comprehension
   utterance.pitch = 1.05; // Gentle, friendly pitch
   utterance.volume = 1.0;
 
-  // Try to pick a natural English voice
+  // Try to pick a natural voice in the target language
   const voices = window.speechSynthesis.getVoices();
-  const preferredVoice =
-    voices.find((v) => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha') || v.name.includes('Karen'))) ||
+  const matchingVoice =
+    voices.find(
+      (v) =>
+        v.lang.toLowerCase() === targetBcp.toLowerCase() ||
+        v.lang.toLowerCase().startsWith(langPrefix)
+    ) ||
     voices.find((v) => v.lang.startsWith('en'));
 
-  if (preferredVoice) {
-    utterance.voice = preferredVoice;
+  if (matchingVoice) {
+    utterance.voice = matchingVoice;
   }
 
   if (onEnd) {

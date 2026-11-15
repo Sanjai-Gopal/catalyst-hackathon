@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { toast } from 'sonner';
+import { LanguageSwitcher } from '@/components/language-switcher';
 
 interface CareCircleOnboardingModalProps {
   isOpen: boolean;
@@ -242,18 +243,21 @@ export function CareCircleOnboardingModal({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto bg-card border-border'>
         <DialogHeader>
-          <div className='flex items-center gap-3'>
-            <div className='flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary'>
-              <Heart className='h-6 w-6' />
+          <div className='flex items-center justify-between gap-3'>
+            <div className='flex items-center gap-3'>
+              <div className='flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary'>
+                <Heart className='h-6 w-6' />
+              </div>
+              <div>
+                <DialogTitle className='text-xl font-bold tracking-tight'>
+                  Care Circle Onboarding & Setup
+                </DialogTitle>
+                <DialogDescription className='text-xs text-muted-foreground'>
+                  Step {step} of 5: Connecting Elders, Children & Doctors.
+                </DialogDescription>
+              </div>
             </div>
-            <div>
-              <DialogTitle className='text-xl font-bold tracking-tight'>
-                Care Circle Onboarding & Setup
-              </DialogTitle>
-              <DialogDescription className='text-xs text-muted-foreground'>
-                Step {step} of 5: Connecting Elders, Children & Doctors in one collaborative circle.
-              </DialogDescription>
-            </div>
+            <LanguageSwitcher />
           </div>
         </DialogHeader>
 

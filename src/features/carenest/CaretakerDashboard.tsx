@@ -43,6 +43,8 @@ import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
 import { AddMedicationModal } from './AddMedicationModal';
 import { CobeGlobe } from '@/components/design-system/CobeGlobe';
+import { useLanguage } from '@/context/language-context';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { toast } from 'sonner';
 
 interface CaretakerDashboardProps {
@@ -79,6 +81,8 @@ export function CaretakerDashboard({
 }: CaretakerDashboardProps) {
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const { t } = useLanguage();
 
   const honorificLabel =
     patient.honorific === 'Custom'
@@ -204,6 +208,9 @@ export function CaretakerDashboard({
           </div>
 
           <div className='flex items-center gap-2 sm:gap-3 flex-wrap'>
+            {/* Language Switcher */}
+            <LanguageSwitcher />
+
             {onOpenOnboarding && (
               <Button
                 variant='outline'
@@ -211,7 +218,7 @@ export function CaretakerDashboard({
                 className='h-10 px-3.5 text-xs font-semibold rounded-xl border-primary/30 text-primary bg-primary/5 hover:bg-primary/10 flex items-center gap-1.5'
               >
                 <Sparkles className='w-3.5 h-3.5' />
-                <span>Care Circle Setup</span>
+                <span>{t('careCircleSetup')}</span>
               </Button>
             )}
             <Button
@@ -219,14 +226,14 @@ export function CaretakerDashboard({
               onClick={onSwitchToSeniorMode}
               className='h-10 px-4 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
             >
-              👵 {honorificLabel} Safe Mode
+              👵 {honorificLabel} {t('seniorMode')}
             </Button>
             <Button
               onClick={() => setIsAddModalOpen(true)}
               className='h-10 px-4 text-xs font-semibold rounded-xl bg-primary text-primary-foreground shadow-sm'
             >
               <Plus className='w-4 h-4 mr-1.5' />
-              Add Medication
+              {t('addMedication')}
             </Button>
           </div>
         </div>
@@ -238,7 +245,7 @@ export function CaretakerDashboard({
           <Card className='shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between pb-2'>
               <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                Daily Adherence
+                {t('dailyAdherence')}
               </CardTitle>
               <Activity className='h-4 w-4 text-emerald-600' />
             </CardHeader>
@@ -253,7 +260,7 @@ export function CaretakerDashboard({
           <Card className='shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between pb-2'>
               <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                Active Medications
+                {t('activeMedications')}
               </CardTitle>
               <Pill className='h-4 w-4 text-primary' />
             </CardHeader>
@@ -268,7 +275,7 @@ export function CaretakerDashboard({
           <Card className='shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between pb-2'>
               <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                Upcoming Visits
+                {t('upcomingVisits')}
               </CardTitle>
               <Calendar className='h-4 w-4 text-indigo-500' />
             </CardHeader>
@@ -283,7 +290,7 @@ export function CaretakerDashboard({
           <Card className='shadow-sm'>
             <CardHeader className='flex flex-row items-center justify-between pb-2'>
               <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
-                Gemini Drug Safety
+                {t('geminiShield')}
               </CardTitle>
               <ShieldCheck className='h-4 w-4 text-emerald-500' />
             </CardHeader>
@@ -300,23 +307,23 @@ export function CaretakerDashboard({
         <Tabs value={activeTab} onValueChange={setActiveTab} className='space-y-6'>
           <TabsList className='grid grid-cols-3 sm:grid-cols-6 w-full max-w-4xl h-11 bg-muted/60 p-1 rounded-xl'>
             <TabsTrigger value='overview' className='text-xs font-medium'>
-              Overview
+              {t('overview')}
             </TabsTrigger>
             <TabsTrigger value='children-portal' className='text-xs font-medium'>
-              👨‍👩‍👧 Children Portal
+              👨‍👩‍👧 {t('childrenPortal')}
             </TabsTrigger>
             <TabsTrigger value='doctor-portal' className='text-xs font-medium'>
-              🩺 Doctor Portal
+              🩺 {t('doctorPortal')}
             </TabsTrigger>
             <TabsTrigger value='medications' className='text-xs font-medium'>
-              Meds ({medications.length})
+              {t('medications')} ({medications.length})
             </TabsTrigger>
             <TabsTrigger value='safety' className='text-xs font-medium flex items-center gap-1.5'>
               <Sparkles className='w-3 h-3 text-amber-500' />
-              Gemini Safety
+              {t('geminiSafety')}
             </TabsTrigger>
             <TabsTrigger value='email-simulator' className='text-xs font-medium'>
-              Email Alerts
+              {t('emailAlerts')}
             </TabsTrigger>
           </TabsList>
 
