@@ -1,5 +1,5 @@
-import { logger } from '@/lib/logger'
 import { getApiAuthHeaders } from '@/lib/auth'
+import { logger } from '@/lib/logger'
 import { type EmailNotificationPayload } from '../types/carenest'
 
 export interface EmailDispatchResult {

@@ -23,16 +23,16 @@
 
 CareNest AI was developed in direct response to the **PromptWars × Catalyst Solo Hackathon Challenge: Elderly Care & Medication Management Platform**. Below is the verifiable 1:1 compliance matrix against each official requirement:
 
-| Official Challenge Requirement | CareNest AI Implementation | Verification / File Reference |
-|---|---|---|
-| **1. Help elderly manage daily medications** | Senior Safe Mode with giant tactile cards, schedule filtering (`morning`, `afternoon`, `evening`, `night`), 1-tap adherence marking, and dosage tracking. | `src/features/carenest/SeniorModeView.tsx` |
-| **2. Medical appointments & routine management** | Doctor appointment manager with calendar scheduling, telemedicine video room, and clinical telemetry vitals tracking (BP, Glucose, HR, SpO2). | `src/features/carenest/TelehealthConsultationModal.tsx` |
-| **3. Shared ecosystem (Elders, Caregivers, Doctors)** | Tri-party portal architecture: Senior View (affectionate "Amma"/"Appa" UX), Children Caregiver Portal (remote adherence audit), Doctor Portal (clinical safety). | `src/features/carenest/CareNestApp.tsx` |
-| **4. Secure, passcode-based access** | Protected caregiver barrier requiring family passcode (`CARE-8492` or `CARE-2026`) with brute-force lockout safeguards. | `src/features/carenest/PasscodeModal.tsx` |
-| **5. View, add, edit, and manage schedules** | Interactive schedule manager allowing caretakers to add custom medications, adjust dosage frequencies, and configure time slots. | `src/features/carenest/AddMedicationModal.tsx` |
-| **6. Track adherence in real time** | Persistent live adherence telemetry (localStorage + Appwrite Cloud) calculating exact adherence rates (% taken vs scheduled). | `src/features/carenest/CaretakerDashboard.tsx` |
-| **7. Proactive email reminders** | Transactional HTML email engine powered by Resend API dispatching automated alerts for missed doses, upcoming reminders, and appointments. | `src/services/emailService.ts` |
-| **8. Beyond basic reminder apps: Innovation & Accessibility** | Zero-latency multilingual voice assistant (<10ms), 7 language translations, WebMCP agentic AI browsing, and Google Gemini clinical contraindication analyzer. | `src/services/voiceService.ts`, `src/services/geminiHealthcare.ts` |
+| Official Challenge Requirement                                | CareNest AI Implementation                                                                                                                                       | Verification / File Reference                                      |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| **1. Help elderly manage daily medications**                  | Senior Safe Mode with giant tactile cards, schedule filtering (`morning`, `afternoon`, `evening`, `night`), 1-tap adherence marking, and dosage tracking.        | `src/features/carenest/SeniorModeView.tsx`                         |
+| **2. Medical appointments & routine management**              | Doctor appointment manager with calendar scheduling, telemedicine video room, and clinical telemetry vitals tracking (BP, Glucose, HR, SpO2).                    | `src/features/carenest/TelehealthConsultationModal.tsx`            |
+| **3. Shared ecosystem (Elders, Caregivers, Doctors)**         | Tri-party portal architecture: Senior View (affectionate "Amma"/"Appa" UX), Children Caregiver Portal (remote adherence audit), Doctor Portal (clinical safety). | `src/features/carenest/CareNestApp.tsx`                            |
+| **4. Secure, passcode-based access**                          | Protected caregiver barrier requiring family passcode (`CARE-8492` or `CARE-2026`) with brute-force lockout safeguards.                                          | `src/features/carenest/PasscodeModal.tsx`                          |
+| **5. View, add, edit, and manage schedules**                  | Interactive schedule manager allowing caretakers to add custom medications, adjust dosage frequencies, and configure time slots.                                 | `src/features/carenest/AddMedicationModal.tsx`                     |
+| **6. Track adherence in real time**                           | Persistent live adherence telemetry (localStorage + Appwrite Cloud) calculating exact adherence rates (% taken vs scheduled).                                    | `src/features/carenest/CaretakerDashboard.tsx`                     |
+| **7. Proactive email reminders**                              | Transactional HTML email engine powered by Resend API dispatching automated alerts for missed doses, upcoming reminders, and appointments.                       | `src/services/emailService.ts`                                     |
+| **8. Beyond basic reminder apps: Innovation & Accessibility** | Zero-latency multilingual voice assistant (<10ms), 7 language translations, WebMCP agentic AI browsing, and Google Gemini clinical contraindication analyzer.    | `src/services/voiceService.ts`, `src/services/geminiHealthcare.ts` |
 
 ---
 

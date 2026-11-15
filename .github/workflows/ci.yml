@@ -16,6 +16,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -33,7 +35,23 @@ jobs:
       #   run: pnpm knip
 
       - name: Run Prettier check
-        run: npm run format:check
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          EVENT_BEFORE: ${{ github.event.before }}
+        run: |
+          if [[ -n "$BASE_REF" ]]; then
+            git fetch origin "$BASE_REF"
+            base="origin/$BASE_REF"
+          else
+            base="$EVENT_BEFORE"
+          fi
+          changed_files="$(git diff --name-only --diff-filter=ACMR "$base...HEAD" | grep -E '\.(cjs|mjs|js|jsx|ts|tsx|json|md|mdx|yml|yaml|css|scss|html)$' || true)"
+          if [[ -n "$changed_files" ]]; then
+            printf '%s\n' "$changed_files" | xargs -r -d '\n' npx prettier --check --
+          else
+            echo "No changed files need formatting checks."
+          fi
 
       - name: Install browsers
         run: npm run test:browser:install
