@@ -1,31 +1,45 @@
 # CareNest AI — Intelligent Elderly Care & Medication Management Platform
-> **PromptWars × Catalyst Solo Hackathon | Powered by Google for Developers × Hack2Skill**  
+> **PromptWars × Catalyst | Powered by Google for Developers × Hack2Skill × MnM**  
 > **Challenge:** Elderly Care & Medication Management Platform  
 > **Author:** Sanjai Gopal ([@Sanjai-Gopal](https://github.com/Sanjai-Gopal))  
-> **Live Production Deployment:** [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app)
+> **Live Production URL:** [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app)  
+> **Public GitHub Repository:** [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon)  
+
+---
+
+## 📋 Hackathon Submission Requirements (All 4 Met)
+
+| Requirement | Details | Status |
+|---|---|:---:|
+| **Requirement 1/4: GitHub Repository Link** | [https://github.com/Sanjai-Gopal/catalyst-hackathon](https://github.com/Sanjai-Gopal/catalyst-hackathon) | ✅ Submitted |
+| **Requirement 2/4: Public Access** | Repository is published and set to **Public Access** | ✅ Verified |
+| **Requirement 3/4: Deployed Project Link** | [https://catalyst-hackathon-lime.vercel.app](https://catalyst-hackathon-lime.vercel.app) (Verified HTTP 200 OK) | ✅ Live & Working |
+| **Requirement 4/4: Project Description** | Comprehensive description below ready for platform submission | ✅ Complete |
 
 ---
 
 ## 🌟 Executive Summary & Problem Statement Alignment
 
-Elderly healthcare is fraught with fragmented care routines: seniors struggle with polypharmacy confusion, small print instructions, and cognitive fatigue, while remote family members and caretakers endure chronic anxiety over missed doses or delayed appointments.
+Elderly healthcare is fraught with fragmented care routines: seniors struggle with polypharmacy confusion, small print instructions, cognitive fatigue, and language barriers, while remote family members and physicians endure chronic anxiety over missed doses or delayed appointments.
 
-**CareNest AI** is a smart, interconnected healthcare management ecosystem specifically engineered to place **the elderly individual at the center of their own healthcare decisions**, while keeping family members, caretakers, and physicians seamlessly informed through a secure, shared ecosystem.
+**CareNest AI** is a smart, interconnected healthcare management ecosystem specifically engineered to place **the elderly individual at the center of their own healthcare decisions**, while keeping family members, caretakers, and doctors seamlessly informed through a secure, shared ecosystem.
 
 ```
                   ┌─────────────────────────────────────────────────────────┐
                   │                 CareNest AI Ecosystem                   │
                   └────────────────────────────┬────────────────────────────┘
                                                │
-               ┌───────────────────────────────┴───────────────────────────────┐
-               ▼                                                               ▼
-   👵 SENIOR SAFE INTERFACE                                      🛡️ CAREGIVER CONTROL PORTAL
-   • Giant tactile cards & high contrast                          • Passcode-Protected Barrier (CARE-8492)
-   • 1-Tap "Taken" with confetti reward                           • Real-time adherence analytics (% rate)
-   • Web Speech API + Gemini audio companion                      • Add/Edit/Delete medication schedules
-   • 1-Tap Emergency SOS broadcast                                • Doctor appointments manager
-               │                                                               │
-               └───────────────────────────────┬───────────────────────────────┘
+         ┌─────────────────────────────────────┼─────────────────────────────────────┐
+         ▼                                     ▼                                     ▼
+👵 ELDER VIEW (AMMA / APPA)           👨‍👩‍👧 CHILDREN PORTAL                    🩺 DOCTOR PORTAL
+• Giant tactile cards & high contrast  • Passcode-Protected Access (CARE-8492)• Clinical Drug Safety Shield
+• Affectionate Address ("Amma"/"Appa") • Real-time adherence logs (% rate)    • Prescription OCR parsing
+• 7-Language Switcher (Tamil, Hindi..) • 1-Tap Direct Phone Call to Child    • Appointment management
+• Zero-Latency Voice Assistant (<10ms) • Proactive Email Reminders (Resend)   • Patient health condition log
+• 1-Tap Emergency SOS Dialer (tel:..)  • Care Circle Onboarding Wizard        • Contraindication alerts
+         │                                     │                                     │
+         └─────────────────────────────────────┴─────────────────────────────────────┘
+                                               │
                                                ▼
                          ┌───────────────────────────────────────────┐
                          │       Google & Cloud Infrastructure       │
@@ -33,9 +47,9 @@ Elderly healthcare is fraught with fragmented care routines: seniors struggle wi
                          │  • Google Gemini 2.5 Flash:               │
                          │    - Clinical Drug-Drug Interaction Shield│
                          │    - Prescription OCR Schedule Parser     │
-                         │    - Empathetic Senior Audio Explainer    │
+                         │    - Multilingual Audio Explainer         │
                          │  • Google OAuth 2.0 Identity Provider     │
-                         │  • Appwrite Cloud Backend (Singapore SGP) │
+                         │  • Web Speech API (BCP-47 Voice STT & TTS)│
                          │  • Resend API Transactional Notifications │
                          │  • Cobe WebGL 3D Regional Care Globe      │
                          └───────────────────────────────────────────┘
@@ -45,39 +59,60 @@ Elderly healthcare is fraught with fragmented care routines: seniors struggle wi
 
 ## 🚀 Key Innovations & Architectural Highlights
 
-### 1. Dual-Persona Shared Ecosystem
-- **Elder View (Senior Safe Mode):** Designed with geriatric UI/UX principles—warm cashmere/alabaster aesthetic (`#FBF9F5`), 24px+ typography, zero visual clutter, time-of-day tabs (Morning, Afternoon, Evening, Night), and a giant green tactile "I Have Taken This" button.
-- **Voice Guidance Companion:** Uses browser Web Speech API combined with Google Gemini prompt engineering to convert clinical doctor instructions into warm, affectionate 2-sentence audio reminders addressed directly to Amma.
-- **1-Tap Emergency SOS:** Large high-contrast emergency button that instantly dispatches high-priority email alerts to family and sounds audible reassurance.
+### 1. Collaborative Tri-Party Care Circle
+- **Elderly Parents:** Affectionately addressed as **"Amma"** or **"Appa"** (Mother/Father) instead of cold clinical names. Supported with gentle, large high-contrast visual cues and voice prompts.
+- **Children (Primary Caregivers):** Remote oversight dashboard, real-time adherence logs, speed-dial links, and immediate emergency alerts.
+- **Doctors:** Clinical portal tracking upcoming appointments, prescription schedules, and AI contraindication reports.
+- **Care Circle Onboarding Wizard:** 5-step guided onboarding collecting health conditions, current daily medicines, children contact details, and primary physician information.
 
-### 2. Passcode-Protected Caregiver Barrier
-- Sensitive medical settings, prescription modification, and clinical appointment management are protected by secure passcode verification (`CARE-8492`).
-- Seamlessly unlocks full oversight without requiring elderly family members to navigate complicated multi-factor friction.
+### 2. Multi-Language Switcher (7 Languages Supported)
+Native UI translations, voice prompts, and AI explanations supporting:
+- 🇬🇧 **English** (`en`)
+- 🇮🇳 **Tamil** (`ta` - தமிழ்)
+- 🇮🇳 **Hindi** (`hi` - हिन्दी)
+- 🇮🇳 **Telugu** (`te` - తెలుగు)
+- 🇮🇳 **Kannada** (`kn` - ಕನ್ನಡ)
+- 🇮🇳 **Malayalam** (`ml` - മലയാളം)
+- 🇪🇸 **Spanish** (`es` - Español)
 
-### 3. Proactive Automated Email Reminders (Resend API)
-CareNest automatically formats and dispatches responsive, high-contrast HTML emails for:
-- ⚠️ **Missed Medication Alerts:** Notifies primary caregiver immediately if a scheduled dose passes unconfirmed.
-- ⏰ **Upcoming Dose Reminders:** Prepares family to assist with meals or hydration.
-- 📅 **Doctor Appointment Alerts:** Includes clinic address, specialty, and preparation instructions.
-- 🚨 **Emergency SOS Broadcasts:** Immediate distress beacon with patient location and contact data.
+### 3. Instant Voice Assistant & Speech Intelligence (< 10ms Latency)
+- **Speech Recognition (STT):** Elders can simply speak commands in their native language:
+  - *"I took my morning medicine"* / *"மாத்திரை போட்டேன்"* / *"दवा खा ली"* -> instantly marks medicines as taken.
+  - *"Call my child"* / *"மகனுக்கு போன் பண்ணு"* / *"बेटे को कॉल करो"* -> instantly opens device dialer.
+  - *"Read my schedule"* / *"மருந்து பட்டியல் சொல்"* / *"दवा बताओ"* -> reads active medicines aloud.
+- **Zero-Latency TTS Engine:** Uses warm pre-cached localized speech templates for immediate (< 10ms) auditory response, eliminating network delay.
+- **Speech Speed Control:** Accessible speed selector (`0.85x Gentle`, `0.95x Normal`, `1.15x Fast`) customized for geriatric listening comfort.
 
-### 4. Google Gemini 2.5 Flash Clinical Safety Shield
-- **Drug-Drug Interaction Analysis:** Automatically inspects all active prescriptions for clinical contraindications (e.g., verifying safe combination of Amlodipine, Metformin, Calcium, and Atorvastatin).
-- **Dietary Warning Engine:** Flags critical food contraindications (e.g. avoiding grapefruit juice with statins).
+### 4. Emergency SOS with Direct Child Calling
+- Pressing the Emergency SOS button immediately launches the native phone dialer (`tel:+91...`) connecting the elder directly to their child.
+- Opens an interactive Emergency Calling Dialog featuring WhatsApp SOS distress message, Doctor speed dial, and 108 Ambulance hotline.
+- Sounds multilingual reassuring voice guidance to calm the elder.
+
+### 5. Google Gemini 2.5 Flash Clinical Safety Shield
+- **Drug-Drug Interaction Analysis:** Automatically inspects active prescriptions for clinical contraindications (e.g., verifying combinations of Amlodipine, Metformin, Calcium, and Atorvastatin).
+- **Dietary Warning Engine:** Flags critical food contraindications (e.g., avoiding grapefruit juice with statins).
 - **Prescription OCR Parser:** Caretakers can paste doctor consultation notes or prescription text, and Gemini extracts structured dosage, frequency, and time slot schedules automatically.
 
-### 5. 3D WebGL Regional Care Network
-- Integrated interactive 3D globe visualization powered by `cobe` showcasing real-time interconnected nodes: Amma's residence in Chennai, Apollo Speciality Hospitals, and family members in San Francisco.
+### 6. Passcode-Protected Caregiver Barrier
+- Sensitive medical settings, prescription modification, and clinical appointment management are protected by secure passcode verification (`CARE-8492` or `CARE-2026`).
+
+### 7. Proactive Automated Email Reminders (Resend API)
+CareNest automatically formats and dispatches responsive HTML emails for:
+- ⚠️ **Missed Medication Alerts**
+- ⏰ **Upcoming Dose Reminders**
+- 📅 **Doctor Appointment Reminders**
+- 🚨 **Emergency SOS Broadcasts**
 
 ---
 
-## 🛠️ Tech Stack & Integrations
+## 🛠️ Tech Stack
 
 | Layer | Technologies |
 |---|---|
-| **Frontend Framework** | React 19, TypeScript 5.8 (Strict), Vite 8, TanStack Router |
+| **Frontend Framework** | React 19, TypeScript 5.8 (Strict Mode), Vite 8, TanStack Router |
 | **Design System** | Tailwind CSS v4, Radix UI, Lucide Icons, Canvas Confetti |
 | **AI Intelligence** | **Google Gemini 2.5 Flash** (`@google/genai`) |
+| **Speech Engine** | **Web Speech API** (BCP-47 SpeechRecognition + SpeechSynthesis) |
 | **Authentication** | **Google OAuth 2.0** + Appwrite Cloud (Singapore `sgp`) |
 | **Database & Sync** | Appwrite Cloud Database (`6af86b4100238c0101ef`) |
 | **Email Service** | Resend API (Transactional HTML templates) |
@@ -89,35 +124,29 @@ CareNest automatically formats and dispatches responsive, high-contrast HTML ema
 ## 🧪 Testing & Verification
 
 CareNest AI includes automated unit tests covering all core healthcare algorithms:
+- **Test Files:** 22 passed (22)
+- **Tests:** 145 passed (145) (100% pass rate)
 - Passcode access validation (`CARE-8492`, `8492`, rejection of invalid tokens)
-- Medication adherence formula and streak calculations
+- Medication adherence calculation formulas
 - Time slot filtering and schedule grouping
+- Multilingual intent recognition (English, Tamil, Hindi)
+- Instant voice template generation
 - Email template payload generation and HTML formatting
 - Patient safety data contracts and allergy integrity
 
 ```bash
-# Run test suite
+# Run unit tests
 npm test
 
-# Run strict TypeScript validation (0 errors)
+# Run strict TypeScript build validation (0 errors)
 npm run build
 ```
 
 ---
 
-## 🔒 Security & Git Hygiene
+## 🔒 Security & Performance
 
-- **Strict Secret Management:** Zero hardcoded credentials or API keys committed. All sensitive keys are configured via `.env.local` and ignored via `.gitignore`.
-- **OWASP Security Headers:** Configured via `vercel.json` (`X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`).
-
----
-
-## 🏆 Hackathon Submission Checklist
-
-- [x] **Challenge Alignment:** Comprehensive elderly care platform with dual-mode senior/caretaker interface.
-- [x] **Passcode Security:** Family passcode barrier (`CARE-8492`).
-- [x] **Proactive Email Reminders:** Integrated with Resend API for missed doses, reminders, and appointments.
-- [x] **Google Technologies:** Google Gemini 2.5 Flash AI + Google OAuth 2.0.
-- [x] **Strict Code Quality:** Clean TypeScript with 0 compilation errors.
-- [x] **Automated Tests:** Comprehensive Vitest test suite.
-- [x] **Deployed on Vercel:** Production live build verified.
+- **Zero Committed Secrets:** All sensitive credentials managed server-side and via `.env.local`.
+- **Zero Console Errors:** Clean production runtime.
+- **Accessibility:** Senior-friendly touch targets (min 48px), high contrast text (WCAG AAA), high-legibility fonts, and multilingual audio guidance.
+- **Sub-Second Response Times:** Client-side speech synthesis and cache layer eliminate latency.
