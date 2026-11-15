@@ -62,8 +62,9 @@ Respond with a strict JSON array of objects with these exact keys:
 ]`;
 
   try {
+    if (!aiInstance) throw new Error('Primary SDK not initialized');
     const response = await aiInstance.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json',
@@ -74,8 +75,23 @@ Respond with a strict JSON array of objects with these exact keys:
     const text = response.text?.trim() || '[]';
     const parsed = JSON.parse(text);
     return Array.isArray(parsed) ? parsed : [parsed];
-  } catch (error) {
-    console.error('[GeminiHealthcare] Interaction check failed:', error);
+  } catch (primaryErr) {
+    // Active Dual-SDK Route: Fallback to @google/generative-ai classic SDK
+    if (googleGenAIClassic) {
+      try {
+        const classicModel = googleGenAIClassic.getGenerativeModel({
+          model: 'gemini-1.5-flash',
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.2 },
+        });
+        const classicRes = await classicModel.generateContent(prompt);
+        const text = classicRes.response.text()?.trim() || '[]';
+        const parsed = JSON.parse(text);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch (classicErr) {
+        console.warn('[GeminiHealthcare] Classic SDK fallback notice:', classicErr);
+      }
+    }
+    console.warn('[GeminiHealthcare] Interaction check baseline fallback:', primaryErr);
     return [
       {
         severity: 'safe',
@@ -125,6 +141,7 @@ Return a strict JSON array of medications:
 ]`;
 
   try {
+    if (!aiInstance) throw new Error('Primary SDK not initialized');
     const response = await aiInstance.models.generateContent({
       model: 'gemini-1.5-flash',
       contents: prompt,
@@ -136,8 +153,22 @@ Return a strict JSON array of medications:
 
     const text = response.text?.trim() || '[]';
     return JSON.parse(text);
-  } catch (err) {
-    console.warn('[GeminiHealthcare] Prescription parse fallback due to API notice:', err);
+  } catch (primaryErr) {
+    // Active Dual-SDK Route: Fallback to @google/generative-ai classic SDK
+    if (googleGenAIClassic) {
+      try {
+        const classicModel = googleGenAIClassic.getGenerativeModel({
+          model: 'gemini-1.5-flash',
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.1 },
+        });
+        const classicRes = await classicModel.generateContent(prompt);
+        const text = classicRes.response.text()?.trim() || '[]';
+        return JSON.parse(text);
+      } catch (classicErr) {
+        console.warn('[GeminiHealthcare] Classic SDK fallback notice:', classicErr);
+      }
+    }
+    console.warn('[GeminiHealthcare] Prescription parse fallback due to API notice:', primaryErr);
     return [
       {
         name: 'Amlodipine Besylate',

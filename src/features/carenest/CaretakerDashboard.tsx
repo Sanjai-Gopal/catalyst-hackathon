@@ -41,6 +41,7 @@ import {
   Volume2,
   Video,
   RotateCcw,
+  Lock,
 } from 'lucide-react';
 import { analyzeDrugInteractionsWithGemini } from '@/services/geminiHealthcare';
 import { sendEmailNotification, buildEmailTemplate } from '@/services/emailService';
@@ -93,6 +94,7 @@ export function CaretakerDashboard({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isTelehealthOpen, setIsTelehealthOpen] = useState(false);
   const [isRefillDialogOpen, setIsRefillDialogOpen] = useState(false);
+  const [showPasscode, setShowPasscode] = useState(false);
 
   const { t, currentLanguage } = useLanguage();
 
@@ -229,9 +231,18 @@ export function CaretakerDashboard({
             <div>
               <div className='flex items-center gap-2'>
                 <h1 className='text-xl font-bold tracking-tight'>CareNest AI</h1>
-                <Badge variant='outline' className='font-mono text-xs border-primary/30 text-primary'>
-                  Passcode: {patient.passcode}
-                </Badge>
+                <button
+                  type='button'
+                  onClick={() => setShowPasscode((prev) => !prev)}
+                  title='Click to reveal or hide passcode'
+                  aria-label={showPasscode ? 'Hide passcode' : 'Show passcode'}
+                  className='cursor-pointer inline-flex'
+                >
+                  <Badge variant='outline' className='font-mono text-xs border-primary/30 text-primary flex items-center gap-1 hover:bg-primary/5 transition-colors'>
+                    <Lock className='h-3 w-3' />
+                    Passcode: {showPasscode ? patient.passcode : '••••••••'}
+                  </Badge>
+                </button>
                 <Badge className='text-[10px] bg-primary/10 text-primary border-primary/20'>
                   Caring for {honorificLabel} 🌸
                 </Badge>

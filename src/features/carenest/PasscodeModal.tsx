@@ -15,15 +15,17 @@ interface PasscodeModalProps {
   onClose: () => void;
   onSuccess: () => void;
   targetRole?: 'caretaker' | 'family';
+  patientPasscode?: string;
 }
 
-const VALID_PASSCODES = ['CARE-8492', '8492', 'CARE-2026', '2026'];
+const DEFAULT_PASSCODES = ['CARE-8492', '8492', 'CARE-2026', '2026'];
 const MAX_ATTEMPTS = 5;
 
 export function PasscodeModal({
   isOpen,
   onClose,
   onSuccess,
+  patientPasscode,
 }: PasscodeModalProps) {
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
@@ -51,8 +53,12 @@ export function PasscodeModal({
     if (lockoutSeconds > 0) return;
 
     const cleanCode = passcode.trim().toUpperCase();
+    const dynamicCode = patientPasscode?.trim().toUpperCase();
 
-    if (VALID_PASSCODES.includes(cleanCode)) {
+    if (
+      (dynamicCode && cleanCode === dynamicCode) ||
+      DEFAULT_PASSCODES.includes(cleanCode)
+    ) {
       setError('');
       setPasscode('');
       setFailedAttempts(0);
