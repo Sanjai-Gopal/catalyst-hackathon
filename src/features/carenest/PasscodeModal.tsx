@@ -16,6 +16,7 @@ interface PasscodeModalProps {
   onClose: () => void;
   onSuccess: () => void;
   targetRole?: 'caretaker' | 'family';
+  patientPasscode?: string;
 }
 
 const MAX_ATTEMPTS = 5;
@@ -27,6 +28,7 @@ export function PasscodeModal({
   isOpen,
   onClose,
   onSuccess,
+  patientPasscode,
 }: PasscodeModalProps) {
   const [passcode, setPasscode] = useState('');
   const [error, setError] = useState('');
@@ -53,7 +55,10 @@ export function PasscodeModal({
     e.preventDefault();
     if (lockoutSeconds > 0) return;
 
-    if (verifyPasscode(passcode)) {
+    const cleanCode = passcode.trim().toUpperCase();
+    const dynamicCode = patientPasscode?.trim().toUpperCase();
+
+    if (verifyPasscode(passcode) || (dynamicCode && cleanCode === dynamicCode)) {
       setError('');
       setPasscode('');
       setFailedAttempts(0);

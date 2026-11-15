@@ -186,6 +186,7 @@ export function CareNestApp() {
         {/* Passcode Modal for Caregiver Barrier */}
         <PasscodeModal
           isOpen={isPasscodeModalOpen}
+          patientPasscode={patient.passcode}
           onClose={() => setIsPasscodeModalOpen(false)}
           onSuccess={() => {
             setIsPasscodeModalOpen(false);
