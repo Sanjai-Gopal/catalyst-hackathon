@@ -263,7 +263,7 @@ export function CaretakerDashboard({
                 className='h-10 px-3.5 text-xs font-semibold rounded-xl border-border hover:bg-muted flex items-center gap-1.5'
                 title='Reset daily routine to pending'
               >
-                <RotateCcw className='w-3.5 h-3.5 text-emerald-600' />
+                <RotateCcw className='w-3.5 h-3.5 text-emerald-700' />
                 <span>Reset Routine</span>
               </Button>
             )}
@@ -302,7 +302,7 @@ export function CaretakerDashboard({
               <CardTitle className='text-xs font-semibold uppercase tracking-wider text-muted-foreground'>
                 {t('dailyAdherence')}
               </CardTitle>
-              <Activity className='h-4 w-4 text-emerald-600' />
+              <Activity className='h-4 w-4 text-emerald-700' />
             </CardHeader>
             <CardContent>
               <div className='text-2xl font-bold text-foreground'>{adherenceRate}%</div>
@@ -413,7 +413,7 @@ export function CaretakerDashboard({
                             <div
                               className={`flex h-9 w-9 items-center justify-center rounded-lg ${
                                 isTaken
-                                  ? 'bg-emerald-500/10 text-emerald-600'
+                                  ? 'bg-emerald-500/10 text-emerald-700'
                                   : 'bg-muted text-muted-foreground'
                               }`}
                             >
@@ -438,7 +438,7 @@ export function CaretakerDashboard({
 
                           <div className='flex items-center gap-2'>
                             {isTaken ? (
-                              <Badge className='bg-emerald-600/10 text-emerald-600 border-emerald-600/20 text-xs'>
+                              <Badge className='bg-emerald-600/10 text-emerald-700 border-emerald-600/20 text-xs'>
                                 Logged Taken
                               </Badge>
                             ) : (
@@ -485,7 +485,7 @@ export function CaretakerDashboard({
                     <div className='p-3 rounded-xl bg-muted/40 border border-border/40'>
                       <div className='text-xs text-muted-foreground uppercase font-semibold'>Emergency Alert Email</div>
                       <div className='font-medium mt-1'>{patient.emergencyContact.email}</div>
-                      <div className='text-xs text-emerald-600 mt-0.5'>✓ Resend API Verified</div>
+                      <div className='text-xs text-emerald-700 mt-0.5'>✓ Resend API Verified</div>
                     </div>
                   </CardContent>
                 </Card>
@@ -609,7 +609,7 @@ export function CaretakerDashboard({
                     <span className='text-muted-foreground'>Phone / WhatsApp:</span>
                     <span className='font-mono text-foreground'>{patient.childrenContact?.phone || '+91 98401 23456'}</span>
                   </div>
-                  <div className='pt-2 flex items-center justify-between text-[11px] text-emerald-600 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20'>
+                  <div className='pt-2 flex items-center justify-between text-[11px] text-emerald-700 bg-emerald-500/10 p-2.5 rounded-xl border border-emerald-500/20'>
                     <span className='font-semibold'>✓ Real-time Email & SOS active</span>
                     <Badge variant='outline' className='text-[10px] bg-emerald-500/20 text-emerald-700'>
                       Connected
@@ -807,7 +807,7 @@ export function CaretakerDashboard({
                 <CardContent className='space-y-3 text-xs'>
                   {interactionAlerts.length === 0 ? (
                     <div className='p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 flex items-center gap-2'>
-                      <CheckCircle2 className='w-4 h-4 text-emerald-600 flex-shrink-0' />
+                      <CheckCircle2 className='w-4 h-4 text-emerald-700 flex-shrink-0' />
                       <span>All current {medications.length} medications are clinically safe with zero major contraindications.</span>
                     </div>
                   ) : (
@@ -903,6 +903,7 @@ export function CaretakerDashboard({
                           onDeleteMedication(med.id);
                           toast.success(`Removed ${med.name}`);
                         }}
+                        aria-label={`Remove ${med.name}`}
                         className='h-8 w-8 text-muted-foreground hover:text-destructive'
                       >
                         <Trash2 className='w-4 h-4' />
@@ -1040,7 +1041,7 @@ export function CaretakerDashboard({
                         ) : alert.severity === 'warning' ? (
                           <AlertTriangle className='w-4 h-4 text-amber-600' />
                         ) : (
-                          <CheckCircle2 className='w-4 h-4 text-emerald-600' />
+                          <CheckCircle2 className='w-4 h-4 text-emerald-700' />
                         )}
                         <span className='font-bold text-xs uppercase tracking-wider'>
                           {alert.severity === 'danger'
@@ -1162,7 +1163,7 @@ export function CaretakerDashboard({
                               To: {log.recipient} • {log.time}
                             </div>
                           </div>
-                          <Badge className='bg-emerald-500/10 text-emerald-600 border-emerald-500/20 text-[10px]'>
+                          <Badge className='bg-emerald-500/10 text-emerald-700 border-emerald-500/20 text-[10px]'>
                             Delivered
                           </Badge>
                         </div>

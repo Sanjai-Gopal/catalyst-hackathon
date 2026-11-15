@@ -242,7 +242,6 @@ export function SeniorModeView({
     <main
       id='content'
       tabIndex={-1}
-      role='main'
       aria-label='Senior Care Dashboard'
       className='min-h-screen bg-[#FBF9F5] text-[#2C2825] px-4 py-6 md:px-8 max-w-5xl mx-auto focus:outline-none'
     >
@@ -282,7 +281,7 @@ export function SeniorModeView({
             size='sm'
             onClick={handleTriggerSOS}
             aria-label={t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}
-            className='h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 animate-pulse'
+            className='h-11 px-4 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 motion-safe:animate-pulse'
           >
             <PhoneCall className='w-4 h-4' />
             <span>{t('callChildNow', { childName: activeChildContact.name.split(' ')[0] })}</span>
@@ -358,7 +357,7 @@ export function SeniorModeView({
         </div>
         <div className='flex items-center gap-2'>
           <span className='inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-semibold'>
-            <span className='h-2 w-2 rounded-full bg-emerald-500 animate-ping'></span>
+            <span className='h-2 w-2 rounded-full bg-emerald-500 motion-safe:animate-ping'></span>
             ● Live Real-Time Adherence (Zero Mock Data)
           </span>
         </div>
@@ -614,11 +613,11 @@ export function SeniorModeView({
       </div>
 
       {/* Emergency Assistance Footer */}
-      <div className='mt-10 p-6 rounded-3xl bg-gradient-to-r from-rose-50 to-orange-50 border-2 border-rose-300 shadow-md'>
+      <div className='mt-10 p-6 rounded-3xl bg-rose-50 border-2 border-rose-300 shadow-md'>
         <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
           <div className='space-y-1 text-center md:text-left'>
             <div className='flex items-center justify-center md:justify-start gap-2 text-xs font-bold text-rose-700 uppercase tracking-wider'>
-              <span className='inline-block w-2.5 h-2.5 rounded-full bg-rose-600 animate-ping' />
+              <span className='inline-block w-2.5 h-2.5 rounded-full bg-rose-600 motion-safe:animate-ping' />
               <span>{t('emergencyTriggeredBanner')}</span>
             </div>
             <h3 className='text-2xl font-bold text-rose-950 flex items-center justify-center md:justify-start gap-2'>
@@ -639,7 +638,7 @@ export function SeniorModeView({
             className={`h-16 px-8 font-extrabold text-lg rounded-2xl shadow-xl transition-all flex items-center gap-3 ${
               isEmergencyTriggered
                 ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                : 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95 animate-pulse'
+                : 'bg-rose-600 hover:bg-rose-700 text-white active:scale-95 motion-safe:animate-pulse'
             }`}
           >
             <PhoneCall className='w-6 h-6' />
@@ -665,7 +664,7 @@ export function SeniorModeView({
         <DialogContent className='sm:max-w-md bg-white border-2 border-rose-300 text-slate-900 rounded-3xl p-6 shadow-2xl'>
           <DialogHeader>
             <div className='flex items-center gap-3'>
-              <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-white animate-pulse shadow-md'>
+              <div className='flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-600 text-white motion-safe:animate-pulse shadow-md'>
                 <PhoneCall className='h-6 w-6' />
               </div>
               <div>
